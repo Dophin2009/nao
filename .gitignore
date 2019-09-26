@@ -1,2 +1,6 @@
+# Target directories
+bin/
+
+# IDE configs
 .vscode/
 .idea/

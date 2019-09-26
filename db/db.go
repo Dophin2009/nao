@@ -9,7 +9,7 @@ import (
 // Tables provides a slice of zero-value interfaces
 // for the types to be persisted
 func Tables() (tables []interface{}) {
-	tables = append(tables, &Title{}, &Media{})
+	tables = append(tables, &Title{}, &Media{}, &Producer{}, &MediaProducer{})
 	return
 }
 

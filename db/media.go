@@ -9,19 +9,20 @@ import (
 // Media represents a single media type
 type Media struct {
 	gorm.Model
-	Synopsis string
-	Titles   []Title `gorm:"polymorphic:Owner"`
+	Synopsis  string
+	Titles    []Title `gorm:"polymorphic:Owner"`
+	Producers []MediaProducer
 }
 
 // MediaGetAll fetches all Media records
 func MediaGetAll(db *gorm.DB) (media []Media) {
-	db.Find(&media)
+	db.Set("gorm:auto_preload", true).Find(&media)
 	return
 }
 
 // MediaGetByID fetches a single Media record by id
 func MediaGetByID(id uint, db *gorm.DB) (media Media) {
-	db.First(&media, id)
+	db.Set("gorm:auto_preload", true).First(&media, id)
 	return
 }
 

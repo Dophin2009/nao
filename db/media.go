@@ -12,6 +12,8 @@ type Media struct {
 	Synopsis  string
 	Titles    []Title `gorm:"polymorphic:Owner"`
 	Producers []MediaProducer
+	Related   []MediaRelation `gorm:"foreignKey:Owner"`
+	RelatedTo []MediaRelation `gorm:"foreignKey:Related"`
 }
 
 // MediaGetAll fetches all Media records
@@ -33,6 +35,6 @@ func MediaCreate(media *Media, db *gorm.DB) error {
 		return errors.New("database insertion failed")
 	}
 
-	db.Create(&media)
+	db.Create(media)
 	return nil
 }

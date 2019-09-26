@@ -34,6 +34,6 @@ func MediaProducerCreate(mediaProducer *MediaProducer, db *gorm.DB) error {
 		return errors.New("database insertion failed")
 	}
 
-	db.Create(&mediaProducer)
+	db.Create(mediaProducer)
 	return nil
 }

@@ -33,6 +33,6 @@ func ProducerCreate(producer *Producer, db *gorm.DB) error {
 		return errors.New("database insertion failed")
 	}
 
-	db.Create(&producer)
+	db.Create(producer)
 	return nil
 }

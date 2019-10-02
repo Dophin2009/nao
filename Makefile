@@ -6,13 +6,17 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 
 # Project variables
+TARGET_DIR=bin
 BINARY_NAME=goni
 
 all: build
 
 build:
-	$(GOBUILD) -o bin/$(BINARY_NAME) -v
+	$(GOBUILD) -o $(TARGET_DIR)/$(BINARY_NAME) -v
+
+run: build
+	$(TARGET_DIR)/$(BINARY_NAME)
 
 clean:
 	$(GOCLEAN)
-	rm -f bin/$(BINARY_NAME)
+	rm -f $(TARGET_DIR)/$(BINARY_NAME)

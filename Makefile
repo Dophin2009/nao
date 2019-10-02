@@ -14,8 +14,8 @@ MODULES=anisheet
 default: build
 
 build:
-	@for module in $(BINARIES) ; do \
-		$(GOBUILD) -o $(TARGET_DIR)/$${module} -v $(REPO_NAME)/cmd/$${module} ; \
+	@for module in $(MODULES) ; do \
+		$(GOBUILD) -o $(TARGET_DIR)/$$module -v $(REPO_NAME)/cmd/$$module ; \
 	done
 
 clean:

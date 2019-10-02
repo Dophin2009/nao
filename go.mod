@@ -1,4 +1,4 @@
-module gitlab.com/Dophin2009/goni
+module gitlab.com/Dophin2009/anisheet
 
 go 1.12
 

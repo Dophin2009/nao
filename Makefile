@@ -1,5 +1,6 @@
 # Golang variables
 GOCMD=go
+GOINSTALL=$(GOCMD) install
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
@@ -7,16 +8,15 @@ GOGET=$(GOCMD) get
 
 # Project variables
 TARGET_DIR=bin
-BINARY_NAME=goni
+REPO_NAME=gitlab.com/Dophin2009/anisheet
+MODULES=anisheet
 
-all: build
+default: build
 
 build:
-	$(GOBUILD) -o $(TARGET_DIR)/$(BINARY_NAME) -v
-
-run: build
-	$(TARGET_DIR)/$(BINARY_NAME)
+	@for module in $(BINARIES) ; do \
+		$(GOBUILD) -o $(TARGET_DIR)/$${module} -v $(REPO_NAME)/cmd/$${module} ; \
+	done
 
 clean:
-	$(GOCLEAN)
-	rm -f $(TARGET_DIR)/$(BINARY_NAME)
+	rm -rf $(TARGET_DIR)/

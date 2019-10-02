@@ -1,4 +1,4 @@
-package db
+package data
 
 import (
 	"github.com/jinzhu/gorm"
@@ -10,7 +10,7 @@ import (
 // for the types to be persisted
 func Tables() (tables []interface{}) {
 	tables = append(tables, &Title{}, &Media{}, &MediaRelation{},
-		&Producer{}, &MediaProducer{})
+		&Producer{}, &MediaProducer{}, &Episode{})
 	return
 }
 
@@ -38,4 +38,14 @@ func ConnectWithMigrations(dbPath string) (database *gorm.DB) {
 	}
 
 	return
+}
+
+// Preload enables auto preload for the given database connection
+func Preload(db *gorm.DB) *gorm.DB {
+	return db.Set("gorm:auto_preload", true)
+}
+
+// SkipAutoCreate disables auto create for the given database connection
+func SkipAutoCreate(db *gorm.DB) *gorm.DB {
+	return db.Set("gorm:save_associations", false)
 }

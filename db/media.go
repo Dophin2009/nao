@@ -2,6 +2,8 @@ package db
 
 import (
 	"errors"
+	"strconv"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 )
@@ -10,31 +12,39 @@ import (
 type Media struct {
 	gorm.Model
 	Synopsis  string
-	Titles    []Title `gorm:"polymorphic:Owner"`
+	Titles    []Title `gorm:"polymorphic:Owner;save_associations:true"`
 	Producers []MediaProducer
+	Episodes  []Episode
 	Related   []MediaRelation `gorm:"foreignKey:Owner"`
 	RelatedTo []MediaRelation `gorm:"foreignKey:Related"`
 }
 
 // MediaGetAll fetches all Media records
 func MediaGetAll(db *gorm.DB) (media []Media) {
-	db.Set("gorm:auto_preload", true).Find(&media)
+	Preload(db).Find(&media)
 	return
 }
 
 // MediaGetByID fetches a single Media record by id
-func MediaGetByID(id uint, db *gorm.DB) (media Media) {
-	db.Set("gorm:auto_preload", true).First(&media, id)
-	return
+func MediaGetByID(id uint, db *gorm.DB) (media Media, err error) {
+	Preload(db).First(&media, id)
+	if media.ID == 0 {
+		return media, errors.New(strings.Join([]string{"media with id", strconv.Itoa(int(id)), "not found"}, " "))
+	}
+	return media, nil
 }
 
 // MediaCreate persists a new record for the provided
 // Media instance
 func MediaCreate(media *Media, db *gorm.DB) error {
-	if !db.NewRecord(media) {
-		return errors.New("database insertion failed")
+	if media.ID != 0 {
+		return errors.New("media id must not be set")
 	}
 
-	db.Create(media)
+	if !db.NewRecord(media) {
+		return errors.New(strings.Join([]string{"media with id", strconv.Itoa(int(media.ID)), "already exists"}, " "))
+	}
+
+	Preload(db).Create(media)
 	return nil
 }

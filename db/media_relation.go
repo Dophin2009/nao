@@ -2,6 +2,8 @@ package db
 
 import (
 	"errors"
+	"strconv"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 )
@@ -21,16 +23,31 @@ func MediaRelationGetAll(db *gorm.DB) (relation []MediaRelation) {
 }
 
 // MediaRelationGetByID fetches a single MediaRelation record by id
-func MediaRelationGetByID(id uint, db *gorm.DB) (relation MediaRelation) {
+func MediaRelationGetByID(id uint, db *gorm.DB) (relation MediaRelation, err error) {
 	db.Set("gorm:auto_preload", true).First(&relation, id)
+	if relation.ID == 0 {
+		return relation, errors.New(strings.Join([]string{"media relation with id", strconv.Itoa(int(id)), "not found"}, " "))
+	}
 	return
 }
 
 // MediaRelationCreate persists a new record for the provided
 // MediaRelation instance
 func MediaRelationCreate(relation *MediaRelation, db *gorm.DB) error {
+	if relation.ID != 0 {
+		return errors.New("media relation id must not be set")
+	}
+
 	if !db.NewRecord(relation) {
-		return errors.New("database insertion failed")
+		return errors.New(strings.Join([]string{"media relation with id", strconv.Itoa(int(relation.ID)), "already exists"}, " "))
+	}
+
+	if _, err := MediaGetByID(relation.Owner, db); err != nil {
+		return err
+	}
+
+	if _, err := MediaGetByID(relation.Related, db); err != nil {
+		return err
 	}
 
 	db.Create(relation)

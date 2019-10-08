@@ -1,50 +1,78 @@
 package data
 
 import (
-	"errors"
-	"strconv"
-	"strings"
+	"encoding/json"
+	"fmt"
 
-	"github.com/jinzhu/gorm"
+	bolt "go.etcd.io/bbolt"
 )
 
-// Media represents a single media type
+// Media represents a single instance of a media
 type Media struct {
-	gorm.Model
-	Synopsis  string
-	Titles    []Title `gorm:"polymorphic:Owner;save_associations:true"`
-	Producers []MediaProducer
-	Episodes  []Episode
-	Related   []MediaRelation `gorm:"foreignKey:Owner"`
-	RelatedTo []MediaRelation `gorm:"foreignKey:Related"`
+	ID       int
+	Titles   []Info
+	Synopsis string
 }
 
-// MediaGetAll fetches all Media records
-func MediaGetAll(db *gorm.DB) (media []Media) {
-	Preload(db).Find(&media)
+// MediaBucketName provides the database bucket name
+// for the Media entity
+func MediaBucketName() string {
+	return "Media"
+}
+
+func bucket() []byte {
+	return []byte(MediaBucketName())
+}
+
+// MediaGetAll retrieves all persisted Media values
+func MediaGetAll(db *bolt.DB) (list []Media, err error) {
+	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucket())
+		b.ForEach(func(k, v []byte) error {
+			m := Media{}
+			err = json.Unmarshal(v, &m)
+			list = append(list, m)
+			return err
+		})
+
+		return nil
+	})
+
 	return
 }
 
-// MediaGetByID fetches a single Media record by id
-func MediaGetByID(id uint, db *gorm.DB) (media Media, err error) {
-	Preload(db).First(&media, id)
-	if media.ID == 0 {
-		return media, errors.New(strings.Join([]string{"media with id", strconv.Itoa(int(id)), "not found"}, " "))
-	}
-	return media, nil
+// MediaGet retrieves a single instance of Media with
+// the given ID
+func MediaGet(ID int, db *bolt.DB) (media Media, err error) {
+	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucket())
+		v := b.Get(Itob(ID))
+		return json.Unmarshal(v, &media)
+	})
+
+	return
 }
 
-// MediaCreate persists a new record for the provided
-// Media instance
-func MediaCreate(media *Media, db *gorm.DB) error {
+// MediaCreate persists a new instance of Media
+func MediaCreate(media *Media, db *bolt.DB) error {
 	if media.ID != 0 {
-		return errors.New("media id must not be set")
+		return fmt.Errorf("media id must be default value")
 	}
 
-	if !db.NewRecord(media) {
-		return errors.New(strings.Join([]string{"media with id", strconv.Itoa(int(media.ID)), "already exists"}, " "))
-	}
+	return db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucket())
 
-	Preload(db).Create(media)
-	return nil
+		id, err := b.NextSequence()
+		if err != nil {
+			return err
+		}
+		media.ID = int(id)
+
+		buf, err := json.Marshal(media)
+		if err != nil {
+			return err
+		}
+
+		return b.Put(Itob(media.ID), buf)
+	})
 }

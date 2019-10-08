@@ -1,51 +1,54 @@
 package data
 
 import (
-	"github.com/jinzhu/gorm"
-	// Required to connect to an SQLite db
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"encoding/binary"
+
+	bolt "go.etcd.io/bbolt"
 )
 
-// Tables provides a slice of zero-value interfaces
-// for the types to be persisted
-func Tables() (tables []interface{}) {
-	tables = append(tables, &Title{}, &Media{}, &MediaRelation{},
-		&Producer{}, &MediaProducer{}, &Episode{})
-	return
+// Buckets provides an array of all the buckets in the database
+func Buckets() []string {
+	return []string{MediaBucketName()}
 }
 
-// Connect establishes a connection to or creates an
-// SQLite3 database at the provided path
-func Connect(dbPath string) (database *gorm.DB) {
-	database, err := gorm.Open("sqlite3", dbPath)
-	if err != nil {
-		panic("could not connect to database: " + dbPath)
+// ConnectDatabase connects to the database file at the given path
+// and return a bolt.DB struct
+func ConnectDatabase(dbPath string, create bool) (*bolt.DB, error) {
+	// open database connection
+	db, err := bolt.Open(dbPath, 0600, nil)
+
+	// if specified to create buckets, cycle through all strings in
+	// Buckets() and create buckets
+	if create {
+		err = db.Update(func(tx *bolt.Tx) error {
+			for _, bucket := range Buckets() {
+				tx.CreateBucket([]byte(bucket))
+			}
+			return nil
+		})
 	}
 
+	return db, err
+}
+
+// ClearDatabase removes all buckets in the given database
+func ClearDatabase(db *bolt.DB) (err error) {
+	err = db.Update(func(tx *bolt.Tx) error {
+		for _, bucket := range Buckets() {
+			err = tx.DeleteBucket([]byte(bucket))
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
 	return
 }
 
-// ConnectWithMigrations performs table migrations after
-// establishing a connection to an SQLite3 database at the
-// provided path
-func ConnectWithMigrations(dbPath string) (database *gorm.DB) {
-	database = Connect(dbPath)
-
-	// Perform migrations
-	for _, table := range Tables() {
-		database.DropTableIfExists(table)
-		database.CreateTable(table)
-	}
-
-	return
-}
-
-// Preload enables auto preload for the given database connection
-func Preload(db *gorm.DB) *gorm.DB {
-	return db.Set("gorm:auto_preload", true)
-}
-
-// SkipAutoCreate disables auto create for the given database connection
-func SkipAutoCreate(db *gorm.DB) *gorm.DB {
-	return db.Set("gorm:save_associations", false)
+// Itob returns an 8-byte big endian representation of v
+func Itob(v int) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
 }

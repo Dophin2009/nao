@@ -1,66 +1,51 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 
+	"github.com/davecgh/go-spew/spew"
 	"gitlab.com/Dophin2009/anisheet/pkg/data"
 )
 
 func main() {
-	database := data.ConnectWithMigrations("/tmp/anisheet.db")
+
+	db, err := data.ConnectDatabase("/tmp/anisheet.db", true)
+	if err != nil {
+		panic("error connecting to database ")
+	}
+	defer db.Close()
 
 	mitsuboshi := data.Media{
-		Synopsis: "The show follows the fun activities of three grade-school girls.",
-		Titles: []data.Title{
-			data.Title{Name: "Mitsuboshi Colors", Language: "English"},
+		Synopsis: "Three girls have fun",
+		Titles: []data.Info{
+			data.Info{
+				Data:     "Mitsuboshi Colors",
+				Language: "English",
+			},
 		},
 	}
-	data.MediaCreate(&mitsuboshi, database)
+	err = data.MediaCreate(&mitsuboshi, db)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	notMitsuboshi := data.Media{
-		Synopsis: "The show doesn't follow the fun activities of three grade-school girls.",
-		Titles: []data.Title{
-			data.Title{Name: "Not Mitsuboshi Colors", Language: "English"},
-		},
+		Synopsis: "Three girls don't have fun",
 	}
-	data.MediaCreate(&notMitsuboshi, database)
-
-	relation := data.MediaRelation{
-		Owner:    mitsuboshi.ID,
-		Related:  notMitsuboshi.ID,
-		Relation: "Side-story",
-	}
-	err := data.MediaRelationCreate(&relation, database)
+	err = data.MediaCreate(&notMitsuboshi, db)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 
-	silverLink := data.Producer{
-		Titles: []data.Title{
-			data.Title{Name: "Silver Link", Language: "English"},
-		},
+	allMedia, _ := data.MediaGetAll(db)
+	spew.Config = spew.ConfigState{
+		Indent:                  "    ",
+		DisableMethods:          true,
+		DisableCapacities:       true,
+		DisablePointerMethods:   true,
+		DisablePointerAddresses: true,
 	}
-	err = data.ProducerCreate(&silverLink, database)
-	if err != nil {
-		panic(err)
-	}
+	spew.Config.Dump(allMedia)
 
-	producerRelation := data.MediaProducer{
-		MediaID:    mitsuboshi.ID,
-		ProducerID: silverLink.ID,
-		Role:       "Studio",
-	}
-	err = data.MediaProducerCreate(&producerRelation, database)
-	if err != nil {
-		panic(err)
-	}
-
-	found, err := data.ProducerGetByID(1, database)
-	if err != nil {
-		panic(err)
-	}
-	s, _ := json.MarshalIndent(found, "", "\t")
-	fmt.Print(string(s))
-
+	data.ClearDatabase(db)
 }

@@ -90,6 +90,26 @@ func main() {
 		fmt.Println(err)
 	}
 
+	mitsuboshiNotMitsuboshi := data.MediaRelation{
+		OwnerID:      mitsuboshi.ID,
+		RelatedID:    notMitsuboshi.ID,
+		Relationship: "Side-story",
+	}
+	err = data.MediaRelationCreate(&mitsuboshiNotMitsuboshi, db)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	notMitsuboshiMitsuboshi := data.MediaRelation{
+		OwnerID:      notMitsuboshi.ID,
+		RelatedID:    mitsuboshi.ID,
+		Relationship: "Main story",
+	}
+	err = data.MediaRelationCreate(&notMitsuboshiMitsuboshi, db)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	allMedia, err := data.MediaGetAll(db)
 	if err != nil {
 		fmt.Println(err)
@@ -107,6 +127,12 @@ func main() {
 		fmt.Println(err)
 	}
 	spew.Dump(allMediaProducers)
+
+	allMediaRelations, err := data.MediaRelationGetAll(db)
+	if err != nil {
+		fmt.Println(err)
+	}
+	spew.Dump(allMediaRelations)
 
 	data.ClearDatabase(db)
 }

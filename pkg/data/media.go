@@ -2,7 +2,6 @@ package data
 
 import (
 	"encoding/json"
-	"fmt"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -67,11 +66,6 @@ func MediaGet(ID int, db *bolt.DB) (m Media, err error) {
 
 // MediaCreate persists a new instance of Media
 func MediaCreate(m *Media, db *bolt.DB) error {
-	// ID must be 0
-	if m.ID != 0 {
-		return fmt.Errorf("media id must be default value")
-	}
-
 	return db.Update(func(tx *bolt.Tx) error {
 		// Get Media bucket, exit if error
 		b, err := bucket(mediaBucketName, tx)
@@ -88,6 +82,35 @@ func MediaCreate(m *Media, db *bolt.DB) error {
 		m.ID = int(id)
 
 		// Save Media in bucket
+		buf, err := json.Marshal(m)
+		if err != nil {
+			return err
+		}
+
+		return b.Put(itob(m.ID), buf)
+	})
+}
+
+// MediaUpdate updates the properties of an existing
+// persisted Media instance
+func MediaUpdate(m *Media, db *bolt.DB) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		// Get Media bucket, exit if error
+		b, err := bucket(mediaBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Check if Media with ID exists
+		_, err = get(m.ID, b)
+		if err != nil {
+			return err
+		}
+
+		// Replace properties of new with immutable
+		// ones of old (none yet)
+
+		// Save Media
 		buf, err := json.Marshal(m)
 		if err != nil {
 			return err

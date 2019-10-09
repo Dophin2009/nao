@@ -2,7 +2,6 @@ package data
 
 import (
 	"encoding/json"
-	"fmt"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -125,11 +124,6 @@ func MediaProducerGetByProducer(pID int, db *bolt.DB) (list []MediaProducer, err
 
 // MediaProducerCreate persists a new instance of MediaProducer
 func MediaProducerCreate(mp *MediaProducer, db *bolt.DB) error {
-	// ID must be 0
-	if mp.ID != 0 {
-		return fmt.Errorf("mediaProducer id must be default value")
-	}
-
 	return db.Update(func(tx *bolt.Tx) error {
 		// Get MediaProducer bucket, exit if error
 		b, err := bucket(mediaProducerBucketName, tx)
@@ -168,6 +162,35 @@ func MediaProducerCreate(mp *MediaProducer, db *bolt.DB) error {
 		mp.ID = int(id)
 
 		// Save MediaProducer in bucket
+		buf, err := json.Marshal(mp)
+		if err != nil {
+			return err
+		}
+
+		return b.Put(itob(mp.ID), buf)
+	})
+}
+
+// MediaProducerUpdate updates the properties of an existing
+// persisted Producer instance
+func MediaProducerUpdate(mp *MediaProducer, db *bolt.DB) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		// Get MediaProducer bucket, exit if error
+		b, err := bucket(mediaProducerBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Check if MediaProducer with ID exists
+		_, err = get(mp.ID, b)
+		if err != nil {
+			return err
+		}
+
+		// Replace properties of new with immutable
+		// ones of old (none yet)
+
+		// Save MediaProducer
 		buf, err := json.Marshal(mp)
 		if err != nil {
 			return err

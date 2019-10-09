@@ -2,7 +2,6 @@ package data
 
 import (
 	"encoding/json"
-	"fmt"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -125,11 +124,6 @@ func MediaRelationGetByRelated(mID int, db *bolt.DB) (list []MediaRelation, err 
 
 // MediaRelationCreate persists a new instance of MediaRelation
 func MediaRelationCreate(mr *MediaRelation, db *bolt.DB) error {
-	// ID must be 0
-	if mr.ID != 0 {
-		return fmt.Errorf("mediaRelation id must be default value")
-	}
-
 	return db.Update(func(tx *bolt.Tx) error {
 		// Get MediaRelation bucket, exit if error
 		b, err := bucket(mediaRelationBucketName, tx)
@@ -168,6 +162,35 @@ func MediaRelationCreate(mr *MediaRelation, db *bolt.DB) error {
 		mr.ID = int(id)
 
 		// Save MediaRelation in bucket
+		buf, err := json.Marshal(mr)
+		if err != nil {
+			return err
+		}
+
+		return b.Put(itob(mr.ID), buf)
+	})
+}
+
+// MediaRelationUpdate updates the properties of an existing
+// persisted Producer instance
+func MediaRelationUpdate(mr *MediaRelation, db *bolt.DB) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		// Get MediaRelation bucket, exit if error
+		b, err := bucket(mediaRelationBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Check if MediaRelation with ID exists
+		_, err = get(mr.ID, b)
+		if err != nil {
+			return err
+		}
+
+		// Replace properties of new with immutable
+		// ones of old (none yet)
+
+		// Save MediaRelation
 		buf, err := json.Marshal(mr)
 		if err != nil {
 			return err

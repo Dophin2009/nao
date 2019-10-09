@@ -2,7 +2,6 @@ package data
 
 import (
 	"encoding/json"
-	"fmt"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -67,11 +66,6 @@ func ProducerGet(ID int, db *bolt.DB) (p Producer, err error) {
 
 // ProducerCreate persists a new instance of Producer
 func ProducerCreate(p *Producer, db *bolt.DB) error {
-	// ID must be 0
-	if p.ID != 0 {
-		return fmt.Errorf("producer id must be default value")
-	}
-
 	return db.Update(func(tx *bolt.Tx) error {
 		// Get Producer bucket, exit if error
 		b, err := bucket(producerBucketName, tx)
@@ -87,6 +81,35 @@ func ProducerCreate(p *Producer, db *bolt.DB) error {
 		p.ID = int(id)
 
 		// Save Producer in bucket
+		buf, err := json.Marshal(p)
+		if err != nil {
+			return err
+		}
+
+		return b.Put(itob(p.ID), buf)
+	})
+}
+
+// ProducerUpdate updates the properties of an existing
+// persisted Producer instance
+func ProducerUpdate(p *Producer, db *bolt.DB) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		// Get Producer bucket, exit if error
+		b, err := bucket(producerBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Check if Producer with ID exists
+		_, err = get(p.ID, b)
+		if err != nil {
+			return err
+		}
+
+		// Replace properties of new with immutable
+		// ones of old (none yet)
+
+		// Save Producer
 		buf, err := json.Marshal(p)
 		if err != nil {
 			return err

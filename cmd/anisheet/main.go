@@ -8,6 +8,13 @@ import (
 )
 
 func main() {
+	spew.Config = spew.ConfigState{
+		Indent:                  "    ",
+		DisableMethods:          true,
+		DisableCapacities:       true,
+		DisablePointerMethods:   true,
+		DisablePointerAddresses: true,
+	}
 
 	db, err := data.ConnectDatabase("/tmp/anisheet.db", true)
 	if err != nil {
@@ -37,15 +44,69 @@ func main() {
 		fmt.Println(err)
 	}
 
-	allMedia, _ := data.MediaGetAll(db)
-	spew.Config = spew.ConfigState{
-		Indent:                  "    ",
-		DisableMethods:          true,
-		DisableCapacities:       true,
-		DisablePointerMethods:   true,
-		DisablePointerAddresses: true,
+	silverLink := data.Producer{
+		Titles: []data.Info{
+			data.Info{
+				Data:     "Silver Link",
+				Language: "English",
+			},
+		},
 	}
-	spew.Config.Dump(allMedia)
+	err = data.ProducerCreate(&silverLink, db)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	notSilverLink := data.Producer{
+		Titles: []data.Info{
+			data.Info{
+				Data:     "Not Silver Link",
+				Language: "English",
+			},
+		},
+	}
+	err = data.ProducerCreate(&notSilverLink, db)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	mitsuboshiSilverLink := data.MediaProducer{
+		MediaID:    mitsuboshi.ID,
+		ProducerID: silverLink.ID,
+		Role:       "Studio",
+	}
+	err = data.MediaProducerCreate(&mitsuboshiSilverLink, db)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	notMitsuboshiNotSilverLink := data.MediaProducer{
+		MediaID:    notMitsuboshi.ID,
+		ProducerID: notSilverLink.ID,
+		Role:       "Studio",
+	}
+	err = data.MediaProducerCreate(&notMitsuboshiNotSilverLink, db)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	allMedia, err := data.MediaGetAll(db)
+	if err != nil {
+		fmt.Println(err)
+	}
+	spew.Dump(allMedia)
+
+	allProducers, err := data.ProducerGetAll(db)
+	if err != nil {
+		fmt.Println(err)
+	}
+	spew.Dump(allProducers)
+
+	allMediaProducers, err := data.MediaProducerGetAll(db)
+	if err != nil {
+		fmt.Println(err)
+	}
+	spew.Dump(allMediaProducers)
 
 	data.ClearDatabase(db)
 }

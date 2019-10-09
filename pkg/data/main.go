@@ -1,14 +1,12 @@
 package data
 
 import (
-	"encoding/binary"
-
 	bolt "go.etcd.io/bbolt"
 )
 
 // Buckets provides an array of all the buckets in the database
 func Buckets() []string {
-	return []string{MediaBucketName()}
+	return []string{mediaBucketName, producerBucketName, mediaProducerBucketName}
 }
 
 // ConnectDatabase connects to the database file at the given path
@@ -44,11 +42,4 @@ func ClearDatabase(db *bolt.DB) (err error) {
 	})
 
 	return
-}
-
-// Itob returns an 8-byte big endian representation of v
-func Itob(v int) []byte {
-	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, uint64(v))
-	return b
 }

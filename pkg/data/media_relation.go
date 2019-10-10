@@ -13,6 +13,7 @@ type MediaRelation struct {
 	OwnerID      int
 	RelatedID    int
 	Relationship string
+	Version      int
 }
 
 const mediaRelationBucketName = "MediaRelation"
@@ -157,13 +158,17 @@ func MediaRelationUpdate(mr *MediaRelation, db *bolt.DB) error {
 		}
 
 		// Check if MediaRelation with ID exists
-		_, err = get(mr.ID, b)
+		o, err := get(mr.ID, b)
 		if err != nil {
 			return err
 		}
 
 		// Replace properties of new with immutable
-		// ones of old (none yet)
+		// ones of old
+		old := MediaRelation{}
+		err = json.Unmarshal([]byte(o), &old)
+		// Update version
+		mr.Version = old.Version + 1
 
 		// Save MediaRelation
 		buf, err := json.Marshal(mr)

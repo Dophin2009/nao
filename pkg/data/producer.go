@@ -9,9 +9,10 @@ import (
 // Producer represents a single studio, producer,
 // licensor, etc.
 type Producer struct {
-	ID     int
-	Titles []Info
-	Type   string
+	ID      int
+	Titles  []Info
+	Type    string
+	Version int
 }
 
 // ProducerBucketName provides the database bucket name
@@ -110,13 +111,17 @@ func ProducerUpdate(p *Producer, db *bolt.DB) error {
 		}
 
 		// Check if Producer with ID exists
-		_, err = get(p.ID, b)
+		o, err := get(p.ID, b)
 		if err != nil {
 			return err
 		}
 
 		// Replace properties of new with immutable
-		// ones of old (none yet)
+		// ones of old
+		old := Producer{}
+		err = json.Unmarshal([]byte(o), &old)
+		// Update version
+		p.Version = old.Version + 1
 
 		// Save Producer
 		buf, err := json.Marshal(p)

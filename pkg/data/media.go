@@ -18,6 +18,7 @@ type Media struct {
 	SeasonPremiered Season
 	Type            string
 	Source          string
+	Version         int
 }
 
 // Season contains information about the quarter
@@ -149,13 +150,17 @@ func MediaUpdate(m *Media, db *bolt.DB) error {
 		}
 
 		// Check if Media with ID exists
-		_, err = get(m.ID, b)
+		o, err := get(m.ID, b)
 		if err != nil {
 			return err
 		}
 
 		// Replace properties of new with immutable
-		// ones of old (none yet)
+		// ones of old
+		old := Media{}
+		err = json.Unmarshal([]byte(o), &old)
+		// Update version
+		m.Version = old.Version + 1
 
 		// Save Media
 		buf, err := json.Marshal(m)

@@ -11,6 +11,7 @@ type Genre struct {
 	ID           int
 	Names        []Info
 	Descriptions []Info
+	Version      int
 }
 
 const genreBucketName = "Genre"
@@ -109,13 +110,17 @@ func GenreUpdate(g *Genre, db *bolt.DB) error {
 		}
 
 		// Check if Genre with ID exists
-		_, err = get(g.ID, b)
+		o, err := get(g.ID, b)
 		if err != nil {
 			return err
 		}
 
 		// Replace properties of new with immutable
-		// ones of old (none yet)
+		// ones of old
+		old := Genre{}
+		err = json.Unmarshal([]byte(o), &old)
+		// Update version
+		g.Version = old.Version + 1
 
 		// Save Genre
 		buf, err := json.Marshal(g)

@@ -12,6 +12,7 @@ type MediaGenre struct {
 	ID      int
 	MediaID int
 	GenreID int
+	Version int
 }
 
 const mediaGenreBucketName = "MediaGenre"
@@ -148,13 +149,17 @@ func MediaGenreUpdate(mg *MediaGenre, db *bolt.DB) error {
 		}
 
 		// Check if MediaGenre with ID exists
-		_, err = get(mg.ID, b)
+		o, err := get(mg.ID, b)
 		if err != nil {
 			return err
 		}
 
 		// Replace properties of new with immutable
-		// ones of old (none yet)
+		// ones of old
+		old := MediaGenre{}
+		err = json.Unmarshal([]byte(o), &old)
+		// Update version
+		mg.Version = old.Version + 1
 
 		// Save MediaGenre
 		buf, err := json.Marshal(mg)

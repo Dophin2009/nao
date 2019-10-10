@@ -13,6 +13,7 @@ type MediaProducer struct {
 	MediaID    int
 	ProducerID int
 	Role       string
+	Version    int
 }
 
 const mediaProducerBucketName = "MediaProducer"
@@ -149,13 +150,17 @@ func MediaProducerUpdate(mp *MediaProducer, db *bolt.DB) error {
 		}
 
 		// Check if MediaProducer with ID exists
-		_, err = get(mp.ID, b)
+		o, err := get(mp.ID, b)
 		if err != nil {
 			return err
 		}
 
 		// Replace properties of new with immutable
-		// ones of old (none yet)
+		// ones of old
+		old := MediaProducer{}
+		err = json.Unmarshal([]byte(o), &old)
+		// Update version
+		mp.Version = old.Version + 1
 
 		// Save MediaProducer
 		buf, err := json.Marshal(mp)

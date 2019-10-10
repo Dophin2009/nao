@@ -18,6 +18,7 @@ type Episode struct {
 	Duration uint
 	Filler   bool
 	Recap    bool
+	Version  int
 }
 
 const episodeBucketName = "Episode"
@@ -145,13 +146,17 @@ func EpisodeUpdate(ep *Episode, db *bolt.DB) error {
 		}
 
 		// Check if Episode with ID exists
-		_, err = get(ep.ID, b)
+		o, err := get(ep.ID, b)
 		if err != nil {
 			return err
 		}
 
 		// Replace properties of new with immutable
-		// ones of old (none yet)
+		// ones of old
+		old := Episode{}
+		err = json.Unmarshal([]byte(o), &old)
+		// Update version
+		ep.Version = old.Version + 1
 
 		// Save Episode
 		buf, err := json.Marshal(ep)

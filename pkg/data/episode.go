@@ -22,33 +22,6 @@ type Episode struct {
 
 const episodeBucketName = "Episode"
 
-// EpisodeGetAll retrieves all persisted Episode values
-func EpisodeGetAll(db *bolt.DB) (list []Episode, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get Episode bucket, exit if error
-		b, err := bucket(episodeBucketName, tx)
-
-		if err != nil {
-			return err
-		}
-
-		// Unmarshal and add all Episode to slice,
-		// exit if error
-		return b.ForEach(func(k, v []byte) error {
-			ep := Episode{}
-			err = json.Unmarshal(v, &ep)
-			if err != nil {
-				return err
-			}
-
-			list = append(list, ep)
-			return err
-		})
-	})
-
-	return
-}
-
 // EpisodeGet retrieves a single instance of Episode with
 // the given ID
 func EpisodeGet(ID int, db *bolt.DB) (ep Episode, err error) {
@@ -66,6 +39,41 @@ func EpisodeGet(ID int, db *bolt.DB) (ep Episode, err error) {
 		}
 
 		return json.Unmarshal(v, &ep)
+	})
+
+	return
+}
+
+// EpisodeGetAll retrieves all persisted Episode values
+func EpisodeGetAll(db *bolt.DB) (list []Episode, err error) {
+	return EpisodeGetFilter(db, func(ep *Episode) bool { return true })
+}
+
+// EpisodeGetFilter retrieves all persisted Episode values
+// that pass the filter
+func EpisodeGetFilter(db *bolt.DB, filter func(ep *Episode) bool) (list []Episode, err error) {
+	err = db.View(func(tx *bolt.Tx) error {
+		// Get Episode bucket, exit if error
+		b, err := bucket(episodeBucketName, tx)
+
+		if err != nil {
+			return err
+		}
+
+		// Unmarshal and add all Episode to slice,
+		// exit if error
+		return b.ForEach(func(k, v []byte) error {
+			ep := Episode{}
+			err = json.Unmarshal(v, &ep)
+			if err != nil {
+				return err
+			}
+
+			if filter(&ep) {
+				list = append(list, ep)
+			}
+			return err
+		})
 	})
 
 	return

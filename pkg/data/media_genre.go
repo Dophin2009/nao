@@ -16,34 +16,6 @@ type MediaGenre struct {
 
 const mediaGenreBucketName = "MediaGenre"
 
-// MediaGenreGetAll retrieves all persisted MediaGenre values
-func MediaGenreGetAll(db *bolt.DB) (list []MediaGenre, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get MediaGenre bucket, exit if error
-		b, err := bucket(mediaGenreBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Unmarshal and add all MediaGenres to slice,
-		// exit if error
-		b.ForEach(func(k, v []byte) error {
-			mg := MediaGenre{}
-			err = json.Unmarshal(v, &mg)
-			if err != nil {
-				return err
-			}
-
-			list = append(list, mg)
-			return err
-		})
-
-		return nil
-	})
-
-	return
-}
-
 // MediaGenreGet retrieves a single instance of MediaGenre with
 // the given ID
 func MediaGenreGet(ID int, db *bolt.DB) (mg MediaGenre, err error) {
@@ -65,37 +37,29 @@ func MediaGenreGet(ID int, db *bolt.DB) (mg MediaGenre, err error) {
 	return
 }
 
+// MediaGenreGetAll retrieves all persisted MediaGenre values
+func MediaGenreGetAll(db *bolt.DB) (list []MediaGenre, err error) {
+	return MediaGenreGetFilter(db, func(mg *MediaGenre) bool { return true })
+}
+
 // MediaGenreGetByMedia retrieves a list of instances of MediaGenre
 // with the given Media ID
 func MediaGenreGetByMedia(mID int, db *bolt.DB) (list []MediaGenre, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get MediaGenre bucket, exit if error
-		b, err := bucket(mediaGenreBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get MediaGenre by Media ID
-		return b.ForEach(func(k, v []byte) (err error) {
-			mg := MediaGenre{}
-			err = json.Unmarshal(v, &mg)
-			if err != nil {
-				return err
-			}
-
-			if mg.MediaID == mID {
-				list = append(list, mg)
-			}
-			return nil
-		})
+	return MediaGenreGetFilter(db, func(mg *MediaGenre) bool {
+		return mg.MediaID == mID
 	})
-
-	return
 }
 
 // MediaGenreGetByGenre retrieves a list of instances of MediaGenre
 // with the given Genre ID
 func MediaGenreGetByGenre(gID int, db *bolt.DB) (list []MediaGenre, err error) {
+	return MediaGenreGetFilter(db, func(mg *MediaGenre) bool {
+		return mg.GenreID == gID
+	})
+}
+
+// MediaGenreGetFilter retrieves all persisted MediaGenre values
+func MediaGenreGetFilter(db *bolt.DB, filter func(mg *MediaGenre) bool) (list []MediaGenre, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		// Get MediaGenre bucket, exit if error
 		b, err := bucket(mediaGenreBucketName, tx)
@@ -103,19 +67,22 @@ func MediaGenreGetByGenre(gID int, db *bolt.DB) (list []MediaGenre, err error) {
 			return err
 		}
 
-		// Get MediaGenre by Genre ID
-		return b.ForEach(func(k, v []byte) (err error) {
+		// Unmarshal and add all MediaGenres to slice,
+		// exit if error
+		b.ForEach(func(k, v []byte) error {
 			mg := MediaGenre{}
 			err = json.Unmarshal(v, &mg)
 			if err != nil {
 				return err
 			}
 
-			if mg.MediaID == gID {
+			if filter(&mg) {
 				list = append(list, mg)
 			}
-			return nil
+			return err
 		})
+
+		return nil
 	})
 
 	return

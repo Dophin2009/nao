@@ -18,32 +18,6 @@ type Producer struct {
 // for the Producer entity
 const producerBucketName = "Producer"
 
-// ProducerGetAll retrieves all persisted Producer values
-func ProducerGetAll(db *bolt.DB) (list []Producer, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get Producer bucket, exit if error
-		b, err := bucket(producerBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Unmarshal and add Producers to slice,
-		// exit if error
-		return b.ForEach(func(k, v []byte) error {
-			var p Producer
-			err = json.Unmarshal(v, &p)
-			if err != nil {
-				return err
-			}
-
-			list = append(list, p)
-			return err
-		})
-	})
-
-	return
-}
-
 // ProducerGet retrieves a single instance of Producer with
 // the given ID
 func ProducerGet(ID int, db *bolt.DB) (p Producer, err error) {
@@ -60,6 +34,40 @@ func ProducerGet(ID int, db *bolt.DB) (p Producer, err error) {
 			return err
 		}
 		return json.Unmarshal(v, &p)
+	})
+
+	return
+}
+
+// ProducerGetAll retrieves all persisted Producer values
+func ProducerGetAll(db *bolt.DB) (list []Producer, err error) {
+	return ProducerGetFilter(db, func(p *Producer) bool { return true })
+}
+
+// ProducerGetFilter retrieves all persisted Producer values
+// that pass the filter
+func ProducerGetFilter(db *bolt.DB, filter func(p *Producer) bool) (list []Producer, err error) {
+	err = db.View(func(tx *bolt.Tx) error {
+		// Get Producer bucket, exit if error
+		b, err := bucket(producerBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Unmarshal and add Producers to slice,
+		// exit if error
+		return b.ForEach(func(k, v []byte) error {
+			var p Producer
+			err = json.Unmarshal(v, &p)
+			if err != nil {
+				return err
+			}
+
+			if filter(&p) {
+				list = append(list, p)
+			}
+			return err
+		})
 	})
 
 	return

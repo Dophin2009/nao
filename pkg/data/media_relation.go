@@ -17,34 +17,6 @@ type MediaRelation struct {
 
 const mediaRelationBucketName = "MediaRelation"
 
-// MediaRelationGetAll retrieves all persisted MediaRelation values
-func MediaRelationGetAll(db *bolt.DB) (list []MediaRelation, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get MediaRelation bucket, exit if error
-		b, err := bucket(mediaRelationBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Unmarshal and add all MediaRelations to slice,
-		// exit if error
-		b.ForEach(func(k, v []byte) error {
-			mr := MediaRelation{}
-			err = json.Unmarshal(v, &mr)
-			if err != nil {
-				return err
-			}
-
-			list = append(list, mr)
-			return err
-		})
-
-		return nil
-	})
-
-	return
-}
-
 // MediaRelationGet retrieves a single instance of MediaRelation with
 // the given ID
 func MediaRelationGet(ID int, db *bolt.DB) (mr MediaRelation, err error) {
@@ -66,37 +38,37 @@ func MediaRelationGet(ID int, db *bolt.DB) (mr MediaRelation, err error) {
 	return
 }
 
+// MediaRelationGetAll retrieves all persisted MediaRelation values
+func MediaRelationGetAll(db *bolt.DB) (list []MediaRelation, err error) {
+	return MediaRelationGetFilter(db, func(mr *MediaRelation) bool { return true })
+}
+
 // MediaRelationGetByOwner retrieves a list of instances of MediaRelation
 // with the given owning Media ID
 func MediaRelationGetByOwner(mID int, db *bolt.DB) (list []MediaRelation, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get MediaRelation bucket, exit if error
-		b, err := bucket(mediaRelationBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get MediaRelation by owning Media ID
-		return b.ForEach(func(k, v []byte) (err error) {
-			mr := MediaRelation{}
-			err = json.Unmarshal(v, &mr)
-			if err != nil {
-				return err
-			}
-
-			if mr.OwnerID == mID {
-				list = append(list, mr)
-			}
-			return nil
-		})
+	return MediaRelationGetFilter(db, func(mr *MediaRelation) bool {
+		return mr.OwnerID == mID
 	})
-
-	return
 }
 
 // MediaRelationGetByRelated retrieves a list of instances of MediaRelation
 // with the given related Media ID
 func MediaRelationGetByRelated(mID int, db *bolt.DB) (list []MediaRelation, err error) {
+	return MediaRelationGetFilter(db, func(mr *MediaRelation) bool {
+		return mr.RelatedID == mID
+	})
+}
+
+// MediaRelationGetByRelationship retrieves a list of instances of Media Relation
+// with the given relationship
+func MediaRelationGetByRelationship(relationship string, db *bolt.DB) (list []MediaRelation, err error) {
+	return MediaRelationGetFilter(db, func(mr *MediaRelation) bool {
+		return mr.Relationship == relationship
+	})
+}
+
+// MediaRelationGetFilter retrieves all persisted MediaRelation values
+func MediaRelationGetFilter(db *bolt.DB, filter func(mr *MediaRelation) bool) (list []MediaRelation, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		// Get MediaRelation bucket, exit if error
 		b, err := bucket(mediaRelationBucketName, tx)
@@ -104,19 +76,22 @@ func MediaRelationGetByRelated(mID int, db *bolt.DB) (list []MediaRelation, err 
 			return err
 		}
 
-		// Get MediaRelation by related Media ID
-		return b.ForEach(func(k, v []byte) (err error) {
+		// Unmarshal and add all MediaRelations to slice,
+		// exit if error
+		b.ForEach(func(k, v []byte) error {
 			mr := MediaRelation{}
 			err = json.Unmarshal(v, &mr)
 			if err != nil {
 				return err
 			}
 
-			if mr.RelatedID == mID {
+			if filter(&mr) {
 				list = append(list, mr)
 			}
-			return nil
+			return err
 		})
+
+		return nil
 	})
 
 	return

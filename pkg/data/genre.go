@@ -17,6 +17,11 @@ const genreBucketName = "Genre"
 
 // GenreGetAll retrieves all persisted Genre values
 func GenreGetAll(db *bolt.DB) (list []Genre, err error) {
+	return GenreGetFilter(db, func(g *Genre) bool { return true })
+}
+
+// GenreGetFilter retrieves all persisted Genre values
+func GenreGetFilter(db *bolt.DB, filter func(g *Genre) bool) (list []Genre, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		// Get Genre bucket, exit if error
 		b, err := bucket(genreBucketName, tx)
@@ -34,7 +39,9 @@ func GenreGetAll(db *bolt.DB) (list []Genre, err error) {
 				return err
 			}
 
-			list = append(list, g)
+			if filter(&g) {
+				list = append(list, g)
+			}
 			return err
 		})
 	})

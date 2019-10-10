@@ -54,33 +54,6 @@ const (
 
 const mediaBucketName = "Media"
 
-// MediaGetAll retrieves all persisted Media values
-func MediaGetAll(db *bolt.DB) (list []Media, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get Media bucket, exit if error
-		b, err := bucket(mediaBucketName, tx)
-
-		if err != nil {
-			return err
-		}
-
-		// Unmarshal and add all Media to slice,
-		// exit if error
-		return b.ForEach(func(k, v []byte) error {
-			m := Media{}
-			err = json.Unmarshal(v, &m)
-			if err != nil {
-				return err
-			}
-
-			list = append(list, m)
-			return err
-		})
-	})
-
-	return
-}
-
 // MediaGet retrieves a single instance of Media with
 // the given ID
 func MediaGet(ID int, db *bolt.DB) (m Media, err error) {
@@ -98,6 +71,41 @@ func MediaGet(ID int, db *bolt.DB) (m Media, err error) {
 		}
 
 		return json.Unmarshal(v, &m)
+	})
+
+	return
+}
+
+// MediaGetAll retrieves all persisted Media values
+func MediaGetAll(db *bolt.DB) (list []Media, err error) {
+	return MediaGetFilter(db, func(m *Media) bool { return true })
+}
+
+// MediaGetFilter retrieves all persisted Media values
+// that pass the filter
+func MediaGetFilter(db *bolt.DB, filter func(m *Media) bool) (list []Media, err error) {
+	err = db.View(func(tx *bolt.Tx) error {
+		// Get Media bucket, exit if error
+		b, err := bucket(mediaBucketName, tx)
+
+		if err != nil {
+			return err
+		}
+
+		// Unmarshal and add all Media to slice,
+		// exit if error
+		return b.ForEach(func(k, v []byte) error {
+			m := Media{}
+			err = json.Unmarshal(v, &m)
+			if err != nil {
+				return err
+			}
+
+			if filter(&m) {
+				list = append(list, m)
+			}
+			return err
+		})
 	})
 
 	return

@@ -17,34 +17,6 @@ type MediaProducer struct {
 
 const mediaProducerBucketName = "MediaProducer"
 
-// MediaProducerGetAll retrieves all persisted MediaProducer values
-func MediaProducerGetAll(db *bolt.DB) (list []MediaProducer, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get MediaProducer bucket, exit if error
-		b, err := bucket(mediaProducerBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Unmarshal and add all MediaProducers to slice,
-		// exit if error
-		b.ForEach(func(k, v []byte) error {
-			mp := MediaProducer{}
-			err = json.Unmarshal(v, &mp)
-			if err != nil {
-				return err
-			}
-
-			list = append(list, mp)
-			return err
-		})
-
-		return nil
-	})
-
-	return
-}
-
 // MediaProducerGet retrieves a single instance of MediaProducer with
 // the given ID
 func MediaProducerGet(ID int, db *bolt.DB) (mp MediaProducer, err error) {
@@ -66,37 +38,29 @@ func MediaProducerGet(ID int, db *bolt.DB) (mp MediaProducer, err error) {
 	return
 }
 
+// MediaProducerGetAll retrieves all persisted MediaProducer values
+func MediaProducerGetAll(db *bolt.DB) (list []MediaProducer, err error) {
+	return MediaProducerGetFilter(db, func(mp *MediaProducer) bool { return true })
+}
+
 // MediaProducerGetByMedia retrieves a list of instances of MediaProducer
 // with the given Media ID
 func MediaProducerGetByMedia(mID int, db *bolt.DB) (list []MediaProducer, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get MediaProducer bucket, exit if error
-		b, err := bucket(mediaProducerBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get MediaProducer by Media ID
-		return b.ForEach(func(k, v []byte) (err error) {
-			mp := MediaProducer{}
-			err = json.Unmarshal(v, &mp)
-			if err != nil {
-				return err
-			}
-
-			if mp.MediaID == mID {
-				list = append(list, mp)
-			}
-			return nil
-		})
+	return MediaProducerGetFilter(db, func(mp *MediaProducer) bool {
+		return mp.MediaID == mID
 	})
-
-	return
 }
 
 // MediaProducerGetByProducer retrieves a list of instances of MediaProducer
 // with the given Producer ID
 func MediaProducerGetByProducer(pID int, db *bolt.DB) (list []MediaProducer, err error) {
+	return MediaProducerGetFilter(db, func(mp *MediaProducer) bool {
+		return mp.ProducerID == pID
+	})
+}
+
+// MediaProducerGetFilter retrieves all persisted MediaProducer values
+func MediaProducerGetFilter(db *bolt.DB, filter func(mp *MediaProducer) bool) (list []MediaProducer, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		// Get MediaProducer bucket, exit if error
 		b, err := bucket(mediaProducerBucketName, tx)
@@ -104,19 +68,22 @@ func MediaProducerGetByProducer(pID int, db *bolt.DB) (list []MediaProducer, err
 			return err
 		}
 
-		// Get MediaProducer by Producer ID
-		return b.ForEach(func(k, v []byte) (err error) {
+		// Unmarshal and add all MediaProducers to slice,
+		// exit if error
+		b.ForEach(func(k, v []byte) error {
 			mp := MediaProducer{}
 			err = json.Unmarshal(v, &mp)
 			if err != nil {
 				return err
 			}
 
-			if mp.MediaID == pID {
+			if filter(&mp) {
 				list = append(list, mp)
 			}
-			return nil
+			return err
 		})
+
+		return nil
 	})
 
 	return

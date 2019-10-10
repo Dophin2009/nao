@@ -23,7 +23,12 @@ func main() {
 	defer db.Close()
 
 	mitsuboshi := data.Media{
-		Synopsis: "Three girls have fun",
+		Synopses: []data.Info{
+			data.Info{
+				Data:     "Three girls have fun",
+				Language: "English",
+			},
+		},
 		Titles: []data.Info{
 			data.Info{
 				Data:     "Mitsuboshi Colors",
@@ -37,7 +42,12 @@ func main() {
 	}
 
 	notMitsuboshi := data.Media{
-		Synopsis: "Three girls don't have fun",
+		Synopses: []data.Info{
+			data.Info{
+				Data:     "Three girls don't have fun",
+				Language: "English",
+			},
+		},
 	}
 	err = data.MediaCreate(&notMitsuboshi, db)
 	if err != nil {

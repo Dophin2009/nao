@@ -14,7 +14,7 @@ type Episode struct {
 	MediaID  int
 	Titles   []Info
 	Date     *time.Time
-	Synopsis string
+	Synopses []Info
 	Duration uint
 	Filler   bool
 	Recap    bool

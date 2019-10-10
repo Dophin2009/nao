@@ -10,7 +10,7 @@ import (
 type Media struct {
 	ID       int
 	Titles   []Info
-	Synopsis string
+	Synopses []Info
 }
 
 const mediaBucketName = "Media"

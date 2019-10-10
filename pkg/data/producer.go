@@ -11,6 +11,7 @@ import (
 type Producer struct {
 	ID     int
 	Titles []Info
+	Type   string
 }
 
 // ProducerBucketName provides the database bucket name

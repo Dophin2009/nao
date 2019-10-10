@@ -2,15 +2,21 @@ package data
 
 import (
 	"encoding/json"
+	"time"
 
 	bolt "go.etcd.io/bbolt"
 )
 
 // Media represents a single instance of a media
 type Media struct {
-	ID       int
-	Titles   []Info
-	Synopses []Info
+	ID         int
+	Titles     []Info
+	Synopses   []Info
+	Background []Info
+	StartDate  *time.Time
+	EndDate    *time.Time
+	Type       string
+	Source     string
 }
 
 const mediaBucketName = "Media"

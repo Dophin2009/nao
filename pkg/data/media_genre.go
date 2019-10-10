@@ -98,24 +98,8 @@ func MediaGenreCreate(mg *MediaGenre, db *bolt.DB) error {
 			return err
 		}
 
-		// Check if Media with ID specified in new MediaGenre exists
-		// Get Media bucket, exit if error
-		mb, err := bucket(mediaBucketName, tx)
-		if err != nil {
-			return err
-		}
-		_, err = get(mg.MediaID, mb)
-		if err != nil {
-			return err
-		}
-
-		// Check if Genre with ID specified in new MediaGenre exists
-		// Get Genre bucket, exit if error
-		gb, err := bucket(genreBucketName, tx)
-		if err != nil {
-			return err
-		}
-		_, err = get(mg.GenreID, gb)
+		// Check if MediaGenre properties are valid
+		err = MediaGenreCheckRelatedIDs(mg, tx)
 		if err != nil {
 			return err
 		}
@@ -154,6 +138,12 @@ func MediaGenreUpdate(mg *MediaGenre, db *bolt.DB) error {
 			return err
 		}
 
+		// Check if MediaGenre properties are valid
+		err = MediaGenreCheckRelatedIDs(mg, tx)
+		if err != nil {
+			return err
+		}
+
 		// Replace properties of new with immutable
 		// ones of old
 		old := MediaGenre{}
@@ -169,4 +159,32 @@ func MediaGenreUpdate(mg *MediaGenre, db *bolt.DB) error {
 
 		return b.Put(itob(mg.ID), buf)
 	})
+}
+
+// MediaGenreCheckRelatedIDs checks if the entities specified
+// by the related entity IDs exist for a MediaGenre
+func MediaGenreCheckRelatedIDs(mg *MediaGenre, tx *bolt.Tx) (err error) {
+	// Check if Media with ID specified in new MediaGenre exists
+	// Get Media bucket, exit if error
+	mb, err := bucket(mediaBucketName, tx)
+	if err != nil {
+		return err
+	}
+	_, err = get(mg.MediaID, mb)
+	if err != nil {
+		return err
+	}
+
+	// Check if Genre with ID specified in new MediaGenre exists
+	// Get Genre bucket, exit if error
+	gb, err := bucket(genreBucketName, tx)
+	if err != nil {
+		return err
+	}
+	_, err = get(mg.GenreID, gb)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

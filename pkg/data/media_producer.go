@@ -99,24 +99,8 @@ func MediaProducerCreate(mp *MediaProducer, db *bolt.DB) error {
 			return err
 		}
 
-		// Check if Media with ID specified in new MediaProducer exists
-		// Get Media bucket, exit if error
-		mb, err := bucket(mediaBucketName, tx)
-		if err != nil {
-			return err
-		}
-		_, err = get(mp.MediaID, mb)
-		if err != nil {
-			return err
-		}
-
-		// Check if Producer with ID specified in new MediaProducer exists
-		// Get Producer bucket, exit if error
-		pb, err := bucket(producerBucketName, tx)
-		if err != nil {
-			return err
-		}
-		_, err = get(mp.ProducerID, pb)
+		// Check if MediaProducer properties are valid
+		err = MediaProducerCheckRelatedIDs(mp, tx)
 		if err != nil {
 			return err
 		}
@@ -155,6 +139,12 @@ func MediaProducerUpdate(mp *MediaProducer, db *bolt.DB) error {
 			return err
 		}
 
+		// Check if MediaProducer properties are valid
+		err = MediaProducerCheckRelatedIDs(mp, tx)
+		if err != nil {
+			return err
+		}
+
 		// Replace properties of new with immutable
 		// ones of old
 		old := MediaProducer{}
@@ -170,4 +160,32 @@ func MediaProducerUpdate(mp *MediaProducer, db *bolt.DB) error {
 
 		return b.Put(itob(mp.ID), buf)
 	})
+}
+
+// MediaProducerCheckRelatedIDs checks if the entities specified
+// by the related entity IDs exist for a MediaProducer
+func MediaProducerCheckRelatedIDs(mp *MediaProducer, tx *bolt.Tx) (err error) {
+	// Check if Media with ID specified in new MediaProducer exists
+	// Get Media bucket, exit if error
+	mb, err := bucket(mediaBucketName, tx)
+	if err != nil {
+		return err
+	}
+	_, err = get(mp.MediaID, mb)
+	if err != nil {
+		return err
+	}
+
+	// Check if Producer with ID specified in new MediaProducer exists
+	// Get Producer bucket, exit if error
+	pb, err := bucket(producerBucketName, tx)
+	if err != nil {
+		return err
+	}
+	_, err = get(mp.ProducerID, pb)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

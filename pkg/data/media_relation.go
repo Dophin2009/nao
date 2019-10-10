@@ -107,24 +107,8 @@ func MediaRelationCreate(mr *MediaRelation, db *bolt.DB) error {
 			return err
 		}
 
-		// Check if Media with ID specified in new MediaRelation exists
-		// Get Media bucket, exit if error
-		mb, err := bucket(mediaBucketName, tx)
-		if err != nil {
-			return err
-		}
-		_, err = get(mr.OwnerID, mb)
-		if err != nil {
-			return err
-		}
-
-		// Check if Producer with ID specified in new MediaRelation exists
-		// Get Producer bucket, exit if error
-		pb, err := bucket(producerBucketName, tx)
-		if err != nil {
-			return err
-		}
-		_, err = get(mr.RelatedID, pb)
+		// Check if MediaRelation properties are valid
+		err = MediaRelationCheckRelatedIDs(mr, tx)
 		if err != nil {
 			return err
 		}
@@ -163,6 +147,12 @@ func MediaRelationUpdate(mr *MediaRelation, db *bolt.DB) error {
 			return err
 		}
 
+		// Check if MediaRelation properties are valid
+		err = MediaRelationCheckRelatedIDs(mr, tx)
+		if err != nil {
+			return err
+		}
+
 		// Replace properties of new with immutable
 		// ones of old
 		old := MediaRelation{}
@@ -178,4 +168,28 @@ func MediaRelationUpdate(mr *MediaRelation, db *bolt.DB) error {
 
 		return b.Put(itob(mr.ID), buf)
 	})
+}
+
+// MediaRelationCheckRelatedIDs checks if the entities specified
+// by the related entity IDs exist for a MediaRelation
+func MediaRelationCheckRelatedIDs(mr *MediaRelation, tx *bolt.Tx) (err error) {
+	// Get Media bucket, exit if error
+	mb, err := bucket(mediaBucketName, tx)
+	if err != nil {
+		return err
+	}
+
+	// Check if owning Media with ID specified in new MediaRelation exists
+	_, err = get(mr.OwnerID, mb)
+	if err != nil {
+		return err
+	}
+
+	// Check if related Media with ID specified in new MediaRelation exists
+	_, err = get(mr.RelatedID, mb)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

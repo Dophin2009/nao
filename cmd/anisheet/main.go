@@ -90,6 +90,13 @@ func main() {
 		fmt.Println(err)
 	}
 
+	mitsuboshiSilverLink.MediaID = 16
+	mitsuboshiSilverLink.Role = "Nani"
+	err = data.MediaProducerUpdate(&mitsuboshiSilverLink, db)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	notMitsuboshiNotSilverLink := data.MediaProducer{
 		MediaID:    notMitsuboshi.ID,
 		ProducerID: notSilverLink.ID,

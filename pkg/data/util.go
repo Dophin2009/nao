@@ -19,7 +19,7 @@ func get(ID int, bucket *bolt.Bucket) (v []byte, err error) {
 
 	v = bucket.Get(itob(ID))
 	if v == nil {
-		return nil, fmt.Errorf("entity with id not found")
+		return nil, fmt.Errorf("entity with id %d not found", ID)
 	}
 	return v, nil
 }

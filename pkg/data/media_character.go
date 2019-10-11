@@ -3,6 +3,7 @@ package data
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -10,12 +11,13 @@ import (
 // MediaCharacter represents a relationship between single
 // instances of Media and Producer
 type MediaCharacter struct {
-	ID          int
-	MediaID     int
-	CharacterID int
-	PersonID    int
-	Role        string
-	Version     int
+	ID            int
+	MediaID       int
+	CharacterID   int
+	CharacterRole string
+	PersonID      int
+	PersonRole    string
+	Version       int
 }
 
 const mediaCharacterBucketName = "MediaCharacter"
@@ -202,6 +204,10 @@ func MediaCharacterCheckRelatedIDs(mc *MediaCharacter, tx *bolt.Tx) (err error) 
 		if err != nil {
 			return err
 		}
+	} else {
+		if strings.Trim(mc.CharacterRole, " ") != "" {
+			return fmt.Errorf("character role must be blank if character id is not specified")
+		}
 	}
 
 	// Check if Person with ID specified in new MediaCharacter exists
@@ -215,6 +221,10 @@ func MediaCharacterCheckRelatedIDs(mc *MediaCharacter, tx *bolt.Tx) (err error) 
 		_, err = get(mc.PersonID, pb)
 		if err != nil {
 			return err
+		}
+	} else {
+		if strings.Trim(mc.PersonRole, " ") != "" {
+			return fmt.Errorf("person role must be blank if person id is not specified")
 		}
 	}
 

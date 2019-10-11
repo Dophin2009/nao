@@ -15,7 +15,7 @@ type Media struct {
 	Background      []Info
 	StartDate       *time.Time
 	EndDate         *time.Time
-	SeasonPremiered Season
+	SeasonPremiered *Season
 	Type            string
 	Source          string
 	Version         int

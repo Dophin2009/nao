@@ -6,8 +6,10 @@ import (
 
 // Buckets provides an array of all the buckets in the database
 func Buckets() []string {
-	return []string{mediaBucketName, producerBucketName,
-		mediaProducerBucketName, mediaRelationBucketName}
+	return []string{mediaBucketName, producerBucketName, genreBucketName,
+		episodeBucketName, characterBucketName, personBucketName,
+		mediaProducerBucketName, mediaRelationBucketName, mediaGenreBucketName,
+		mediaCharacterBucketName}
 }
 
 // ConnectDatabase connects to the database file at the given path

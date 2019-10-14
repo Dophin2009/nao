@@ -3,6 +3,6 @@ module gitlab.com/Dophin2009/anisheet
 go 1.12
 
 require (
-	github.com/davecgh/go-spew v1.1.1
+	github.com/gorilla/mux v1.7.3
 	go.etcd.io/bbolt v1.3.3
 )

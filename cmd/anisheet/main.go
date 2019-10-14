@@ -1,155 +1,65 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"flag"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
-	"github.com/davecgh/go-spew/spew"
+	"gitlab.com/Dophin2009/anisheet/cmd/anisheet/controller"
 	"gitlab.com/Dophin2009/anisheet/pkg/data"
+	bolt "go.etcd.io/bbolt"
 )
 
-func main() {
-	spew.Config = spew.ConfigState{
-		Indent:                  "    ",
-		DisableMethods:          true,
-		DisableCapacities:       true,
-		DisablePointerMethods:   true,
-		DisablePointerAddresses: true,
-	}
+var db *bolt.DB
 
+func main() {
+	// Exit with status code 0 at the end
+	defer os.Exit(0)
+
+	// Open database connection
 	db, err := data.ConnectDatabase("/tmp/anisheet.db", true)
 	if err != nil {
 		panic("error connecting to database ")
 	}
+	// Clear database and close connection at the end
 	defer db.Close()
+	defer data.ClearDatabase(db)
 
-	mitsuboshi := data.Media{
-		Synopses: []data.Info{
-			data.Info{
-				Data:     "Three girls have fun",
-				Language: "English",
-			},
-		},
-		Titles: []data.Info{
-			data.Info{
-				Data:     "Mitsuboshi Colors",
-				Language: "English",
-			},
-		},
-	}
-	err = data.MediaCreate(&mitsuboshi, db)
-	if err != nil {
-		fmt.Println(err)
+	// Create the API controller and HTTP server
+	controller := controller.NewController(db)
+	server := &http.Server{
+		Addr:    "0.0.0.0:8080",
+		Handler: controller.Router,
 	}
 
-	notMitsuboshi := data.Media{
-		Synopses: []data.Info{
-			data.Info{
-				Data:     "Three girls don't have fun",
-				Language: "English",
-			},
-		},
-	}
-	err = data.MediaCreate(&notMitsuboshi, db)
-	if err != nil {
-		fmt.Println(err)
-	}
+	// Allow user to set graceful timeout duration
+	var wait time.Duration
+	flag.DurationVar(&wait, "gt", time.Second*15, "graceful timeout: the duration for which the server gracefully wait for existing connections to finish - e.g. 15s or 1m")
+	flag.Parse()
 
-	silverLink := data.Producer{
-		Titles: []data.Info{
-			data.Info{
-				Data:     "Silver Link",
-				Language: "English",
-			},
-		},
-	}
-	err = data.ProducerCreate(&silverLink, db)
-	if err != nil {
-		fmt.Println(err)
-	}
+	// Launch server in goroutine
+	go func() {
+		// err := server.ListenAndServeTLS("cert.pem", "key.pem")
+		err := server.ListenAndServe()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 
-	notSilverLink := data.Producer{
-		Titles: []data.Info{
-			data.Info{
-				Data:     "Not Silver Link",
-				Language: "English",
-			},
-		},
-	}
-	err = data.ProducerCreate(&notSilverLink, db)
-	if err != nil {
-		fmt.Println(err)
-	}
+	// Wait for SIGINTERRUPT signal
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	<-c
 
-	mitsuboshiSilverLink := data.MediaProducer{
-		MediaID:    mitsuboshi.ID,
-		ProducerID: silverLink.ID,
-		Role:       "Studio",
-	}
-	err = data.MediaProducerCreate(&mitsuboshiSilverLink, db)
-	if err != nil {
-		fmt.Println(err)
-	}
+	// Wait for processes to end, then shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), wait)
+	defer cancel()
+	server.Shutdown(ctx)
 
-	mitsuboshiSilverLink.MediaID = 16
-	mitsuboshiSilverLink.Role = "Nani"
-	err = data.MediaProducerUpdate(&mitsuboshiSilverLink, db)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	notMitsuboshiNotSilverLink := data.MediaProducer{
-		MediaID:    notMitsuboshi.ID,
-		ProducerID: notSilverLink.ID,
-		Role:       "Studio",
-	}
-	err = data.MediaProducerCreate(&notMitsuboshiNotSilverLink, db)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	mitsuboshiNotMitsuboshi := data.MediaRelation{
-		OwnerID:      mitsuboshi.ID,
-		RelatedID:    notMitsuboshi.ID,
-		Relationship: "Side-story",
-	}
-	err = data.MediaRelationCreate(&mitsuboshiNotMitsuboshi, db)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	notMitsuboshiMitsuboshi := data.MediaRelation{
-		OwnerID:      notMitsuboshi.ID,
-		RelatedID:    mitsuboshi.ID,
-		Relationship: "Main story",
-	}
-	err = data.MediaRelationCreate(&notMitsuboshiMitsuboshi, db)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	allMedia, err := data.MediaGetAll(db)
-	if err != nil {
-		fmt.Println(err)
-	}
-	spew.Dump(allMedia)
-
-	allProducers, err := data.ProducerGetAll(db)
-	if err != nil {
-		fmt.Println(err)
-	}
-	spew.Dump(allProducers)
-
-	allMediaProducers, err := data.MediaProducerGetAll(db)
-	if err != nil {
-		fmt.Println(err)
-	}
-	spew.Dump(allMediaProducers)
-
-	allMediaRelations, err := data.MediaRelationGetAll(db)
-	if err != nil {
-		fmt.Println(err)
-	}
-	spew.Dump(allMediaRelations)
-
-	data.ClearDatabase(db)
+	println()
+	log.Println("Exiting...")
 }

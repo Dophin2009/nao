@@ -7,13 +7,13 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 
 # Project variables
-TARGET_DIR=bin
+TARGET_DIR=target
 REPO_NAME=gitlab.com/Dophin2009/anisheet
 MODULES=anisheet
 
 default: build
 
-build:
+build: clean
 	@for module in $(MODULES) ; do \
 		$(GOBUILD) -o $(TARGET_DIR)/$$module -v $(REPO_NAME)/cmd/$$module ; \
 	done

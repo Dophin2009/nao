@@ -1,7 +1,6 @@
 package data
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -9,7 +8,7 @@ import (
 )
 
 // MediaCharacter represents a relationship between single
-// instances of Media and Producer
+// instances of Media and Character
 type MediaCharacter struct {
 	ID            int
 	MediaID       int
@@ -20,163 +19,30 @@ type MediaCharacter struct {
 	Version       int
 }
 
-const mediaCharacterBucketName = "MediaCharacter"
-
-// MediaCharacterGet retrieves a single instance of MediaCharacter with
-// the given ID
-func MediaCharacterGet(ID int, db *bolt.DB) (mc MediaCharacter, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get MediaCharacter bucket, exit if error
-		b, err := bucket(mediaCharacterBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get MediaCharacter by ID, exit if error
-		v, err := get(ID, b)
-		if err != nil {
-			return err
-		}
-		return json.Unmarshal(v, &mc)
-	})
-
-	return
+// Identifier returns the ID of the MediaCharacter
+func (mc *MediaCharacter) Identifier() int {
+	return mc.ID
 }
 
-// MediaCharacterGetAll retrieves all persisted MediaCharacter values
-func MediaCharacterGetAll(db *bolt.DB) (list []MediaCharacter, err error) {
-	return MediaCharacterGetFilter(db, func(mc *MediaCharacter) bool { return true })
+// SetIdentifier sets the ID of the MediaCharacter
+func (mc *MediaCharacter) SetIdentifier(ID int) {
+	mc.ID = ID
 }
 
-// MediaCharacterGetByMedia retrieves a list of instances of MediaCharacter
-// with the given Media ID
-func MediaCharacterGetByMedia(mID int, db *bolt.DB) (list []MediaCharacter, err error) {
-	return MediaCharacterGetFilter(db, func(mc *MediaCharacter) bool {
-		return mc.MediaID == mID
-	})
+// Ver returns the verison of the MediaCharacter
+func (mc *MediaCharacter) Ver() int {
+	return mc.Version
 }
 
-// MediaCharacterGetByCharacter retrieves a list of instances of MediaCharacter
-// with the given Producer ID
-func MediaCharacterGetByCharacter(cID int, db *bolt.DB) (list []MediaCharacter, err error) {
-	return MediaCharacterGetFilter(db, func(mc *MediaCharacter) bool {
-		return mc.CharacterID == cID
-	})
+// UpdateVer increments the version of the
+// MediaCharacter by one
+func (mc *MediaCharacter) UpdateVer() {
+	mc.Version++
 }
 
-// MediaCharacterGetByVoiceActor retrieves a list of instances of MediaCharacter
-// with the given Voice Actor ID
-func MediaCharacterGetByVoiceActor(pID int, db *bolt.DB) (list []MediaCharacter, err error) {
-	return MediaCharacterGetFilter(db, func(mc *MediaCharacter) bool {
-		return mc.CharacterID == pID
-	})
-}
-
-// MediaCharacterGetFilter retrieves all persisted MediaCharacter values
-func MediaCharacterGetFilter(db *bolt.DB, filter func(mc *MediaCharacter) bool) (list []MediaCharacter, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get MediaCharacter bucket, exit if error
-		b, err := bucket(mediaCharacterBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Unmarshal and add all MediaCharacters to slice,
-		// exit if error
-		b.ForEach(func(k, v []byte) error {
-			mc := MediaCharacter{}
-			err = json.Unmarshal(v, &mc)
-			if err != nil {
-				return err
-			}
-
-			if filter(&mc) {
-				list = append(list, mc)
-			}
-			return err
-		})
-
-		return nil
-	})
-
-	return
-}
-
-// MediaCharacterCreate persists a new instance of MediaCharacter
-func MediaCharacterCreate(mc *MediaCharacter, db *bolt.DB) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Get MediaCharacter bucket, exit if error
-		b, err := bucket(mediaCharacterBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Check if MediaCharacter properties are valid
-		err = MediaCharacterCheckRelatedIDs(mc, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get next ID in sequence and
-		// assign to MediaCharacter
-		id, err := b.NextSequence()
-		if err != nil {
-			return err
-		}
-		mc.ID = int(id)
-
-		// Save MediaCharacter in bucket
-		buf, err := json.Marshal(mc)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(mc.ID), buf)
-	})
-}
-
-// MediaCharacterUpdate updates the properties of an existing
-// persisted Producer instance
-func MediaCharacterUpdate(mc *MediaCharacter, db *bolt.DB) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Get MediaCharacter bucket, exit if error
-		b, err := bucket(mediaCharacterBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Check if MediaCharacter with ID exists
-		o, err := get(mc.ID, b)
-		if err != nil {
-			return err
-		}
-
-		// Check if MediaCharacter properties are valid
-		err = MediaCharacterCheckRelatedIDs(mc, tx)
-		if err != nil {
-			return err
-		}
-
-		// Replace properties of new with immutable
-		// ones of old
-		old := MediaCharacter{}
-		err = json.Unmarshal([]byte(o), &old)
-		// Update version
-		mc.Version = old.Version + 1
-
-		// Save MediaCharacter
-		buf, err := json.Marshal(mc)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(mc.ID), buf)
-	})
-}
-
-// MediaCharacterCheckRelatedIDs checks if the entities specified
-// by the related entity IDs exist for a MediaCharacter
-func MediaCharacterCheckRelatedIDs(mc *MediaCharacter, tx *bolt.Tx) (err error) {
+// Validate returns an error if the MediaCharacter is
+// not valid for the database
+func (mc *MediaCharacter) Validate(tx *bolt.Tx) (err error) {
 	// Check if Media with ID specified in new MediaCharacter exists
 	// Get Media bucket, exit if error
 	mb, err := bucket(mediaBucketName, tx)
@@ -229,4 +95,71 @@ func MediaCharacterCheckRelatedIDs(mc *MediaCharacter, tx *bolt.Tx) (err error) 
 	}
 
 	return nil
+}
+
+const mediaCharacterBucketName = "MediaCharacter"
+
+// MediaCharacterGet retrieves a single instance of MediaCharacter with
+// the given ID
+func MediaCharacterGet(ID int, db *bolt.DB) (mc MediaCharacter, err error) {
+	err = getByID(ID, &mc, mediaCharacterBucketName, db)
+	return
+}
+
+// MediaCharacterGetAll retrieves all persisted MediaCharacter values
+func MediaCharacterGetAll(db *bolt.DB) (list []MediaCharacter, err error) {
+	return MediaCharacterGetFilter(db, func(mc *MediaCharacter) bool { return true })
+}
+
+// MediaCharacterGetByMedia retrieves a list of instances of MediaCharacter
+// with the given Media ID
+func MediaCharacterGetByMedia(mID int, db *bolt.DB) (list []MediaCharacter, err error) {
+	return MediaCharacterGetFilter(db, func(mc *MediaCharacter) bool {
+		return mc.MediaID == mID
+	})
+}
+
+// MediaCharacterGetByCharacter retrieves a list of instances of MediaCharacter
+// with the given Character ID
+func MediaCharacterGetByCharacter(cID int, db *bolt.DB) (list []MediaCharacter, err error) {
+	return MediaCharacterGetFilter(db, func(mc *MediaCharacter) bool {
+		return mc.CharacterID == cID
+	})
+}
+
+// MediaCharacterGetByPerson retrieves a list of instances of MediaCharacter
+// with the given Person ID
+func MediaCharacterGetByPerson(pID int, db *bolt.DB) (list []MediaCharacter, err error) {
+	return MediaCharacterGetFilter(db, func(mc *MediaCharacter) bool {
+		return mc.CharacterID == pID
+	})
+}
+
+// MediaCharacterGetFilter retrieves all persisted MediaCharacter values
+func MediaCharacterGetFilter(db *bolt.DB, filter func(mc *MediaCharacter) bool) (list []MediaCharacter, err error) {
+	ilist, err := getFilter(&Media{}, func(entity Idenitifiable) (bool, error) {
+		mc, ok := entity.(*MediaCharacter)
+		if !ok {
+			return false, fmt.Errorf("type assertion failed: entity is not a MediaCharacter")
+		}
+		return filter(mc), nil
+	}, mediaCharacterBucketName, db)
+
+	list = make([]MediaCharacter, len(ilist))
+	for i, mc := range ilist {
+		list[i] = *mc.(*MediaCharacter)
+	}
+
+	return
+}
+
+// MediaCharacterCreate persists a new instance of MediaCharacter
+func MediaCharacterCreate(mc *MediaCharacter, db *bolt.DB) error {
+	return create(mc, mediaCharacterBucketName, db)
+}
+
+// MediaCharacterUpdate updates the properties of an existing
+// persisted Producer instance
+func MediaCharacterUpdate(mc *MediaCharacter, db *bolt.DB) error {
+	return update(mc, mediaCharacterBucketName, db)
 }

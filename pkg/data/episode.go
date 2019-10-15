@@ -1,7 +1,7 @@
 package data
 
 import (
-	"encoding/json"
+	"fmt"
 	"time"
 
 	bolt "go.etcd.io/bbolt"
@@ -21,27 +21,39 @@ type Episode struct {
 	Version  int
 }
 
+// Identifier returns the ID of the Episode
+func (ep *Episode) Identifier() int {
+	return ep.ID
+}
+
+// SetIdentifier sets the ID of the Episode
+func (ep *Episode) SetIdentifier(ID int) {
+	ep.ID = ID
+}
+
+// Ver returns the verison of the Episode
+func (ep *Episode) Ver() int {
+	return ep.Version
+}
+
+// UpdateVer increments the version of the
+// Character by one
+func (ep *Episode) UpdateVer() {
+	ep.Version++
+}
+
+// Validate returns an error if the Episode is
+// not valid for the database
+func (ep *Episode) Validate(tx *bolt.Tx) (err error) {
+	return nil
+}
+
 const episodeBucketName = "Episode"
 
 // EpisodeGet retrieves a single instance of Episode with
 // the given ID
 func EpisodeGet(ID int, db *bolt.DB) (ep Episode, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get Episode bucket, exit if error
-		b, err := bucket(episodeBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get Episode by ID, exit if error
-		v, err := get(ID, b)
-		if err != nil {
-			return err
-		}
-
-		return json.Unmarshal(v, &ep)
-	})
-
+	err = getByID(ID, &ep, episodeBucketName, db)
 	return
 }
 
@@ -53,29 +65,18 @@ func EpisodeGetAll(db *bolt.DB) (list []Episode, err error) {
 // EpisodeGetFilter retrieves all persisted Episode values
 // that pass the filter
 func EpisodeGetFilter(db *bolt.DB, filter func(ep *Episode) bool) (list []Episode, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get Episode bucket, exit if error
-		b, err := bucket(episodeBucketName, tx)
-
-		if err != nil {
-			return err
+	ilist, err := getFilter(&Episode{}, func(entity Idenitifiable) (bool, error) {
+		ep, ok := entity.(*Episode)
+		if !ok {
+			return false, fmt.Errorf("type assertion failed: entity is not a Episode")
 		}
+		return filter(ep), nil
+	}, episodeBucketName, db)
 
-		// Unmarshal and add all Episode to slice,
-		// exit if error
-		return b.ForEach(func(k, v []byte) error {
-			ep := Episode{}
-			err = json.Unmarshal(v, &ep)
-			if err != nil {
-				return err
-			}
-
-			if filter(&ep) {
-				list = append(list, ep)
-			}
-			return err
-		})
-	})
+	list = make([]Episode, len(ilist))
+	for i, m := range ilist {
+		list[i] = *m.(*Episode)
+	}
 
 	return
 }
@@ -83,87 +84,18 @@ func EpisodeGetFilter(db *bolt.DB, filter func(ep *Episode) bool) (list []Episod
 // EpisodeGetByMedia retrieves a list of instances of Episode
 // with the given Media ID
 func EpisodeGetByMedia(mID int, db *bolt.DB) (list []Episode, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get Episode bucket, exit if error
-		b, err := bucket(episodeBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get Episode by Media ID
-		return b.ForEach(func(k, v []byte) (err error) {
-			ep := Episode{}
-			err = json.Unmarshal(v, &ep)
-			if err != nil {
-				return err
-			}
-
-			if ep.MediaID == mID {
-				list = append(list, ep)
-			}
-			return nil
-		})
+	return EpisodeGetFilter(db, func(ep *Episode) bool {
+		return ep.MediaID == mID
 	})
-
-	return
 }
 
 // EpisodeCreate persists a new instance of Episode
 func EpisodeCreate(ep *Episode, db *bolt.DB) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Get Episode bucket, exit if error
-		b, err := bucket(episodeBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get next ID in sequence and
-		// assign to Episode
-		id, err := b.NextSequence()
-		if err != nil {
-			return err
-		}
-		ep.ID = int(id)
-
-		// Save Episode in bucket
-		buf, err := json.Marshal(ep)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(ep.ID), buf)
-	})
+	return create(ep, episodeBucketName, db)
 }
 
 // EpisodeUpdate updates the properties of an existing
 // persisted Producer instance
 func EpisodeUpdate(ep *Episode, db *bolt.DB) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Get Episode bucket, exit if error
-		b, err := bucket(episodeBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Check if Episode with ID exists
-		o, err := get(ep.ID, b)
-		if err != nil {
-			return err
-		}
-
-		// Replace properties of new with immutable
-		// ones of old
-		old := Episode{}
-		err = json.Unmarshal([]byte(o), &old)
-		// Update version
-		ep.Version = old.Version + 1
-
-		// Save Episode
-		buf, err := json.Marshal(ep)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(ep.ID), buf)
-	})
+	return update(ep, episodeBucketName, db)
 }

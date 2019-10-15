@@ -1,7 +1,7 @@
 package data
 
 import (
-	"encoding/json"
+	"fmt"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -14,28 +14,41 @@ type Character struct {
 	Version     int
 }
 
+// Identifier returns the ID of the Character
+func (c *Character) Identifier() int {
+	return c.ID
+}
+
+// SetIdentifier sets the ID of the Character
+func (c *Character) SetIdentifier(ID int) {
+	c.ID = ID
+}
+
+// Ver returns the verison of the Character
+func (c *Character) Ver() int {
+	return c.Version
+}
+
+// UpdateVer increments the version of the
+// Character by one
+func (c *Character) UpdateVer() {
+	c.Version++
+}
+
+// Validate returns an error if the Character is
+// not valid for the database
+func (c *Character) Validate(tx *bolt.Tx) (err error) {
+	return nil
+}
+
 // CharacterBucketName provides the database bucket name
 // for the Character entity
 const characterBucketName = "Character"
 
 // CharacterGet retrieves a single instance of Character with
 // the given ID
-func CharacterGet(ID int, db *bolt.DB) (p Character, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get Character bucket, exit if error
-		b, err := bucket(characterBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get Character by ID, exit if error
-		v, err := get(ID, b)
-		if err != nil {
-			return err
-		}
-		return json.Unmarshal(v, &p)
-	})
-
+func CharacterGet(ID int, db *bolt.DB) (c Character, err error) {
+	err = getByID(ID, &c, characterBucketName, db)
 	return
 }
 
@@ -46,88 +59,30 @@ func CharacterGetAll(db *bolt.DB) (list []Character, err error) {
 
 // CharacterGetFilter retrieves all persisted Character values
 // that pass the filter
-func CharacterGetFilter(db *bolt.DB, filter func(p *Character) bool) (list []Character, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get Character bucket, exit if error
-		b, err := bucket(characterBucketName, tx)
-		if err != nil {
-			return err
+func CharacterGetFilter(db *bolt.DB, filter func(c *Character) bool) (list []Character, err error) {
+	ilist, err := getFilter(&Character{}, func(entity Idenitifiable) (bool, error) {
+		c, ok := entity.(*Character)
+		if !ok {
+			return false, fmt.Errorf("type assertion failed: entity is not a Character")
 		}
+		return filter(c), nil
+	}, characterBucketName, db)
 
-		// Unmarshal and add Characters to slice,
-		// exit if error
-		return b.ForEach(func(k, v []byte) error {
-			var p Character
-			err = json.Unmarshal(v, &p)
-			if err != nil {
-				return err
-			}
-
-			if filter(&p) {
-				list = append(list, p)
-			}
-			return err
-		})
-	})
+	list = make([]Character, len(ilist))
+	for i, c := range ilist {
+		list[i] = *c.(*Character)
+	}
 
 	return
 }
 
 // CharacterCreate persists a new instance of Character
-func CharacterCreate(p *Character, db *bolt.DB) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Get Character bucket, exit if error
-		b, err := bucket(characterBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get next ID in sequence and assign to Character
-		id, err := b.NextSequence()
-		if err != nil {
-			return err
-		}
-		p.ID = int(id)
-
-		// Save Character in bucket
-		buf, err := json.Marshal(p)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(p.ID), buf)
-	})
+func CharacterCreate(c *Character, db *bolt.DB) error {
+	return create(c, characterBucketName, db)
 }
 
 // CharacterUpdate updates the properties of an existing
 // persisted Character instance
-func CharacterUpdate(p *Character, db *bolt.DB) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Get Character bucket, exit if error
-		b, err := bucket(characterBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Check if Character with ID exists
-		o, err := get(p.ID, b)
-		if err != nil {
-			return err
-		}
-
-		// Replace properties of new with immutable
-		// ones of old
-		old := Character{}
-		err = json.Unmarshal([]byte(o), &old)
-		// Update version
-		p.Version = old.Version + 1
-
-		// Save Character
-		buf, err := json.Marshal(p)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(p.ID), buf)
-	})
+func CharacterUpdate(c *Character, db *bolt.DB) error {
+	return update(c, characterBucketName, db)
 }

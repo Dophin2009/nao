@@ -58,7 +58,9 @@ type Idenitifiable interface {
 	SetIdentifier(int)
 
 	Ver() int
-	SetVer(int)
+	UpdateVer()
+
+	Validate(tx *bolt.Tx) error
 }
 
 // getByID is a generic function that queries the given bucket
@@ -122,6 +124,12 @@ func create(entity Idenitifiable, bucketName string, db *bolt.DB) (err error) {
 			return err
 		}
 
+		// Verify validity of struct
+		err = entity.Validate(tx)
+		if err != nil {
+			return err
+		}
+
 		// Get next ID in sequence and
 		// assign to entity
 		id, err := b.NextSequence()
@@ -129,7 +137,7 @@ func create(entity Idenitifiable, bucketName string, db *bolt.DB) (err error) {
 			return err
 		}
 		entity.SetIdentifier(int(id))
-		entity.SetVer(1)
+		entity.UpdateVer()
 
 		// Save entity in bucket
 		buf, err := json.Marshal(entity)
@@ -158,12 +166,17 @@ func update(entity Idenitifiable, bucketName string, db *bolt.DB) (err error) {
 			return err
 		}
 
+		// Verify validity of struct
+		err = entity.Validate(tx)
+		if err != nil {
+			return err
+		}
+
 		// Replace properties of new with internal
 		// ones of old
 		old := entity
 		err = json.Unmarshal([]byte(o), &old)
-		// Update version
-		entity.SetVer(old.Ver() + 1)
+		entity.UpdateVer()
 
 		// Save Media
 		buf, err := json.Marshal(entity)

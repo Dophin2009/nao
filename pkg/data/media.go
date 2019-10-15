@@ -1,7 +1,7 @@
 package data
 
 import (
-	"encoding/json"
+	"fmt"
 	"time"
 
 	bolt "go.etcd.io/bbolt"
@@ -19,6 +19,33 @@ type Media struct {
 	Type            string
 	Source          string
 	Version         int
+}
+
+// Identifier returns the ID of the Media
+func (m *Media) Identifier() int {
+	return m.ID
+}
+
+// SetIdentifier sets the ID of the Media
+func (m *Media) SetIdentifier(ID int) {
+	m.ID = ID
+}
+
+// Ver returns the verison of the Media
+func (m *Media) Ver() int {
+	return m.Version
+}
+
+// UpdateVer increments the version of the
+// Media by one
+func (m *Media) UpdateVer() {
+	m.Version++
+}
+
+// Validate returns an error if the Media is
+// not valid for the database
+func (m *Media) Validate(tx *bolt.Tx) (err error) {
+	return nil
 }
 
 // Season contains information about the quarter
@@ -58,22 +85,7 @@ const mediaBucketName = "Media"
 // MediaGet retrieves a single instance of Media with
 // the given ID
 func MediaGet(ID int, db *bolt.DB) (m Media, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get Media bucket, exit if error
-		b, err := bucket(mediaBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get Media by ID, exit if error
-		v, err := get(ID, b)
-		if err != nil {
-			return err
-		}
-
-		return json.Unmarshal(v, &m)
-	})
-
+	err = getByID(ID, &m, mediaBucketName, db)
 	return
 }
 
@@ -85,89 +97,29 @@ func MediaGetAll(db *bolt.DB) (list []Media, err error) {
 // MediaGetFilter retrieves all persisted Media values
 // that pass the filter
 func MediaGetFilter(db *bolt.DB, filter func(m *Media) bool) (list []Media, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get Media bucket, exit if error
-		b, err := bucket(mediaBucketName, tx)
-
-		if err != nil {
-			return err
+	ilist, err := getFilter(&Media{}, func(entity Idenitifiable) (bool, error) {
+		m, ok := entity.(*Media)
+		if !ok {
+			return false, fmt.Errorf("type assertion failed: entity is not a Media")
 		}
+		return filter(m), nil
+	}, mediaBucketName, db)
 
-		// Unmarshal and add all Media to slice,
-		// exit if error
-		return b.ForEach(func(k, v []byte) error {
-			m := Media{}
-			err = json.Unmarshal(v, &m)
-			if err != nil {
-				return err
-			}
-
-			if filter(&m) {
-				list = append(list, m)
-			}
-			return err
-		})
-	})
+	list = make([]Media, len(ilist))
+	for i, m := range ilist {
+		list[i] = *m.(*Media)
+	}
 
 	return
 }
 
 // MediaCreate persists a new instance of Media
 func MediaCreate(m *Media, db *bolt.DB) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Get Media bucket, exit if error
-		b, err := bucket(mediaBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get next ID in sequence and
-		// assign to Media
-		id, err := b.NextSequence()
-		if err != nil {
-			return err
-		}
-		m.ID = int(id)
-
-		// Save Media in bucket
-		buf, err := json.Marshal(m)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(m.ID), buf)
-	})
+	return create(m, mediaBucketName, db)
 }
 
 // MediaUpdate updates the properties of an existing
 // persisted Media instance
 func MediaUpdate(m *Media, db *bolt.DB) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Get Media bucket, exit if error
-		b, err := bucket(mediaBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Check if Media with ID exists
-		o, err := get(m.ID, b)
-		if err != nil {
-			return err
-		}
-
-		// Replace properties of new with immutable
-		// ones of old
-		old := Media{}
-		err = json.Unmarshal([]byte(o), &old)
-		// Update version
-		m.Version = old.Version + 1
-
-		// Save Media
-		buf, err := json.Marshal(m)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(m.ID), buf)
-	})
+	return update(m, mediaBucketName, db)
 }

@@ -1,7 +1,7 @@
 package data
 
 import (
-	"encoding/json"
+	"fmt"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -16,26 +16,61 @@ type MediaProducer struct {
 	Version    int
 }
 
+// Identifier returns the ID of the MediaProducer
+func (mp *MediaProducer) Identifier() int {
+	return mp.ID
+}
+
+// SetIdentifier sets the ID of the MediaProducer
+func (mp *MediaProducer) SetIdentifier(ID int) {
+	mp.ID = ID
+}
+
+// Ver returns the verison of the MediaProducer
+func (mp *MediaProducer) Ver() int {
+	return mp.Version
+}
+
+// UpdateVer increments the version of the
+// Character by one
+func (mp *MediaProducer) UpdateVer() {
+	mp.Version++
+}
+
+// Validate returns an error if the MediaProducer is
+// not valid for the database
+func (mp *MediaProducer) Validate(tx *bolt.Tx) (err error) {
+	// Check if Media with ID specified in new MediaProducer exists
+	// Get Media bucket, exit if error
+	mb, err := bucket(mediaBucketName, tx)
+	if err != nil {
+		return err
+	}
+	_, err = get(mp.MediaID, mb)
+	if err != nil {
+		return err
+	}
+
+	// Check if Producer with ID specified in new MediaProducer exists
+	// Get Producer bucket, exit if error
+	pb, err := bucket(producerBucketName, tx)
+	if err != nil {
+		return err
+	}
+	_, err = get(mp.ProducerID, pb)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 const mediaProducerBucketName = "MediaProducer"
 
 // MediaProducerGet retrieves a single instance of MediaProducer with
 // the given ID
 func MediaProducerGet(ID int, db *bolt.DB) (mp MediaProducer, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get MediaProducer bucket, exit if error
-		b, err := bucket(mediaProducerBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get MediaProducer by ID, exit if error
-		v, err := get(ID, b)
-		if err != nil {
-			return err
-		}
-		return json.Unmarshal(v, &mp)
-	})
-
+	err = getByID(ID, &mp, mediaProducerBucketName, db)
 	return
 }
 
@@ -62,130 +97,29 @@ func MediaProducerGetByProducer(pID int, db *bolt.DB) (list []MediaProducer, err
 
 // MediaProducerGetFilter retrieves all persisted MediaProducer values
 func MediaProducerGetFilter(db *bolt.DB, filter func(mp *MediaProducer) bool) (list []MediaProducer, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		// Get MediaProducer bucket, exit if error
-		b, err := bucket(mediaProducerBucketName, tx)
-		if err != nil {
-			return err
+	ilist, err := getFilter(&MediaProducer{}, func(entity Idenitifiable) (bool, error) {
+		mp, ok := entity.(*MediaProducer)
+		if !ok {
+			return false, fmt.Errorf("type assertion failed: entity is not a MediaProducer")
 		}
+		return filter(mp), nil
+	}, mediaProducerBucketName, db)
 
-		// Unmarshal and add all MediaProducers to slice,
-		// exit if error
-		b.ForEach(func(k, v []byte) error {
-			mp := MediaProducer{}
-			err = json.Unmarshal(v, &mp)
-			if err != nil {
-				return err
-			}
-
-			if filter(&mp) {
-				list = append(list, mp)
-			}
-			return err
-		})
-
-		return nil
-	})
+	list = make([]MediaProducer, len(ilist))
+	for i, mp := range ilist {
+		list[i] = *mp.(*MediaProducer)
+	}
 
 	return
 }
 
 // MediaProducerCreate persists a new instance of MediaProducer
 func MediaProducerCreate(mp *MediaProducer, db *bolt.DB) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Get MediaProducer bucket, exit if error
-		b, err := bucket(mediaProducerBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Check if MediaProducer properties are valid
-		err = MediaProducerCheckRelatedIDs(mp, tx)
-		if err != nil {
-			return err
-		}
-
-		// Get next ID in sequence and
-		// assign to MediaProducer
-		id, err := b.NextSequence()
-		if err != nil {
-			return err
-		}
-		mp.ID = int(id)
-
-		// Save MediaProducer in bucket
-		buf, err := json.Marshal(mp)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(mp.ID), buf)
-	})
+	return create(mp, mediaProducerBucketName, db)
 }
 
 // MediaProducerUpdate updates the properties of an existing
 // persisted Producer instance
 func MediaProducerUpdate(mp *MediaProducer, db *bolt.DB) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Get MediaProducer bucket, exit if error
-		b, err := bucket(mediaProducerBucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Check if MediaProducer with ID exists
-		o, err := get(mp.ID, b)
-		if err != nil {
-			return err
-		}
-
-		// Check if MediaProducer properties are valid
-		err = MediaProducerCheckRelatedIDs(mp, tx)
-		if err != nil {
-			return err
-		}
-
-		// Replace properties of new with immutable
-		// ones of old
-		old := MediaProducer{}
-		err = json.Unmarshal([]byte(o), &old)
-		// Update version
-		mp.Version = old.Version + 1
-
-		// Save MediaProducer
-		buf, err := json.Marshal(mp)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(mp.ID), buf)
-	})
-}
-
-// MediaProducerCheckRelatedIDs checks if the entities specified
-// by the related entity IDs exist for a MediaProducer
-func MediaProducerCheckRelatedIDs(mp *MediaProducer, tx *bolt.Tx) (err error) {
-	// Check if Media with ID specified in new MediaProducer exists
-	// Get Media bucket, exit if error
-	mb, err := bucket(mediaBucketName, tx)
-	if err != nil {
-		return err
-	}
-	_, err = get(mp.MediaID, mb)
-	if err != nil {
-		return err
-	}
-
-	// Check if Producer with ID specified in new MediaProducer exists
-	// Get Producer bucket, exit if error
-	pb, err := bucket(producerBucketName, tx)
-	if err != nil {
-		return err
-	}
-	_, err = get(mp.ProducerID, pb)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return update(mp, mediaProducerBucketName, db)
 }

@@ -7,11 +7,13 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"gitlab.com/Dophin2009/anisheet/pkg/api"
 	"gitlab.com/Dophin2009/anisheet/pkg/data"
 )
 
-// MediaQueryByID gets a single Media by ID from the
-// persistence layer and writes it to the HTTP response
+// MediaQueryByID gets a single Media by ID (given by the path
+// variable {id}) from the persistence layer and writes it
+// to the HTTP response
 func (c *Controller) MediaQueryByID(w http.ResponseWriter, r *http.Request) {
 	w = withDefaultResponseHeaders(w)
 
@@ -20,17 +22,17 @@ func (c *Controller) MediaQueryByID(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(idVal)
 	if err != nil {
-		encodeError("error parsing id"+idVal, err, w)
+		encodeError(api.PathVariableParsingError, err, w)
 		return
 	}
 
 	media, err := data.MediaGet(id, c.DB)
 	if err != nil {
-		encodeError("error querying media", err, w)
+		encodeError(api.DatabaseQueryingError, err, w)
 		return
 	}
 
-	json.NewEncoder(w).Encode(media)
+	encodeResponseBody(media, w)
 }
 
 // MediaQueryAll gets all the Media from the
@@ -40,14 +42,14 @@ func (c *Controller) MediaQueryAll(w http.ResponseWriter, r *http.Request) {
 
 	media, err := data.MediaGetAll(c.DB)
 	if err != nil {
-		encodeError("error querying media", err, w)
+		encodeError(api.DatabaseQueryingError, err, w)
 		return
 	}
 	if media == nil {
 		media = []data.Media{}
 	}
 
-	json.NewEncoder(w).Encode(media)
+	encodeResponseBody(media, w)
 }
 
 // MediaCreate persists the request body
@@ -56,22 +58,49 @@ func (c *Controller) MediaCreate(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		encodeError("error reading request body", err, w)
+		encodeError(api.RequestBodyReadingError, err, w)
 		return
 	}
 
 	media := data.Media{}
 	err = json.Unmarshal(body, &media)
 	if err != nil {
-		encodeError("error parsing request body", err, w)
+		encodeError(api.RequestBodyParsingError, err, w)
 		return
 	}
 
 	err = data.MediaCreate(&media, c.DB)
 	if err != nil {
-		encodeError("error creating media", err, w)
+		encodeError(api.DatabasePersistingError, err, w)
 		return
 	}
 
-	json.NewEncoder(w).Encode(media)
+	encodeResponseBody(media, w)
+}
+
+// MediaUpdate persists the request body to
+// an existing ID
+func (c *Controller) MediaUpdate(w http.ResponseWriter, r *http.Request) {
+	w = withDefaultResponseHeaders(w)
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		encodeError(api.RequestBodyReadingError, err, w)
+		return
+	}
+
+	media := data.Media{}
+	err = json.Unmarshal(body, &media)
+	if err != nil {
+		encodeError(api.RequestBodyParsingError, err, w)
+		return
+	}
+
+	err = data.MediaUpdate(&media, c.DB)
+	if err != nil {
+		encodeError(api.DatabasePersistingError, err, w)
+		return
+	}
+
+	encodeResponseBody(media, w)
 }

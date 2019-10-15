@@ -37,6 +37,10 @@ func NewController(db *bolt.DB) Controller {
 	return c
 }
 
+func encodeResponseBody(body interface{}, w http.ResponseWriter) {
+	json.NewEncoder(w).Encode(body)
+}
+
 func encodeError(err string, debug error, w http.ResponseWriter) {
 	errorResponse := api.ErrorResponseNew(err, debug)
 	json.NewEncoder(w).Encode(errorResponse)

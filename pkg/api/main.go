@@ -39,3 +39,28 @@ func ErrorResponseNew(err string, debug error) *ErrorResponse {
 		Debug: debug.Error(),
 	}
 }
+
+// PathVariableParsingError is the generic
+// error message given when some path variable
+// could not be parsed properly
+const PathVariableParsingError = "error parsing path variable"
+
+// RequestBodyReadingError is the generic
+// error message given when HTTP request
+// body could not be read
+const RequestBodyReadingError = "error reading request body"
+
+// RequestBodyParsingError is the generic
+// error message given when HTTP request
+// body could not be parsed
+const RequestBodyParsingError = "error parsing request body"
+
+// DatabaseQueryingError is the generic
+// error message given when an error was
+// encountered while querying the database
+const DatabaseQueryingError = "error querying database"
+
+// DatabasePersistingError is the generic
+// error message given when an error was
+// encountered while persisting the database
+const DatabasePersistingError = "error persisting in database"

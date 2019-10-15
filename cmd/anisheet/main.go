@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -21,28 +20,27 @@ func main() {
 	defer os.Exit(0)
 
 	// Open database connection
+	log.Println("Establishing database connection")
 	db, err := data.ConnectDatabase("/tmp/anisheet.db", true)
 	if err != nil {
-		panic("error connecting to database ")
+		log.Fatal("Error connecting to database ")
+		return
 	}
 	// Clear database and close connection at the end
 	defer db.Close()
 	defer data.ClearDatabase(db)
 
 	// Create the API controller and HTTP server
+	const serverAddress = "0.0.0.0:8080"
 	controller := controller.NewController(db)
 	server := &http.Server{
-		Addr:    "0.0.0.0:8080",
+		Addr:    serverAddress,
 		Handler: controller.Router,
 	}
 
-	// Allow user to set graceful timeout duration
-	var wait time.Duration
-	flag.DurationVar(&wait, "gt", time.Second*15, "graceful timeout: the duration for which the server gracefully wait for existing connections to finish - e.g. 15s or 1m")
-	flag.Parse()
-
 	// Launch server in goroutine
 	go func() {
+		log.Println("Launching server on", serverAddress)
 		// err := server.ListenAndServeTLS("cert.pem", "key.pem")
 		err := server.ListenAndServe()
 		if err != nil {
@@ -51,6 +49,7 @@ func main() {
 	}()
 
 	// Wait for SIGINTERRUPT signal
+	wait := time.Second * 15
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	<-c

@@ -138,6 +138,29 @@ func (ser *MediaService) Update(e *Media) (err error) {
 	})
 }
 
+// Delete removes the persisted instance
+// of Media with the given ID
+func (ser *MediaService) Delete(ID int) (e Media, err error) {
+	err = ser.DB.Update(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(MediaBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Store existing to return
+		e.ID = ID
+		err = ser.GetByID(&e)
+		if err != nil {
+			return err
+		}
+
+		// Delete
+		return b.Delete(itob(ID))
+	})
+	return
+}
+
 // Episode is a generic placeholder for all entity types;
 // it is assumed that Episode structs have an ID and Version,
 
@@ -264,6 +287,29 @@ func (ser *EpisodeService) Update(e *Episode) (err error) {
 
 		return b.Put(itob(e.ID), buf)
 	})
+}
+
+// Delete removes the persisted instance
+// of Episode with the given ID
+func (ser *EpisodeService) Delete(ID int) (e Episode, err error) {
+	err = ser.DB.Update(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(EpisodeBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Store existing to return
+		e.ID = ID
+		err = ser.GetByID(&e)
+		if err != nil {
+			return err
+		}
+
+		// Delete
+		return b.Delete(itob(ID))
+	})
+	return
 }
 
 // Character is a generic placeholder for all entity types;
@@ -394,6 +440,29 @@ func (ser *CharacterService) Update(e *Character) (err error) {
 	})
 }
 
+// Delete removes the persisted instance
+// of Character with the given ID
+func (ser *CharacterService) Delete(ID int) (e Character, err error) {
+	err = ser.DB.Update(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(CharacterBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Store existing to return
+		e.ID = ID
+		err = ser.GetByID(&e)
+		if err != nil {
+			return err
+		}
+
+		// Delete
+		return b.Delete(itob(ID))
+	})
+	return
+}
+
 // Genre is a generic placeholder for all entity types;
 // it is assumed that Genre structs have an ID and Version,
 
@@ -520,6 +589,29 @@ func (ser *GenreService) Update(e *Genre) (err error) {
 
 		return b.Put(itob(e.ID), buf)
 	})
+}
+
+// Delete removes the persisted instance
+// of Genre with the given ID
+func (ser *GenreService) Delete(ID int) (e Genre, err error) {
+	err = ser.DB.Update(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(GenreBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Store existing to return
+		e.ID = ID
+		err = ser.GetByID(&e)
+		if err != nil {
+			return err
+		}
+
+		// Delete
+		return b.Delete(itob(ID))
+	})
+	return
 }
 
 // Producer is a generic placeholder for all entity types;
@@ -650,6 +742,29 @@ func (ser *ProducerService) Update(e *Producer) (err error) {
 	})
 }
 
+// Delete removes the persisted instance
+// of Producer with the given ID
+func (ser *ProducerService) Delete(ID int) (e Producer, err error) {
+	err = ser.DB.Update(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(ProducerBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Store existing to return
+		e.ID = ID
+		err = ser.GetByID(&e)
+		if err != nil {
+			return err
+		}
+
+		// Delete
+		return b.Delete(itob(ID))
+	})
+	return
+}
+
 // Person is a generic placeholder for all entity types;
 // it is assumed that Person structs have an ID and Version,
 
@@ -776,6 +891,29 @@ func (ser *PersonService) Update(e *Person) (err error) {
 
 		return b.Put(itob(e.ID), buf)
 	})
+}
+
+// Delete removes the persisted instance
+// of Person with the given ID
+func (ser *PersonService) Delete(ID int) (e Person, err error) {
+	err = ser.DB.Update(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(PersonBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Store existing to return
+		e.ID = ID
+		err = ser.GetByID(&e)
+		if err != nil {
+			return err
+		}
+
+		// Delete
+		return b.Delete(itob(ID))
+	})
+	return
 }
 
 // MediaRelation is a generic placeholder for all entity types;
@@ -906,6 +1044,29 @@ func (ser *MediaRelationService) Update(e *MediaRelation) (err error) {
 	})
 }
 
+// Delete removes the persisted instance
+// of MediaRelation with the given ID
+func (ser *MediaRelationService) Delete(ID int) (e MediaRelation, err error) {
+	err = ser.DB.Update(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(MediaRelationBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Store existing to return
+		e.ID = ID
+		err = ser.GetByID(&e)
+		if err != nil {
+			return err
+		}
+
+		// Delete
+		return b.Delete(itob(ID))
+	})
+	return
+}
+
 // MediaCharacter is a generic placeholder for all entity types;
 // it is assumed that MediaCharacter structs have an ID and Version,
 
@@ -1032,6 +1193,29 @@ func (ser *MediaCharacterService) Update(e *MediaCharacter) (err error) {
 
 		return b.Put(itob(e.ID), buf)
 	})
+}
+
+// Delete removes the persisted instance
+// of MediaCharacter with the given ID
+func (ser *MediaCharacterService) Delete(ID int) (e MediaCharacter, err error) {
+	err = ser.DB.Update(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(MediaCharacterBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Store existing to return
+		e.ID = ID
+		err = ser.GetByID(&e)
+		if err != nil {
+			return err
+		}
+
+		// Delete
+		return b.Delete(itob(ID))
+	})
+	return
 }
 
 // MediaGenre is a generic placeholder for all entity types;
@@ -1162,6 +1346,29 @@ func (ser *MediaGenreService) Update(e *MediaGenre) (err error) {
 	})
 }
 
+// Delete removes the persisted instance
+// of MediaGenre with the given ID
+func (ser *MediaGenreService) Delete(ID int) (e MediaGenre, err error) {
+	err = ser.DB.Update(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(MediaGenreBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Store existing to return
+		e.ID = ID
+		err = ser.GetByID(&e)
+		if err != nil {
+			return err
+		}
+
+		// Delete
+		return b.Delete(itob(ID))
+	})
+	return
+}
+
 // MediaProducer is a generic placeholder for all entity types;
 // it is assumed that MediaProducer structs have an ID and Version,
 
@@ -1288,4 +1495,27 @@ func (ser *MediaProducerService) Update(e *MediaProducer) (err error) {
 
 		return b.Put(itob(e.ID), buf)
 	})
+}
+
+// Delete removes the persisted instance
+// of MediaProducer with the given ID
+func (ser *MediaProducerService) Delete(ID int) (e MediaProducer, err error) {
+	err = ser.DB.Update(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(MediaProducerBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Store existing to return
+		e.ID = ID
+		err = ser.GetByID(&e)
+		if err != nil {
+			return err
+		}
+
+		// Delete
+		return b.Delete(itob(ID))
+	})
+	return
 }

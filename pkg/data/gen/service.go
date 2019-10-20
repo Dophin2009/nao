@@ -138,3 +138,26 @@ func (ser *EntityTypeService) Update(e *EntityType) (err error) {
 		return b.Put(itob(e.ID), buf)
 	})
 }
+
+// Delete removes the persisted instance
+// of EntityType with the given ID
+func (ser *EntityTypeService) Delete(ID int) (e EntityType, err error) {
+	err = ser.DB.Update(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(EntityTypeBucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Store existing to return
+		e.ID = ID
+		err = ser.GetByID(&e)
+		if err != nil {
+			return err
+		}
+
+		// Delete
+		return b.Delete(itob(ID))
+	})
+	return
+}

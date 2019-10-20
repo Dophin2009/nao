@@ -7,7 +7,7 @@ import "strings"
 type Producer struct {
 	ID      int
 	Titles  []Info
-	Type    string
+	Types   []string
 	Version int
 }
 
@@ -16,7 +16,9 @@ func (ser *ProducerService) Clean(e *Producer) (err error) {
 	if err = infoListClean(e.Titles); err != nil {
 		return err
 	}
-	e.Type = strings.Trim(e.Type, " ")
+	for i, t := range e.Types {
+		e.Types[i] = strings.Trim(t, " ")
+	}
 	return nil
 }
 

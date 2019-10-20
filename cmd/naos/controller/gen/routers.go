@@ -7,8 +7,8 @@ import (
 
 	"github.com/cheekybits/genny/generic"
 	"github.com/gorilla/mux"
-	"gitlab.com/Dophin2009/anisheet/pkg/api"
-	"gitlab.com/Dophin2009/anisheet/pkg/data"
+	"gitlab.com/Dophin2009/nao/pkg/api"
+	"gitlab.com/Dophin2009/nao/pkg/data"
 )
 
 //go:generate genny -in=$GOFILE -out=gen-$GOFILE gen "EntityType=Media,Episode,Character,Genre,Producer,Person,User,MediaRelation,MediaCharacter,MediaGenre,MediaProducer,UserMedia"

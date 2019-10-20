@@ -9,8 +9,8 @@ GOGEN=$(GOCMD) generate
 
 # Project variables
 TARGET_DIR=target
-REPO_NAME=gitlab.com/Dophin2009/anisheet
-MODULES=anisheet
+REPO_NAME=gitlab.com/Dophin2009/nao
+MODULES=naos
 
 default: build
 
@@ -23,9 +23,9 @@ build: clean
 	$(GOGEN) $(REPO_NAME)/pkg/data
 	mv pkg/data/service.go pkg/data/gen/service.go
 
-	mv cmd/anisheet/controller/gen/routers.go cmd/anisheet/controller/routers.go
-	$(GOGEN) $(REPO_NAME)/cmd/anisheet/controller
-	mv cmd/anisheet/controller/routers.go cmd/anisheet/controller/gen/routers.go
+	mv cmd/naos/controller/gen/routers.go cmd/naos/controller/routers.go
+	$(GOGEN) $(REPO_NAME)/cmd/naos/controller
+	mv cmd/naos/controller/routers.go cmd/naos/controller/gen/routers.go
 
 	@for module in $(MODULES) ; do \
 		$(GOBUILD) -o $(TARGET_DIR)/$$module -v $(REPO_NAME)/cmd/$$module ; \

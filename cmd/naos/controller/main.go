@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"gitlab.com/Dophin2009/anisheet/pkg/api"
-	"gitlab.com/Dophin2009/anisheet/pkg/data"
+	"gitlab.com/Dophin2009/nao/pkg/api"
+	"gitlab.com/Dophin2009/nao/pkg/data"
 	bolt "go.etcd.io/bbolt"
 )
 

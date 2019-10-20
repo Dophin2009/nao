@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"time"
 
-	"gitlab.com/Dophin2009/anisheet/cmd/anisheet/controller"
-	"gitlab.com/Dophin2009/anisheet/pkg/data"
+	"gitlab.com/Dophin2009/nao/cmd/naos/controller"
+	"gitlab.com/Dophin2009/nao/pkg/data"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -22,7 +22,7 @@ func main() {
 	// Open database connection
 	println()
 	log.Println("Establishing database connection")
-	db, err := data.ConnectDatabase("/tmp/anisheet.db", true)
+	db, err := data.ConnectDatabase("/tmp/naos.db", true)
 	if err != nil {
 		log.Fatal("Error connecting to database ")
 		return

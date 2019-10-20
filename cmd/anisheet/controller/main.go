@@ -6,33 +6,37 @@ import (
 
 	"github.com/gorilla/mux"
 	"gitlab.com/Dophin2009/anisheet/pkg/api"
+	"gitlab.com/Dophin2009/anisheet/pkg/data"
 	bolt "go.etcd.io/bbolt"
 )
 
 // Controller represents the API controller layer
 type Controller struct {
-	DB     *bolt.DB
-	Router *mux.Router
+	Router       *mux.Router
+	MediaService *data.MediaService
 }
 
-// NewController returns a new instance of Controller
-func NewController(db *bolt.DB) Controller {
+// New returns a new instance of Controller
+func New(db *bolt.DB) Controller {
+	// Instantiate controller
 	router := mux.NewRouter().StrictSlash(true)
-
 	c := Controller{
-		DB:     db,
 		Router: router,
+		MediaService: &data.MediaService{
+			DB: db,
+		},
 	}
 
+	// Map routing handlers
 	c.Router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		status := api.StatusGet()
 		json.NewEncoder(w).Encode(status)
 	})
 
 	mediaSubrouter := c.Router.PathPrefix("/media").Subrouter()
+	mediaSubrouter.HandleFunc("/", c.MediaCreate).Methods(http.MethodPost)
 	mediaSubrouter.HandleFunc("/{id}", c.MediaQueryByID).Methods(http.MethodGet)
 	mediaSubrouter.HandleFunc("/", c.MediaQueryAll).Methods(http.MethodGet)
-	mediaSubrouter.HandleFunc("/", c.MediaCreate).Methods(http.MethodPost)
 
 	return c
 }

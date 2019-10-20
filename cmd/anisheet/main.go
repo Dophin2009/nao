@@ -20,6 +20,7 @@ func main() {
 	defer os.Exit(0)
 
 	// Open database connection
+	println()
 	log.Println("Establishing database connection")
 	db, err := data.ConnectDatabase("/tmp/anisheet.db", true)
 	if err != nil {
@@ -32,7 +33,7 @@ func main() {
 
 	// Create the API controller and HTTP server
 	const serverAddress = "0.0.0.0:8080"
-	controller := controller.NewController(db)
+	controller := controller.New(db)
 	server := &http.Server{
 		Addr:    serverAddress,
 		Handler: controller.Router,

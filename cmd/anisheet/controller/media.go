@@ -26,7 +26,10 @@ func (c *Controller) MediaQueryByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	media, err := data.MediaGet(id, c.DB)
+	var media = data.Media{
+		ID: id,
+	}
+	err = c.MediaService.GetByID(&media)
 	if err != nil {
 		encodeError(api.DatabaseQueryingError, err, w)
 		return
@@ -40,7 +43,7 @@ func (c *Controller) MediaQueryByID(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) MediaQueryAll(w http.ResponseWriter, r *http.Request) {
 	w = withDefaultResponseHeaders(w)
 
-	media, err := data.MediaGetAll(c.DB)
+	media, err := c.MediaService.GetAll()
 	if err != nil {
 		encodeError(api.DatabaseQueryingError, err, w)
 		return
@@ -69,7 +72,7 @@ func (c *Controller) MediaCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = data.MediaCreate(&media, c.DB)
+	err = c.MediaService.Create(&media)
 	if err != nil {
 		encodeError(api.DatabasePersistingError, err, w)
 		return
@@ -96,7 +99,7 @@ func (c *Controller) MediaUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = data.MediaUpdate(&media, c.DB)
+	err = c.MediaService.Update(&media)
 	if err != nil {
 		encodeError(api.DatabasePersistingError, err, w)
 		return

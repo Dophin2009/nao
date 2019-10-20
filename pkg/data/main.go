@@ -2,7 +2,6 @@ package data
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 
 	bolt "go.etcd.io/bbolt"
@@ -10,10 +9,10 @@ import (
 
 // Buckets provides an array of all the buckets in the database
 func Buckets() []string {
-	return []string{mediaBucketName, producerBucketName, genreBucketName,
-		episodeBucketName, characterBucketName, personBucketName,
-		mediaProducerBucketName, mediaRelationBucketName, mediaGenreBucketName,
-		mediaCharacterBucketName}
+	return []string{MediaBucketName, ProducerBucketName, GenreBucketName,
+		EpisodeBucketName, CharacterBucketName, PersonBucketName,
+		MediaProducerBucketName, MediaRelationBucketName, MediaGenreBucketName,
+		MediaCharacterBucketName}
 }
 
 // ConnectDatabase connects to the database file at the given path
@@ -51,42 +50,45 @@ func ClearDatabase(db *bolt.DB) (err error) {
 	return
 }
 
-// Idenitifiable encompasses all the entities
+// Entity encompasses all the entities
 // persisted in the database
-type Idenitifiable interface {
-	Identifier() int
-	SetIdentifier(int)
-
-	Ver() int
-	UpdateVer()
-
-	Validate(tx *bolt.Tx) error
+type Entity interface {
 }
 
-// getByID is a generic function that queries the given bucket
+// Service defines methods of persistence
+// service structs
+type Service interface {
+	GetByID(e Entity) (err error)
+	GetAll() (v [][]byte, err error)
+	Create(e Entity) (err error)
+	Update(e Entity) (err error)
+
+	Validate(e Entity) (err error)
+}
+
+// GetByID is a generic function that queries the given bucket
 // in the given database for an entity of the given ID
-func getByID(ID int, entity Idenitifiable, bucketName string, db *bolt.DB) (err error) {
-	return db.View(func(tx *bolt.Tx) error {
+func GetByID(ID int, bucketName string, db *bolt.DB) (v []byte, err error) {
+	err = db.View(func(tx *bolt.Tx) error {
 		// Get bucket, exit if error
-		b, err := bucket(bucketName, tx)
+		b, err := Bucket(bucketName, tx)
 		if err != nil {
 			return err
 		}
 
 		// Get entity by ID, exit if error
-		v, err := get(ID, b)
-		if err != nil {
-			return err
-		}
-
-		return json.Unmarshal(v, entity)
+		v, err = get(ID, b)
+		return err
 	})
+	return
 }
 
-func getFilter(t Idenitifiable, filter func(e Idenitifiable) (bool, error), bucketName string, db *bolt.DB) (list []Idenitifiable, err error) {
+// GetAll returns a list of []byte of all the
+// values in the given bucket
+func GetAll(bucketName string, db *bolt.DB) (list [][]byte, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		// Get bucket, exit if error
-		b, err := bucket(bucketName, tx)
+		b, err := Bucket(bucketName, tx)
 		if err != nil {
 			return err
 		}
@@ -94,101 +96,16 @@ func getFilter(t Idenitifiable, filter func(e Idenitifiable) (bool, error), buck
 		// Unmarshal and add all entities who
 		// pass filter to slice, exit if error
 		return b.ForEach(func(k, v []byte) error {
-			m := t
-			err = json.Unmarshal(v, &m)
-			if err != nil {
-				return err
-			}
-
-			pass, err := filter(m)
-			if err != nil {
-				return err
-			}
-			if pass {
-				list = append(list, m)
-			}
+			list = append(list, v)
 			return nil
 		})
 	})
 	return
 }
 
-// create is a generic function that persists an
-// entity into the given bucket in the given
-// databases
-func create(entity Idenitifiable, bucketName string, db *bolt.DB) (err error) {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Get bucket, exit if error
-		b, err := bucket(bucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Verify validity of struct
-		err = entity.Validate(tx)
-		if err != nil {
-			return err
-		}
-
-		// Get next ID in sequence and
-		// assign to entity
-		id, err := b.NextSequence()
-		if err != nil {
-			return err
-		}
-		entity.SetIdentifier(int(id))
-		entity.UpdateVer()
-
-		// Save entity in bucket
-		buf, err := json.Marshal(entity)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(entity.Identifier()), buf)
-	})
-}
-
-// update is a generic function replaces the value
-// of the given entity id in the given bucket
-// in the given database
-func update(entity Idenitifiable, bucketName string, db *bolt.DB) (err error) {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Get bucket, exit if error
-		b, err := bucket(bucketName, tx)
-		if err != nil {
-			return err
-		}
-
-		// Check if entity with ID exists
-		o, err := get(entity.Identifier(), b)
-		if err != nil {
-			return err
-		}
-
-		// Verify validity of struct
-		err = entity.Validate(tx)
-		if err != nil {
-			return err
-		}
-
-		// Replace properties of new with internal
-		// ones of old
-		old := entity
-		err = json.Unmarshal([]byte(o), &old)
-		entity.UpdateVer()
-
-		// Save Media
-		buf, err := json.Marshal(entity)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(itob(entity.Identifier()), buf)
-	})
-}
-
-func bucket(name string, tx *bolt.Tx) (bucket *bolt.Bucket, err error) {
+// Bucket returns the database bucket with the
+// given name
+func Bucket(name string, tx *bolt.Tx) (bucket *bolt.Bucket, err error) {
 	bucket = tx.Bucket([]byte(name))
 	return
 }

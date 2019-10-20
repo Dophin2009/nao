@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/OpenPeeDeeP/xdg"
 	"gitlab.com/Dophin2009/nao/cmd/naos/controller"
 	"gitlab.com/Dophin2009/nao/pkg/data"
 )
@@ -21,7 +22,7 @@ func main() {
 
 	// Read configuration files
 	etcDir := "/etc/nao/"
-	userDir := os.Getenv("HOME") + "/.config/nao/"
+	userDir := xdg.ConfigHome() + "/nao/"
 	confFileDirs := []string{etcDir, userDir}
 	conf, err := ReadConfig(confFileDirs)
 	if err != nil {

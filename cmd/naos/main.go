@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,19 +11,26 @@ import (
 
 	"gitlab.com/Dophin2009/nao/cmd/naos/controller"
 	"gitlab.com/Dophin2009/nao/pkg/data"
-	bolt "go.etcd.io/bbolt"
 )
-
-var db *bolt.DB
 
 func main() {
 	// Exit with status code 0 at the end
 	defer os.Exit(0)
 
+	println("-------------------: NAO SERVER :-------------------")
+
+	// Read configuration files
+	etcDir := "/etc/nao/"
+	userDir := os.Getenv("HOME") + "/.config/nao/"
+	confFileDirs := []string{etcDir, userDir}
+	conf, err := ReadConfig(confFileDirs)
+	if err != nil {
+		log.Fatalf("Error reading config: %v", err)
+	}
+
 	// Open database connection
-	println()
 	log.Println("Establishing database connection")
-	db, err := data.ConnectDatabase("/tmp/naos.db", true)
+	db, err := data.ConnectDatabase(conf.DB.Path, os.FileMode(conf.DB.Filemode), true)
 	if err != nil {
 		log.Fatal("Error connecting to database ")
 		return
@@ -32,7 +40,7 @@ func main() {
 	defer data.ClearDatabase(db)
 
 	// Create the API controller and HTTP server
-	const serverAddress = "0.0.0.0:8080"
+	serverAddress := fmt.Sprintf("%s:%s", conf.Hostname, conf.Port)
 	controller := controller.New(db)
 	server := &http.Server{
 		Addr:    serverAddress,

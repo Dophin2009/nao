@@ -3,6 +3,7 @@ package data
 import (
 	"encoding/binary"
 	"fmt"
+	"os"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -17,9 +18,9 @@ func Buckets() []string {
 
 // ConnectDatabase connects to the database file at the given path
 // and return a bolt.DB struct
-func ConnectDatabase(dbPath string, create bool) (*bolt.DB, error) {
+func ConnectDatabase(dbPath string, mode os.FileMode, create bool) (*bolt.DB, error) {
 	// open database connection
-	db, err := bolt.Open(dbPath, 0600, nil)
+	db, err := bolt.Open(dbPath, mode, nil)
 
 	// if specified to create buckets, cycle through all strings in
 	// Buckets() and create buckets

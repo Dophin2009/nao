@@ -14,10 +14,21 @@ type Episode struct {
 	Titles   []Info
 	Date     *time.Time
 	Synopses []Info
-	Duration uint
+	Duration *uint
 	Filler   bool
 	Recap    bool
 	Version  int
+}
+
+// Clean cleans the given Episode for storage
+func (ser *EpisodeService) Clean(e *Episode) (err error) {
+	if err = infoListClean(e.Titles); err != nil {
+		return err
+	}
+	if err = infoListClean(e.Synopses); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Validate returns an error if the Episode is

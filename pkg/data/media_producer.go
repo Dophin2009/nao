@@ -1,6 +1,8 @@
 package data
 
 import (
+	"strings"
+
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -12,6 +14,12 @@ type MediaProducer struct {
 	ProducerID int
 	Role       string
 	Version    int
+}
+
+// Clean cleans the given MediaProducer for storage
+func (ser *MediaProducerService) Clean(e *MediaProducer) (err error) {
+	e.Role = strings.Trim(e.Role, " ")
+	return nil
 }
 
 // Validate returns an error if the MediaProducer is

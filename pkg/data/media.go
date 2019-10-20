@@ -1,6 +1,7 @@
 package data
 
 import (
+	"strings"
 	"time"
 )
 
@@ -13,8 +14,8 @@ type Media struct {
 	StartDate       *time.Time
 	EndDate         *time.Time
 	SeasonPremiered *Season
-	Type            string
-	Source          string
+	Type            *string
+	Source          *string
 	Version         int
 }
 
@@ -49,6 +50,26 @@ const (
 	// November, and December
 	Fall
 )
+
+// Clean cleans the given Media for storage
+func (ser *MediaService) Clean(e *Media) (err error) {
+	if err := infoListClean(e.Titles); err != nil {
+		return err
+	}
+	if err := infoListClean(e.Synopses); err != nil {
+		return err
+	}
+	if err := infoListClean(e.Background); err != nil {
+		return err
+	}
+	if e.Type != nil {
+		*e.Type = strings.Trim(*e.Type, " ")
+	}
+	if e.Source != nil {
+		*e.Source = strings.Trim(*e.Source, " ")
+	}
+	return nil
+}
 
 // Validate checks if the given Media is valid
 func (ser *MediaService) Validate(e *Media) (err error) {

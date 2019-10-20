@@ -65,6 +65,11 @@ func (ser *EntityTypeService) GetFilter(keep func(e *EntityType) bool) (list []E
 
 // Create persists a new instance of EntityType to the database.
 func (ser *EntityTypeService) Create(e *EntityType) (err error) {
+	err = ser.Clean(e)
+	if err != nil {
+		return err
+	}
+
 	// Verify validity of struct
 	err = ser.Validate(e)
 	if err != nil {

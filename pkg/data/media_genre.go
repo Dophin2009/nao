@@ -13,6 +13,11 @@ type MediaGenre struct {
 	Version int
 }
 
+// Clean cleans the given MediaGenre for storage
+func (ser *MediaGenreService) Clean(e *MediaGenre) (err error) {
+	return nil
+}
+
 // Validate returns an error if the MediaGenre is
 // not valid for the database.
 func (ser *MediaGenreService) Validate(e *MediaGenre) (err error) {

@@ -92,6 +92,19 @@ func (ws *WatchStatus) MarshalJSON() (v []byte, err error) {
 	return json.Marshal(value)
 }
 
+// Clean cleans the given UserMedia for storage
+func (ser *UserMediaService) Clean(e *UserMedia) (err error) {
+	if err := infoListClean(e.Comments); err != nil {
+		return err
+	}
+	for _, wi := range e.WatchedInstances {
+		if err := infoListClean(wi.Comments); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Validate returns an error if the UserMedia is
 // not valid for the database.
 func (ser *UserMediaService) Validate(e *UserMedia) (err error) {

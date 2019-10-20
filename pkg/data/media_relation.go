@@ -1,6 +1,8 @@
 package data
 
 import (
+	"strings"
+
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -12,6 +14,12 @@ type MediaRelation struct {
 	RelatedID    int
 	Relationship string
 	Version      int
+}
+
+// Clean cleans the given MediaRelation for storage
+func (ser *MediaRelationService) Clean(e *MediaRelation) (err error) {
+	e.Relationship = strings.Trim(e.Relationship, " ")
+	return nil
 }
 
 // Validate returns an error if the MediaRelation is

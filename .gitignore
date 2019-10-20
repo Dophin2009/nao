@@ -1,3 +1,6 @@
+# Generated code
+**/gen-*
+
 # Target directories
 target/
 

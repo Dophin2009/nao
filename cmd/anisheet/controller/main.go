@@ -12,13 +12,6 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// SubController represents a group of endpoints
-// with the same prefix in the controller layer
-type SubController struct {
-	SubRouter *mux.Router
-	Service   *data.Service
-}
-
 // Controller represents the API controller layer
 type Controller struct {
 	Router                *mux.Router
@@ -28,10 +21,12 @@ type Controller struct {
 	GenreService          *data.GenreService
 	ProducerService       *data.ProducerService
 	PersonService         *data.PersonService
+	UserService           *data.UserService
 	MediaRelationService  *data.MediaRelationService
 	MediaCharacterService *data.MediaCharacterService
 	MediaGenreService     *data.MediaGenreService
 	MediaProducerService  *data.MediaProducerService
+	UserMediaService      *data.UserMediaService
 }
 
 // New returns a new instance of Controller
@@ -46,10 +41,12 @@ func New(db *bolt.DB) Controller {
 		GenreService:          &data.GenreService{DB: db},
 		ProducerService:       &data.ProducerService{DB: db},
 		PersonService:         &data.PersonService{DB: db},
+		UserService:           &data.UserService{DB: db},
 		MediaRelationService:  &data.MediaRelationService{DB: db},
 		MediaCharacterService: &data.MediaCharacterService{DB: db},
 		MediaGenreService:     &data.MediaGenreService{DB: db},
 		MediaProducerService:  &data.MediaProducerService{DB: db},
+		UserMediaService:      &data.UserMediaService{DB: db},
 	}
 
 	// Map routing handlers
@@ -64,11 +61,13 @@ func New(db *bolt.DB) Controller {
 	GenreSubrouter(&c)
 	ProducerSubrouter(&c)
 	PersonSubrouter(&c)
+	UserSubrouter(&c)
 	MediaRelationSubrouter(&c)
 	MediaCharacterSubrouter(&c)
 	MediaCharacterSubrouter(&c)
 	MediaGenreSubrouter(&c)
 	MediaProducerSubrouter(&c)
+	UserMediaSubrouter(&c)
 
 	return c
 }

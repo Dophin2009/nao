@@ -7,7 +7,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-//go:generate genny -in=$GOFILE -out=gen-$GOFILE gen "EntityType=Media,Episode,Character,Genre,Producer,Person,MediaRelation,MediaCharacter,MediaGenre,MediaProducer"
+//go:generate genny -in=$GOFILE -out=gen-$GOFILE gen "EntityType=Media,Episode,Character,Genre,Producer,Person,User,MediaRelation,MediaCharacter,MediaGenre,MediaProducer,UserMedia"
 
 // EntityType is a generic placeholder for all entity types;
 // it is assumed that EntityType structs have an ID and Version,

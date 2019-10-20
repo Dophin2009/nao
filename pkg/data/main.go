@@ -11,8 +11,8 @@ import (
 func Buckets() []string {
 	return []string{MediaBucketName, ProducerBucketName, GenreBucketName,
 		EpisodeBucketName, CharacterBucketName, PersonBucketName,
-		MediaProducerBucketName, MediaRelationBucketName, MediaGenreBucketName,
-		MediaCharacterBucketName}
+		UserBucketName, MediaProducerBucketName, MediaRelationBucketName,
+		MediaGenreBucketName, MediaCharacterBucketName, UserMediaBucketName}
 }
 
 // ConnectDatabase connects to the database file at the given path

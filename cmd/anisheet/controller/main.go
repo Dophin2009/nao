@@ -34,9 +34,10 @@ func New(db *bolt.DB) Controller {
 	})
 
 	mediaSubrouter := c.Router.PathPrefix("/media").Subrouter()
-	mediaSubrouter.HandleFunc("/", c.MediaCreate).Methods(http.MethodPost)
+	mediaSubrouter.HandleFunc("", c.MediaCreate).Methods(http.MethodPost)
+	mediaSubrouter.HandleFunc("", c.MediaUpdate).Methods(http.MethodPut)
 	mediaSubrouter.HandleFunc("/{id}", c.MediaQueryByID).Methods(http.MethodGet)
-	mediaSubrouter.HandleFunc("/", c.MediaQueryAll).Methods(http.MethodGet)
+	mediaSubrouter.HandleFunc("", c.MediaQueryAll).Methods(http.MethodGet)
 
 	return c
 }

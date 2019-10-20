@@ -114,7 +114,7 @@ func (ser *EntityTypeService) Update(e *EntityType) (err error) {
 			return err
 		}
 		var o EntityType
-		err = json.Unmarshal(v, o)
+		err = json.Unmarshal(v, &o)
 		if err != nil {
 			return err
 		}

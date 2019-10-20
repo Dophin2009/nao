@@ -113,7 +113,7 @@ func (ser *MediaService) Update(e *Media) (err error) {
 			return err
 		}
 		var o Media
-		err = json.Unmarshal(v, o)
+		err = json.Unmarshal(v, &o)
 		if err != nil {
 			return err
 		}
@@ -241,7 +241,7 @@ func (ser *EpisodeService) Update(e *Episode) (err error) {
 			return err
 		}
 		var o Episode
-		err = json.Unmarshal(v, o)
+		err = json.Unmarshal(v, &o)
 		if err != nil {
 			return err
 		}
@@ -369,7 +369,7 @@ func (ser *CharacterService) Update(e *Character) (err error) {
 			return err
 		}
 		var o Character
-		err = json.Unmarshal(v, o)
+		err = json.Unmarshal(v, &o)
 		if err != nil {
 			return err
 		}
@@ -497,7 +497,7 @@ func (ser *GenreService) Update(e *Genre) (err error) {
 			return err
 		}
 		var o Genre
-		err = json.Unmarshal(v, o)
+		err = json.Unmarshal(v, &o)
 		if err != nil {
 			return err
 		}
@@ -625,7 +625,7 @@ func (ser *ProducerService) Update(e *Producer) (err error) {
 			return err
 		}
 		var o Producer
-		err = json.Unmarshal(v, o)
+		err = json.Unmarshal(v, &o)
 		if err != nil {
 			return err
 		}
@@ -753,7 +753,7 @@ func (ser *PersonService) Update(e *Person) (err error) {
 			return err
 		}
 		var o Person
-		err = json.Unmarshal(v, o)
+		err = json.Unmarshal(v, &o)
 		if err != nil {
 			return err
 		}
@@ -881,7 +881,7 @@ func (ser *MediaRelationService) Update(e *MediaRelation) (err error) {
 			return err
 		}
 		var o MediaRelation
-		err = json.Unmarshal(v, o)
+		err = json.Unmarshal(v, &o)
 		if err != nil {
 			return err
 		}
@@ -1009,7 +1009,7 @@ func (ser *MediaCharacterService) Update(e *MediaCharacter) (err error) {
 			return err
 		}
 		var o MediaCharacter
-		err = json.Unmarshal(v, o)
+		err = json.Unmarshal(v, &o)
 		if err != nil {
 			return err
 		}
@@ -1137,7 +1137,7 @@ func (ser *MediaGenreService) Update(e *MediaGenre) (err error) {
 			return err
 		}
 		var o MediaGenre
-		err = json.Unmarshal(v, o)
+		err = json.Unmarshal(v, &o)
 		if err != nil {
 			return err
 		}
@@ -1265,7 +1265,7 @@ func (ser *MediaProducerService) Update(e *MediaProducer) (err error) {
 			return err
 		}
 		var o MediaProducer
-		err = json.Unmarshal(v, o)
+		err = json.Unmarshal(v, &o)
 		if err != nil {
 			return err
 		}

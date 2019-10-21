@@ -27,6 +27,7 @@ type Controller struct {
 	MediaGenreService     *data.MediaGenreService
 	MediaProducerService  *data.MediaProducerService
 	UserMediaService      *data.UserMediaService
+	UserMediaListService  *data.UserMediaListService
 }
 
 // ControllerNew returns a new instance of Controller
@@ -47,6 +48,7 @@ func ControllerNew(db *bolt.DB) Controller {
 		MediaGenreService:     &data.MediaGenreService{DB: db},
 		MediaProducerService:  &data.MediaProducerService{DB: db},
 		UserMediaService:      &data.UserMediaService{DB: db},
+		UserMediaListService:  &data.UserMediaListService{DB: db},
 	}
 
 	// Map routing handlers
@@ -68,6 +70,7 @@ func ControllerNew(db *bolt.DB) Controller {
 	MediaGenreSubrouter(&c)
 	MediaProducerSubrouter(&c)
 	UserMediaSubrouter(&c)
+	UserMediaListSubrouter(&c)
 
 	return c
 }

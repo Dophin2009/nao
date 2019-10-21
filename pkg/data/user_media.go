@@ -21,6 +21,7 @@ type UserMedia struct {
 	Recommended      *int
 	WatchedInstances []WatchedInstance
 	Comments         []Info
+	UserMediaListIDs []int
 	Version          int
 }
 
@@ -129,6 +130,19 @@ func (ser *UserMediaService) Validate(e *UserMedia) (err error) {
 		_, err = get(e.MediaID, mb)
 		if err != nil {
 			return err
+		}
+
+		// Check if UserMediaLists with IDs specified in UserMedia exists
+		// Get User bucket, exit if error
+		umlb, err := Bucket(UserMediaListBucketName, tx)
+		if err != nil {
+			return err
+		}
+		for _, listID := range e.UserMediaListIDs {
+			_, err = get(listID, umlb)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil

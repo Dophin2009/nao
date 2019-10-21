@@ -11,7 +11,7 @@ import (
 	"gitlab.com/Dophin2009/nao/pkg/data"
 )
 
-//go:generate genny -in=$GOFILE -out=gen-$GOFILE gen "EntityType=Media,Episode,Character,Genre,Producer,Person,User,MediaRelation,MediaCharacter,MediaGenre,MediaProducer,UserMedia"
+//go:generate genny -in=$GOFILE -out=gen-$GOFILE gen "EntityType=Media,Episode,Character,Genre,Producer,Person,User,MediaRelation,MediaCharacter,MediaGenre,MediaProducer,UserMedia,UserMediaList"
 
 // EntityType is a generic placeholder for all entity types;
 // it is assumed that EntityType structs have an ID and Version,

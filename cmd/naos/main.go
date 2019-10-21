@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/OpenPeeDeeP/xdg"
-	"gitlab.com/Dophin2009/nao/cmd/naos/controller"
 	"gitlab.com/Dophin2009/nao/pkg/data"
 )
 
@@ -42,7 +41,7 @@ func main() {
 
 	// Create the API controller and HTTP server
 	serverAddress := fmt.Sprintf("%s:%s", conf.Hostname, conf.Port)
-	controller := controller.New(db)
+	controller := ControllerNew(db)
 	server := &http.Server{
 		Addr:    serverAddress,
 		Handler: controller.Router,

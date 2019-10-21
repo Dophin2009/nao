@@ -1,4 +1,4 @@
-package controller
+package main
 
 import (
 	"encoding/json"
@@ -29,8 +29,8 @@ type Controller struct {
 	UserMediaService      *data.UserMediaService
 }
 
-// New returns a new instance of Controller
-func New(db *bolt.DB) Controller {
+// ControllerNew returns a new instance of Controller
+func ControllerNew(db *bolt.DB) Controller {
 	// Instantiate controller
 	router := mux.NewRouter().StrictSlash(true)
 	c := Controller{

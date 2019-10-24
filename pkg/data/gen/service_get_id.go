@@ -1,8 +1,9 @@
 package data
 
 import (
+	"encoding/json"
+
 	"github.com/cheekybits/genny/generic"
-	bolt "go.etcd.io/bbolt"
 )
 
 //go:generate genny -in=$GOFILE -out=gen_$GOFILE gen "EntityType=Media,Episode,Character,Genre,Producer,Person,User,MediaRelation,MediaCharacter,MediaGenre,MediaProducer,UserMedia,UserMediaList"
@@ -12,12 +13,17 @@ import (
 // both of which should be of int type.
 type EntityType generic.Type
 
-// EntityTypeService is a struct that performs
-// CRUD operations on the persistence layer.
-type EntityTypeService struct {
-	DB *bolt.DB
-}
+// GetByID retrieves a single isntance of EntityType
+// with the given ID.
+func (ser *EntityTypeService) GetByID(e *EntityType) (err error) {
+	v, err := GetByID(e.ID, EntityTypeBucketName, ser.DB)
+	if err != nil {
+		return err
+	}
 
-// EntityTypeBucketName represents the database bucket
-// name for the bucket that stores EntityType instances
-const EntityTypeBucketName = "EntityType"
+	err = json.Unmarshal(v, e)
+	if err != nil {
+		return err
+	}
+	return
+}

@@ -19,9 +19,9 @@ clean:
 
 # Fix this
 build: clean
-	mv pkg/data/gen/service.go pkg/data/service.go
+	mv pkg/data/gen/service*.go pkg/data/
 	$(GOGEN) $(REPO_NAME)/pkg/data
-	mv pkg/data/service.go pkg/data/gen/service.go
+	mv pkg/data/service*.go pkg/data/gen/
 
 	mv cmd/naos/gen/routers.go cmd/naos/routers.go
 	$(GOGEN) $(REPO_NAME)/cmd/naos

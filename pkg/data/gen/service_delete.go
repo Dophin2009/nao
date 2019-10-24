@@ -12,12 +12,25 @@ import (
 // both of which should be of int type.
 type EntityType generic.Type
 
-// EntityTypeService is a struct that performs
-// CRUD operations on the persistence layer.
-type EntityTypeService struct {
-	DB *bolt.DB
-}
+// Delete removes the persisted instance
+// of EntityType with the given ID
+func (ser *EntityTypeService) Delete(ID int) (e EntityType, err error) {
+	err = ser.DB.Update(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(EntityTypeBucketName, tx)
+		if err != nil {
+			return err
+		}
 
-// EntityTypeBucketName represents the database bucket
-// name for the bucket that stores EntityType instances
-const EntityTypeBucketName = "EntityType"
+		// Store existing to return
+		e.ID = ID
+		err = ser.GetByID(&e)
+		if err != nil {
+			return err
+		}
+
+		// Delete
+		return b.Delete(itob(ID))
+	})
+	return
+}

@@ -53,6 +53,7 @@ func ControllerNew(db *bolt.DB) Controller {
 
 	// Map routing handlers
 	c.Router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w = withDefaultResponseHeaders(w)
 		status := api.StatusGet()
 		json.NewEncoder(w).Encode(status)
 	})

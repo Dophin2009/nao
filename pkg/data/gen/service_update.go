@@ -18,6 +18,11 @@ type EntityType generic.Type
 // of EntityType with the given EntityType of
 // the same ID.
 func (ser *EntityTypeService) Update(e *EntityType) (err error) {
+	err = ser.Clean(e)
+	if err != nil {
+		return err
+	}
+
 	// Verify validity of struct
 	err = ser.Validate(e)
 	if err != nil {
@@ -44,7 +49,7 @@ func (ser *EntityTypeService) Update(e *EntityType) (err error) {
 
 		// Replace properties of new with certain
 		// ones of old
-		e.Version = o.Version + 1
+		ser.persistOldProperties(&o, e)
 
 		// Save Entity
 		buf, err := json.Marshal(e)

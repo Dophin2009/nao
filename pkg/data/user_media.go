@@ -106,6 +106,13 @@ func (ser *UserMediaService) Clean(e *UserMedia) (err error) {
 	return nil
 }
 
+// persistOldProperties maintains certain properties
+// of the existing entity in updates
+func (ser *UserMediaService) persistOldProperties(old *UserMedia, new *UserMedia) (err error) {
+	new.Version = old.Version + 1
+	return nil
+}
+
 // Validate returns an error if the UserMedia is
 // not valid for the database.
 func (ser *UserMediaService) Validate(e *UserMedia) (err error) {

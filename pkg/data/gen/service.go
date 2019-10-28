@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/cheekybits/genny/generic"
+
 	bolt "go.etcd.io/bbolt"
 )
 

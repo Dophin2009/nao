@@ -37,6 +37,13 @@ func (ser *EpisodeService) Validate(e *Episode) (err error) {
 	return nil
 }
 
+// persistOldProperties maintains certain properties
+// of the existing entity in updates
+func (ser *EpisodeService) persistOldProperties(old *Episode, new *Episode) (err error) {
+	new.Version = old.Version + 1
+	return nil
+}
+
 // GetByMedia retrieves a list of instances of Episode
 // with the given Media ID.
 func (ser *EpisodeService) GetByMedia(mID int, db *bolt.DB) (list []Episode, err error) {

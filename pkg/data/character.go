@@ -24,3 +24,10 @@ func (ser *CharacterService) Clean(e *Character) (err error) {
 func (ser *CharacterService) Validate(e *Character) (err error) {
 	return nil
 }
+
+// persistOldProperties maintains certain properties
+// of the existing entity in updates
+func (ser *CharacterService) persistOldProperties(old *Character, new *Character) (err error) {
+	new.Version = old.Version + 1
+	return nil
+}

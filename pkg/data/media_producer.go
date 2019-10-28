@@ -52,6 +52,13 @@ func (ser *MediaProducerService) Validate(e *MediaProducer) (err error) {
 	})
 }
 
+// persistOldProperties maintains certain properties
+// of the existing entity in updates
+func (ser *MediaProducerService) persistOldProperties(old *MediaProducer, new *MediaProducer) (err error) {
+	new.Version = old.Version + 1
+	return nil
+}
+
 // GetByMedia retrieves a list of instances of MediaProducer
 // with the given Media ID.
 func (ser *MediaProducerService) GetByMedia(mID int, db *bolt.DB) (list []MediaProducer, err error) {

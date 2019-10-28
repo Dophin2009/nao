@@ -41,3 +41,10 @@ func (ser *UserMediaListService) Validate(e *UserMediaList) (err error) {
 		return nil
 	})
 }
+
+// persistOldProperties maintains certain properties
+// of the existing entity in updates
+func (ser *UserMediaListService) persistOldProperties(old *UserMediaList, new *UserMediaList) (err error) {
+	new.Version = old.Version + 1
+	return nil
+}

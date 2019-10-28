@@ -27,3 +27,10 @@ func (ser *ProducerService) Clean(e *Producer) (err error) {
 func (ser *ProducerService) Validate(e *Producer) (err error) {
 	return nil
 }
+
+// persistOldProperties maintains certain properties
+// of the existing entity in updates
+func (ser *ProducerService) persistOldProperties(old *Producer, new *Producer) (err error) {
+	new.Version = old.Version + 1
+	return nil
+}

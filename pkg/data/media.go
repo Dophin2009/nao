@@ -75,3 +75,10 @@ func (ser *MediaService) Clean(e *Media) (err error) {
 func (ser *MediaService) Validate(e *Media) (err error) {
 	return nil
 }
+
+// persistOldProperties maintains certain properties
+// of the existing entity in updates
+func (ser *MediaService) persistOldProperties(old *Media, new *Media) (err error) {
+	new.Version = old.Version + 1
+	return nil
+}

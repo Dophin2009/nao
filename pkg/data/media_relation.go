@@ -71,3 +71,10 @@ func (ser *MediaRelationService) GetByRelationship(relationship string, db *bolt
 		return mr.Relationship == relationship
 	})
 }
+
+// persistOldProperties maintains certain properties
+// of the existing entity in updates
+func (ser *MediaRelationService) persistOldProperties(old *MediaRelation, new *MediaRelation) (err error) {
+	new.Version = old.Version + 1
+	return nil
+}

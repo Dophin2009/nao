@@ -24,3 +24,10 @@ func (ser *GenreService) Clean(e *Genre) (err error) {
 func (ser *GenreService) Validate(e *Genre) (err error) {
 	return nil
 }
+
+// persistOldProperties maintains certain properties
+// of the existing entity in updates
+func (ser *GenreService) persistOldProperties(old *Genre, new *Genre) (err error) {
+	new.Version = old.Version + 1
+	return nil
+}

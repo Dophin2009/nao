@@ -23,9 +23,9 @@ build: clean
 	$(GOGEN) $(REPO_NAME)/pkg/data
 	mv pkg/data/service*.go pkg/data/gen/
 
-	mv cmd/naos/gen/routers.go cmd/naos/routers.go
-	$(GOGEN) $(REPO_NAME)/cmd/naos
-	mv cmd/naos/routers.go cmd/naos/gen/routers.go
+	mv internal/naos/gen/routers.go internal/naos/routers.go
+	$(GOGEN) $(REPO_NAME)/internal/naos
+	mv internal/naos/routers.go internal/naos/gen/routers.go
 
 	@for module in $(MODULES) ; do \
 		$(GOBUILD) -o $(TARGET_DIR)/$$module -v $(REPO_NAME)/cmd/$$module ; \

@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/OpenPeeDeeP/xdg"
+	"gitlab.com/Dophin2009/nao/internal/naos"
 	"gitlab.com/Dophin2009/nao/pkg/data"
 )
 
@@ -20,10 +20,7 @@ func main() {
 	println("-------------------: NAO SERVER :-------------------")
 
 	// Read configuration files
-	etcDir := "/etc/nao/"
-	userDir := xdg.ConfigHome() + "/nao/"
-	confFileDirs := []string{etcDir, userDir}
-	conf, err := ReadConfig(confFileDirs)
+	conf, err := naos.ReadLinuxConfigs()
 	if err != nil {
 		log.Fatalf("Error reading config: %v", err)
 	}
@@ -41,7 +38,7 @@ func main() {
 
 	// Create the API controller and HTTP server
 	serverAddress := fmt.Sprintf("%s:%s", conf.Hostname, conf.Port)
-	controller := ControllerNew(db)
+	controller := naos.ControllerNew(db)
 	server := &http.Server{
 		Addr:    serverAddress,
 		Handler: controller.Router,

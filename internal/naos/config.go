@@ -1,6 +1,7 @@
-package main
+package naos
 
 import (
+	"github.com/OpenPeeDeeP/xdg"
 	"github.com/spf13/viper"
 )
 
@@ -13,6 +14,16 @@ type Configuration struct {
 		Path     string `mapstructure:"path"`
 		Filemode uint32 `mapstructure:"filemode"`
 	} `mapstructure:"db"`
+}
+
+// ReadLinuxConfigs looks for config files from
+// the default Linux config locations and returns
+//a parsed Configuration struct
+func ReadLinuxConfigs() (Configuration, error) {
+	etcDir := "/etc/nao/"
+	userDir := xdg.ConfigHome() + "/nao/"
+	confFileDirs := []string{etcDir, userDir}
+	return ReadConfig(confFileDirs)
 }
 
 // ReadConfig returns a Configuration struct

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/cheekybits/genny/generic"
+	json "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
 	"gitlab.com/Dophin2009/nao/pkg/api"
 	"gitlab.com/Dophin2009/nao/pkg/data"
@@ -54,7 +55,7 @@ func (g *EntityTypeHandlerGroup) CreateHandler() Handler {
 			// Read request body
 			body, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				encodeError(api.RequestBodyReadingError, err, w)
+				encodeError(api.RequestBodyReadingError, err, http.StatusBadRequest, w)
 				return
 			}
 
@@ -62,14 +63,14 @@ func (g *EntityTypeHandlerGroup) CreateHandler() Handler {
 			var e data.EntityType
 			err = json.Unmarshal(body, &e)
 			if err != nil {
-				encodeError(api.RequestBodyParsingError, err, w)
+				encodeError(api.RequestBodyParsingError, err, http.StatusBadRequest, w)
 				return
 			}
 
 			// Persist parsed EntityType
 			err = g.Service.Create(&e)
 			if err != nil {
-				encodeError(api.DatabasePersistingError, err, w)
+				encodeError(api.DatabasePersistingError, err, http.StatusInternalServerError, w)
 				return
 			}
 
@@ -92,7 +93,7 @@ func (g *EntityTypeHandlerGroup) UpdateHandler() Handler {
 			// Read request body
 			body, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				encodeError(api.RequestBodyReadingError, err, w)
+				encodeError(api.RequestBodyReadingError, err, http.StatusBadRequest, w)
 				return
 			}
 
@@ -100,14 +101,14 @@ func (g *EntityTypeHandlerGroup) UpdateHandler() Handler {
 			var e data.EntityType
 			err = json.Unmarshal(body, &e)
 			if err != nil {
-				encodeError(api.RequestBodyParsingError, err, w)
+				encodeError(api.RequestBodyParsingError, err, http.StatusBadRequest, w)
 				return
 			}
 
 			// Persist parsed EntityType
 			err = g.Service.Update(&e)
 			if err != nil {
-				encodeError(api.DatabasePersistingError, err, w)
+				encodeError(api.DatabasePersistingError, err, http.StatusInternalServerError, w)
 				return
 			}
 
@@ -130,14 +131,14 @@ func (g *EntityTypeHandlerGroup) DeleteHandler() Handler {
 			// Parse ID
 			id, err := parsePathVarInteger(&ps, "id")
 			if err != nil {
-				encodeError(api.PathVariableParsingError, err, w)
+				encodeError(api.PathVariableParsingError, err, http.StatusBadRequest, w)
 				return
 			}
 
 			// Delete by ID and retrieve existing
 			e, err := g.Service.Delete(id)
 			if err != nil {
-				encodeError(api.DatabasePersistingError, err, w)
+				encodeError(api.DatabasePersistingError, err, http.StatusInternalServerError, w)
 				return
 			}
 
@@ -161,7 +162,7 @@ func (g *EntityTypeHandlerGroup) GetAllHandler() Handler {
 			// Retrieve all EntityType
 			list, err := g.Service.GetAll()
 			if err != nil {
-				encodeError(api.DatabaseQueryingError, err, w)
+				encodeError(api.DatabaseQueryingError, err, http.StatusInternalServerError, w)
 				return
 			}
 			if list == nil {
@@ -188,7 +189,7 @@ func (g *EntityTypeHandlerGroup) GetByIDHandler() Handler {
 			// Parse ID from path
 			id, err := parsePathVarInteger(&ps, "id")
 			if err != nil {
-				encodeError(api.PathVariableParsingError, err, w)
+				encodeError(api.PathVariableParsingError, err, http.StatusBadRequest, w)
 				return
 			}
 
@@ -198,7 +199,7 @@ func (g *EntityTypeHandlerGroup) GetByIDHandler() Handler {
 			}
 			err = g.Service.GetByID(&e)
 			if err != nil {
-				encodeError(api.DatabaseQueryingError, err, w)
+				encodeError(api.DatabaseQueryingError, err, http.StatusInternalServerError, w)
 				return
 			}
 

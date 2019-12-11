@@ -69,3 +69,8 @@ const DatabaseQueryingError = "error querying database"
 // error message given when an error was
 // encountered while persisting the database
 const DatabasePersistingError = "error persisting in database"
+
+// GenericInternalServerError is the generic
+// error message given when an error was
+// encountered in the server
+const GenericInternalServerError = "internal server error"

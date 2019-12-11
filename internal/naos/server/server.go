@@ -96,12 +96,12 @@ func (s *Server) RegisterHandler(h Handler) {
 			if err := h.Authentication(w, r, ps); err != nil {
 				// If error in authenticating, not any other reason,
 				// return unauthorized status
-				if _, ok := err.(*AuthenticationError); ok {
-					w.WriteHeader(http.StatusUnauthorized)
+				if err, ok := err.(*AuthenticationError); ok {
+					encodeError("authentication failed", err, http.StatusUnauthorized, w)
 					return
 				}
 				// Else, return internal error code
-				w.WriteHeader(http.StatusInternalServerError)
+				encodeError("internal server error", err, http.StatusInternalServerError, w)
 				return
 			}
 		}
@@ -165,8 +165,9 @@ func encodeResponseBody(body interface{}, w http.ResponseWriter) {
 	json.NewEncoder(w).Encode(body)
 }
 
-func encodeError(err string, debug error, w http.ResponseWriter) {
+func encodeError(err string, debug error, statusCode int, w http.ResponseWriter) {
 	errorResponse := api.ErrorResponseNew(err, debug)
 	json.NewEncoder(w).Encode(errorResponse)
+	w.WriteHeader(statusCode)
 	return
 }

@@ -1,9 +1,8 @@
 package data
 
 import (
-	"encoding/json"
-
 	"github.com/cheekybits/genny/generic"
+	json "github.com/json-iterator/go"
 	bolt "go.etcd.io/bbolt"
 )
 

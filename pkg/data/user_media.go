@@ -1,10 +1,10 @@
 package data
 
 import (
-	"encoding/json"
 	"errors"
 	"time"
 
+	json "github.com/json-iterator/go"
 	bolt "go.etcd.io/bbolt"
 )
 

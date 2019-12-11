@@ -1,9 +1,8 @@
 package data
 
 import (
-	"encoding/json"
-
 	"github.com/cheekybits/genny/generic"
+	json "github.com/json-iterator/go"
 )
 
 //go:generate genny -in=$GOFILE -out=gen_$GOFILE gen "EntityType=Media,Episode,Character,Genre,Producer,Person,User,MediaRelation,MediaCharacter,MediaGenre,MediaProducer,UserMedia,UserMediaList"

@@ -1,9 +1,9 @@
 package data
 
 import (
-	"encoding/json"
 	"strings"
 
+	json "github.com/json-iterator/go"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/crypto/bcrypt"
 )

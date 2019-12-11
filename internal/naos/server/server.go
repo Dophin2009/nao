@@ -1,13 +1,13 @@
 package server
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
+	json "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
 	"gitlab.com/Dophin2009/nao/pkg/api"
 )

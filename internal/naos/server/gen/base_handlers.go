@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"strings"

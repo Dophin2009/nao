@@ -1,5 +1,6 @@
 # Generated code
 **/gen_*
+**/gen.*
 
 # Target directories
 bin/

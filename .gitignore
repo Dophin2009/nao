@@ -2,7 +2,7 @@
 **/gen_*
 
 # Target directories
-target/
+bin/
 
 # IDE configs
 .vscode/

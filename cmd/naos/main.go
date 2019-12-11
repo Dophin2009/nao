@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
-	"gitlab.com/Dophin2009/nao/internal/naos"
+	"gitlab.com/Dophin2009/nao/internal/naos/config"
+	"gitlab.com/Dophin2009/nao/internal/naos/server"
 	"gitlab.com/Dophin2009/nao/pkg/data"
+	bolt "go.etcd.io/bbolt"
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 	println("-------------------: NAO SERVER :-------------------")
 
 	// Read configuration files
-	conf, err := naos.ReadLinuxConfigs()
+	conf, err := config.ReadLinuxConfigs()
 	if err != nil {
 		log.Fatalf("Error reading config: %v", err)
 	}
@@ -37,18 +38,14 @@ func main() {
 	defer data.ClearDatabase(db)
 
 	// Create the API controller and HTTP server
-	serverAddress := fmt.Sprintf("%s:%s", conf.Hostname, conf.Port)
-	controller := naos.ControllerNew(db)
-	server := &http.Server{
-		Addr:    serverAddress,
-		Handler: controller.Router,
-	}
+	address := fmt.Sprintf("%s:%s", conf.Hostname, conf.Port)
+	s := initServer(address, db)
+	shttp := s.HTTPServer()
 
 	// Launch server in goroutine
 	go func() {
-		log.Println("Launching server on", serverAddress)
-		// err := server.ListenAndServeTLS("cert.pem", "key.pem")
-		err := server.ListenAndServe()
+		log.Println("Launching server on", s.Address)
+		err := shttp.ListenAndServe()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -56,15 +53,23 @@ func main() {
 
 	// Wait for SIGINTERRUPT signal
 	wait := time.Second * 15
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	<-c
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, os.Interrupt)
+	<-sc
 
 	// Wait for processes to end, then shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), wait)
 	defer cancel()
-	server.Shutdown(ctx)
+	shttp.Shutdown(ctx)
 
 	println()
 	log.Println("Exiting...")
+}
+
+func initServer(address string, db *bolt.DB) *server.Server {
+	s := server.NewServer(address)
+	for _, hg := range server.NewEntityHandlerGroups(db) {
+		s.RegisterHandlerGroup(hg)
+	}
+	return &s
 }

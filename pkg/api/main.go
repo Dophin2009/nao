@@ -40,6 +40,11 @@ func ErrorResponseNew(err string, debug error) *ErrorResponse {
 	}
 }
 
+// AuthenticationError is the generic error
+// message given when the user failed to
+// authenticate
+const AuthenticationError = "error authenticating user"
+
 // PathVariableParsingError is the generic
 // error message given when some path variable
 // could not be parsed properly

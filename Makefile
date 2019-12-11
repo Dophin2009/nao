@@ -8,7 +8,7 @@ GOGET=$(GOCMD) get
 GOGEN=$(GOCMD) generate
 
 # Project variables
-TARGET_DIR=target
+TARGET_DIR=bin
 REPO_NAME=gitlab.com/Dophin2009/nao
 MODULES=naos
 
@@ -23,9 +23,9 @@ build: clean
 	$(GOGEN) $(REPO_NAME)/pkg/data
 	mv pkg/data/service*.go pkg/data/gen/
 
-	mv internal/naos/gen/routers.go internal/naos/routers.go
-	$(GOGEN) $(REPO_NAME)/internal/naos
-	mv internal/naos/routers.go internal/naos/gen/routers.go
+	mv internal/naos/server/gen/base_handlers.go internal/naos/server/base_handlers.go
+	$(GOGEN) $(REPO_NAME)/internal/naos/server
+	mv internal/naos/server/base_handlers.go internal/naos/server/gen/base_handlers.go
 
 	@for module in $(MODULES) ; do \
 		$(GOBUILD) -o $(TARGET_DIR)/$$module -v $(REPO_NAME)/cmd/$$module ; \

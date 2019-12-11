@@ -1,4 +1,4 @@
-package naos
+package config
 
 import (
 	"github.com/OpenPeeDeeP/xdg"

@@ -16,6 +16,7 @@ default: build
 
 clean:
 	rm -rf $(TARGET_DIR)/
+	find . -type f -name '*.gen.go' -delete
 
 # Fix this
 build: clean

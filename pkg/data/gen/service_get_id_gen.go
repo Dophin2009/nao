@@ -5,7 +5,7 @@ import (
 	json "github.com/json-iterator/go"
 )
 
-//go:generate genny -in=$GOFILE -out=gen_$GOFILE gen "EntityType=Media,Episode,Character,Genre,Producer,Person,User,MediaRelation,MediaCharacter,MediaGenre,MediaProducer,UserMedia,UserMediaList"
+//go:generate genny -in=service_get_id_gen.go -out=service_get_id.gen.go gen "EntityType=Media,Episode,Character,Genre,Producer,Person,User,MediaRelation,MediaCharacter,MediaGenre,MediaProducer,UserMedia,UserMediaList"
 
 // EntityType is a generic placeholder for all entity types;
 // it is assumed that EntityType structs have an ID and Version,

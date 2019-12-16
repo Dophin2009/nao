@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/OpenPeeDeeP/xdg"
 	"github.com/spf13/viper"
 )
@@ -19,9 +21,9 @@ type Configuration struct {
 // ReadLinuxConfigs looks for config files from
 // the default Linux config locations and returns
 //a parsed Configuration struct
-func ReadLinuxConfigs() (Configuration, error) {
-	etcDir := "/etc/nao/"
-	userDir := xdg.ConfigHome() + "/nao/"
+func ReadLinuxConfigs(subpath string) (Configuration, error) {
+	etcDir := fmt.Sprintf("/etc/%s/", subpath)
+	userDir := fmt.Sprintf("%s/%s/", xdg.ConfigHome(), subpath)
 	confFileDirs := []string{etcDir, userDir}
 	return ReadConfig(confFileDirs)
 }

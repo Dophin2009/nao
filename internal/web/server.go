@@ -245,7 +245,7 @@ func EncodeResponseBody(body interface{}, w http.ResponseWriter) {
 // EncodeResponseError encodes an error response into the response
 // body of the given ResponseWriter.
 func EncodeResponseError(err string, debug error, statusCode int, w http.ResponseWriter) {
-	errorResponse := api.ErrorResponseNew(err, debug)
+	errorResponse := ErrorResponseNew(err, debug)
 	json.NewEncoder(w).Encode(errorResponse)
 	w.WriteHeader(statusCode)
 }

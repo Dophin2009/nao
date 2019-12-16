@@ -7,8 +7,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	json "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
+	"gitlab.com/Dophin2009/nao/internal/data"
 	"gitlab.com/Dophin2009/nao/internal/web"
-	"gitlab.com/Dophin2009/nao/pkg/data"
 	bolt "go.etcd.io/bbolt"
 )
 

@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"gitlab.com/Dophin2009/nao/internal/data"
 	"gitlab.com/Dophin2009/nao/internal/web"
-	"gitlab.com/Dophin2009/nao/pkg/data"
 )
 
 // JWTAuthenticator is an authenticator for JWT tokens.

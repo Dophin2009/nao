@@ -19,9 +19,9 @@ clean:
 
 # Fix this
 build: clean
-	mv pkg/data/gen/* pkg/data/
-	$(GOGEN) $(REPO_NAME)/pkg/data
-	mv pkg/data/*_gen.go pkg/data/gen/
+	mv internal/data/gen/* internal/data/
+	$(GOGEN) $(REPO_NAME)/internal/data
+	mv internal/data/*_gen.go internal/data/gen/
 
 	mv internal/naos/server/gen/* internal/naos/server/
 	$(GOGEN) $(REPO_NAME)/internal/naos/server 

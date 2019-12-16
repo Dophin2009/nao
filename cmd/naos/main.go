@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"gitlab.com/Dophin2009/nao/internal/config"
+	"gitlab.com/Dophin2009/nao/internal/data"
 	"gitlab.com/Dophin2009/nao/internal/naos/server"
 	"gitlab.com/Dophin2009/nao/internal/web"
-	"gitlab.com/Dophin2009/nao/pkg/data"
 	bolt "go.etcd.io/bbolt"
 )
 

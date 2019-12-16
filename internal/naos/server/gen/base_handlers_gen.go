@@ -7,8 +7,8 @@ import (
 	"github.com/cheekybits/genny/generic"
 	json "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
+	"gitlab.com/Dophin2009/nao/internal/data"
 	"gitlab.com/Dophin2009/nao/internal/web"
-	"gitlab.com/Dophin2009/nao/pkg/data"
 )
 
 //go:generate genny -in=base_handlers_gen.go -out=base_handlers.gen.go gen "EntityType=Media,Episode,Character,Genre,Producer,Person,User,MediaRelation,MediaCharacter,MediaGenre,MediaProducer,UserMedia,UserMediaList"

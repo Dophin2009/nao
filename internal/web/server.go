@@ -11,7 +11,6 @@ import (
 
 	json "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
-	"gitlab.com/Dophin2009/nao/pkg/api"
 )
 
 // HTTPReciever is a type alias for functions that handle
@@ -117,7 +116,7 @@ func (s *Server) StatusHandler() Handler {
 		Method: http.MethodGet,
 		Path:   []string{},
 		Func: func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			status := api.StatusGet()
+			status := CurrentStatus()
 			json.NewEncoder(w).Encode(status)
 		},
 		ResponseHeaders: map[string]string{
@@ -143,10 +142,10 @@ type Status struct {
 	Time    *time.Time `json:"time"`
 }
 
-// StatusGet retrieves information about the
+// CurrentStatus retrieves information about the
 // API at the current time and returns it as
 // an APIStatus object
-func StatusGet() *Status {
+func CurrentStatus() *Status {
 	currentTime := time.Now()
 	return &Status{
 		Version: "v1",

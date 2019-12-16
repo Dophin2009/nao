@@ -10,6 +10,7 @@ import (
 
 	"gitlab.com/Dophin2009/nao/internal/naos/config"
 	"gitlab.com/Dophin2009/nao/internal/naos/server"
+	"gitlab.com/Dophin2009/nao/internal/web"
 	"gitlab.com/Dophin2009/nao/pkg/data"
 	bolt "go.etcd.io/bbolt"
 )
@@ -66,8 +67,8 @@ func main() {
 	log.Println("Exiting...")
 }
 
-func initServer(address string, db *bolt.DB) *server.Server {
-	s := server.NewServer(address)
+func initServer(address string, db *bolt.DB) *web.Server {
+	s := web.NewServer(address)
 	for _, hg := range server.NewEntityHandlerGroups(db) {
 		s.RegisterHandlerGroup(hg)
 	}

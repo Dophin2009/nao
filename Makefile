@@ -18,14 +18,17 @@ clean:
 	rm -rf $(TARGET_DIR)/
 
 # Fix this
+INTERNAL_NAOS_SERVER_GEN_FILES = base_handlers.go
 build: clean
 	mv pkg/data/gen/service*.go pkg/data/
 	$(GOGEN) $(REPO_NAME)/pkg/data
 	mv pkg/data/service*.go pkg/data/gen/
 
-	mv internal/naos/server/gen/base_handlers.go internal/naos/server/base_handlers.go
-	$(GOGEN) $(REPO_NAME)/internal/naos/server
-	mv internal/naos/server/base_handlers.go internal/naos/server/gen/base_handlers.go
+	@for file in $(INTERNAL_NAOS_SERVER_GEN_FILES) ; do \
+		mv internal/naos/server/gen/$$file internal/naos/server/$$file; \
+		$(GOGEN) $(REPO_NAME)/internal/naos/server; \
+		mv internal/naos/server/$$file internal/naos/server/gen/$$file; \
+	done
 
 	@for module in $(MODULES) ; do \
 		$(GOBUILD) -o $(TARGET_DIR)/$$module -v $(REPO_NAME)/cmd/$$module ; \

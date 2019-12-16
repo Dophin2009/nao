@@ -1,14 +1,13 @@
 package server
 
 import (
-	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/cheekybits/genny/generic"
 	json "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
-	"gitlab.com/Dophin2009/nao/pkg/api"
+	"gitlab.com/Dophin2009/nao/internal/web"
 	"gitlab.com/Dophin2009/nao/pkg/data"
 )
 
@@ -19,43 +18,36 @@ import (
 // both of which should be of int type.
 type EntityType generic.Type
 
-// EntityTypeHandlerGroup is a basic handler group for EntityType
-type EntityTypeHandlerGroup struct {
-	Service *data.EntityTypeService
-}
-
-// NewEntityTypeHandlerGroup returns a handler group for
-// EntityType with the given service
-func NewEntityTypeHandlerGroup(service *data.EntityTypeService) EntityTypeHandlerGroup {
-	g := EntityTypeHandlerGroup{
-		Service: service,
-	}
-	return g
-}
-
-// Handlers returns all the basic CRUD handlers for the
-// handler group
-func (g *EntityTypeHandlerGroup) Handlers() []Handler {
-	return []Handler{
+// Handlers returns all the handlers for the handler group
+func (g *EntityTypeHandlerGroup) Handlers() []web.Handler {
+	handlers := []web.Handler{
 		g.CreateHandler(),
 		g.UpdateHandler(),
 		g.DeleteHandler(),
 		g.GetAllHandler(),
 		g.GetByIDHandler(),
 	}
+	handlers = append(handlers, g.ExtraHandlers()...)
+	return handlers
 }
 
 // CreateHandler returns an POST endpoint handler
 // for creating new EntityType
-func (g *EntityTypeHandlerGroup) CreateHandler() Handler {
-	return Handler{
+func (g *EntityTypeHandlerGroup) CreateHandler() web.Handler {
+	return web.Handler{
 		Method: http.MethodPost,
 		Path:   []string{strings.ToLower("EntityType")},
-		Logic: func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			// Read request body
-			body, err := ioutil.ReadAll(r.Body)
+		Func: func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+			err := g.createAuthenticator(r, ps)
 			if err != nil {
-				encodeError(api.RequestBodyReadingError, err, http.StatusBadRequest, w)
+				web.EncodeResponseErrorUnauthorized(web.ErrorAuthentication, err, w)
+				return
+			}
+
+			// Read request body
+			body, err := web.ReadRequestBody(r)
+			if err != nil {
+				web.EncodeResponseErrorBadRequest(web.ErrorRequestBodyReading, err, w)
 				return
 			}
 
@@ -63,37 +55,43 @@ func (g *EntityTypeHandlerGroup) CreateHandler() Handler {
 			var e data.EntityType
 			err = json.Unmarshal(body, &e)
 			if err != nil {
-				encodeError(api.RequestBodyParsingError, err, http.StatusBadRequest, w)
+				web.EncodeResponseErrorBadRequest(web.ErrorRequestBodyParsing, err, w)
 				return
 			}
 
 			// Persist parsed EntityType
 			err = g.Service.Create(&e)
 			if err != nil {
-				encodeError(api.DatabasePersistingError, err, http.StatusInternalServerError, w)
+				web.EncodeResponseErrorInternalServer(web.ErrorInternalServer, err, w)
 				return
 			}
 
 			// Encode response
-			encodeResponseBody(e, w)
+			web.EncodeResponseBody(e, w)
 		},
 		ResponseHeaders: map[string]string{
-			HeaderContentType: HeaderContentTypeValJSON,
+			web.HeaderContentType: web.HeaderContentTypeValJSON,
 		},
 	}
 }
 
 // UpdateHandler returns a PUT endpoint handler for
 // updaing the EntityType with the given id (path variable :id)
-func (g *EntityTypeHandlerGroup) UpdateHandler() Handler {
-	return Handler{
+func (g *EntityTypeHandlerGroup) UpdateHandler() web.Handler {
+	return web.Handler{
 		Method: http.MethodPut,
 		Path:   []string{strings.ToLower("EntityType"), ":id"},
-		Logic: func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			// Read request body
-			body, err := ioutil.ReadAll(r.Body)
+		Func: func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+			err := g.updateAuthenticator(r, ps)
 			if err != nil {
-				encodeError(api.RequestBodyReadingError, err, http.StatusBadRequest, w)
+				web.EncodeResponseErrorUnauthorized(web.ErrorAuthentication, err, w)
+				return
+			}
+
+			// Read request body
+			body, err := web.ReadRequestBody(r)
+			if err != nil {
+				web.EncodeResponseErrorBadRequest(web.ErrorRequestBodyReading, err, w)
 				return
 			}
 
@@ -101,68 +99,79 @@ func (g *EntityTypeHandlerGroup) UpdateHandler() Handler {
 			var e data.EntityType
 			err = json.Unmarshal(body, &e)
 			if err != nil {
-				encodeError(api.RequestBodyParsingError, err, http.StatusBadRequest, w)
+				web.EncodeResponseErrorBadRequest(web.ErrorRequestBodyParsing, err, w)
 				return
 			}
 
 			// Persist parsed EntityType
 			err = g.Service.Update(&e)
 			if err != nil {
-				encodeError(api.DatabasePersistingError, err, http.StatusInternalServerError, w)
+				web.EncodeResponseErrorInternalServer(web.ErrorInternalServer, err, w)
 				return
 			}
 
 			// Encode response
-			encodeResponseBody(e, w)
+			web.EncodeResponseBody(e, w)
 		},
 		ResponseHeaders: map[string]string{
-			HeaderContentType: HeaderContentTypeValJSON,
+			web.HeaderContentType: web.HeaderContentTypeValJSON,
 		},
 	}
 }
 
 // DeleteHandler returns a DELETE endpoint handler for
 // deleting the EntityType at the given id (path variable :id)
-func (g *EntityTypeHandlerGroup) DeleteHandler() Handler {
-	return Handler{
+func (g *EntityTypeHandlerGroup) DeleteHandler() web.Handler {
+	return web.Handler{
 		Method: http.MethodDelete,
 		Path:   []string{strings.ToLower("EntityType"), ":id"},
-		Logic: func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			// Parse ID
-			id, err := parsePathVarInteger(&ps, "id")
+		Func: func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+			err := g.deleteAuthenticator(r, ps)
 			if err != nil {
-				encodeError(api.PathVariableParsingError, err, http.StatusBadRequest, w)
+				web.EncodeResponseErrorUnauthorized(web.ErrorAuthentication, err, w)
+				return
+			}
+
+			// Parse ID
+			id, err := web.ParsePathVarInt("id", &ps)
+			if err != nil {
+				web.EncodeResponseErrorBadRequest(web.ErrorPathVariableParsing, err, w)
 				return
 			}
 
 			// Delete by ID and retrieve existing
 			e, err := g.Service.Delete(id)
 			if err != nil {
-				encodeError(api.DatabasePersistingError, err, http.StatusInternalServerError, w)
+				web.EncodeResponseErrorInternalServer(web.ErrorInternalServer, err, w)
 				return
 			}
 
 			// Encode response
-			encodeResponseBody(e, w)
-
+			web.EncodeResponseBody(e, w)
 		},
 		ResponseHeaders: map[string]string{
-			HeaderContentType: HeaderContentTypeValJSON,
+			web.HeaderContentType: web.HeaderContentTypeValJSON,
 		},
 	}
 }
 
 // GetAllHandler returns a GET endpoint handler for
 // retrieving all EntityType
-func (g *EntityTypeHandlerGroup) GetAllHandler() Handler {
-	return Handler{
+func (g *EntityTypeHandlerGroup) GetAllHandler() web.Handler {
+	return web.Handler{
 		Method: http.MethodGet,
 		Path:   []string{strings.ToLower("EntityType")},
-		Logic: func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		Func: func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+			err := g.getAllAuthenticator(r, ps)
+			if err != nil {
+				web.EncodeResponseErrorUnauthorized(web.ErrorAuthentication, err, w)
+				return
+			}
+
 			// Retrieve all EntityType
 			list, err := g.Service.GetAll()
 			if err != nil {
-				encodeError(api.DatabaseQueryingError, err, http.StatusInternalServerError, w)
+				web.EncodeResponseErrorInternalServer(web.ErrorInternalServer, err, w)
 				return
 			}
 			if list == nil {
@@ -170,10 +179,10 @@ func (g *EntityTypeHandlerGroup) GetAllHandler() Handler {
 			}
 
 			// Encode response
-			encodeResponseBody(list, w)
+			web.EncodeResponseBody(list, w)
 		},
 		ResponseHeaders: map[string]string{
-			HeaderContentType: HeaderContentTypeValJSON,
+			web.HeaderContentType: web.HeaderContentTypeValJSON,
 		},
 	}
 }
@@ -181,15 +190,21 @@ func (g *EntityTypeHandlerGroup) GetAllHandler() Handler {
 // GetByIDHandler returns a GET endpoint handler for
 // retrieving a single EntityType by the given id (path
 // variable :id)
-func (g *EntityTypeHandlerGroup) GetByIDHandler() Handler {
-	return Handler{
+func (g *EntityTypeHandlerGroup) GetByIDHandler() web.Handler {
+	return web.Handler{
 		Method: http.MethodGet,
 		Path:   []string{strings.ToLower("EntityType"), ":id"},
-		Logic: func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			// Parse ID from path
-			id, err := parsePathVarInteger(&ps, "id")
+		Func: func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+			err := g.getByIDAuthenticator(r, ps)
 			if err != nil {
-				encodeError(api.PathVariableParsingError, err, http.StatusBadRequest, w)
+				web.EncodeResponseErrorUnauthorized(web.ErrorAuthentication, err, w)
+				return
+			}
+
+			// Parse ID from path
+			id, err := web.ParsePathVarInt("id", &ps)
+			if err != nil {
+				web.EncodeResponseErrorBadRequest(web.ErrorPathVariableParsing, err, w)
 				return
 			}
 
@@ -199,15 +214,15 @@ func (g *EntityTypeHandlerGroup) GetByIDHandler() Handler {
 			}
 			err = g.Service.GetByID(&e)
 			if err != nil {
-				encodeError(api.DatabaseQueryingError, err, http.StatusInternalServerError, w)
+				web.EncodeResponseErrorInternalServer(web.ErrorInternalServer, err, w)
 				return
 			}
 
 			// Encode response
-			encodeResponseBody(e, w)
+			web.EncodeResponseBody(e, w)
 		},
 		ResponseHeaders: map[string]string{
-			HeaderContentType: HeaderContentTypeValJSON,
+			web.HeaderContentType: web.HeaderContentTypeValJSON,
 		},
 	}
 }

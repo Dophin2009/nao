@@ -13,7 +13,8 @@ func Buckets() []string {
 	return []string{MediaBucketName, ProducerBucketName, GenreBucketName,
 		EpisodeBucketName, CharacterBucketName, PersonBucketName,
 		UserBucketName, MediaProducerBucketName, MediaRelationBucketName,
-		MediaGenreBucketName, MediaCharacterBucketName, UserMediaBucketName}
+		MediaGenreBucketName, MediaCharacterBucketName, UserMediaBucketName,
+		JWTBucket}
 }
 
 // ConnectDatabase connects to the database file at the given path
@@ -27,7 +28,10 @@ func ConnectDatabase(dbPath string, mode os.FileMode, create bool) (*bolt.DB, er
 	if create {
 		err = db.Update(func(tx *bolt.Tx) error {
 			for _, bucket := range Buckets() {
-				tx.CreateBucket([]byte(bucket))
+				_, err = tx.CreateBucketIfNotExists([]byte(bucket))
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		})

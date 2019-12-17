@@ -1,6 +1,9 @@
 package data
 
 import (
+	"encoding/binary"
+	"fmt"
+
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -173,4 +176,62 @@ func GetByID(id int, ser Service) (Model, error) {
 	}
 
 	return m, nil
+}
+
+// GetRawByID is a generic function that queries the given bucket
+// in the given database for an entity of the given ID
+func GetRawByID(ID int, bucketName string, db *bolt.DB) (v []byte, err error) {
+	err = db.View(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(bucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Get entity by ID, exit if error
+		v = b.Get(itob(ID))
+		if v == nil {
+			return fmt.Errorf("entity with id %d not found", ID)
+		}
+		return err
+	})
+	return
+}
+
+// GetRawAll returns a list of []byte of all the values in the
+// given bucket
+func GetRawAll(bucketName string, db *bolt.DB) (list [][]byte, err error) {
+	err = db.View(func(tx *bolt.Tx) error {
+		// Get bucket, exit if error
+		b, err := Bucket(bucketName, tx)
+		if err != nil {
+			return err
+		}
+
+		// Unmarshal and add all entities who
+		// pass filter to slice, exit if error
+		return b.ForEach(func(k, v []byte) error {
+			list = append(list, v)
+			return nil
+		})
+	})
+	return
+}
+
+func get(ID int, bucket *bolt.Bucket) (v []byte, err error) {
+	if bucket == nil {
+		return nil, fmt.Errorf("bucket must not be nil")
+	}
+
+	v = bucket.Get(itob(ID))
+	if v == nil {
+		return nil, fmt.Errorf("entity with id %d not found", ID)
+	}
+	return v, nil
+}
+
+func itob(v int) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
 }

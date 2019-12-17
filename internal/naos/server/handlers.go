@@ -423,10 +423,7 @@ func (g *UserHandlerGroup) LoginHandler() web.Handler {
 				return
 			}
 
-			user := data.User{
-				Username: creds.Username,
-			}
-			err = g.Service.GetByUsername(&user)
+			user, err := g.Service.GetByUsername(creds.Username)
 
 			expirationTime := time.Now().Add(5 * time.Minute)
 			claims := &data.JWTClaims{
@@ -447,6 +444,9 @@ func (g *UserHandlerGroup) LoginHandler() web.Handler {
 				Value:   tokenString,
 				Expires: expirationTime,
 			})
+		},
+		ResponseHeaders: map[string]string{
+			web.HeaderContentType: web.HeaderContentTypeValJSON,
 		},
 	}
 }

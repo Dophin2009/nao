@@ -42,18 +42,16 @@ type UserPermissionAuthenticator struct {
 
 // Authenticate checks if the user with the given ID
 // has permissions that meet the requirements.
-func (au *UserPermissionAuthenticator) Authenticate(userID int, req *data.Permission) (user data.User, err error) {
-	user.ID = userID
-	err = au.Service.GetByID(&user)
+func (au *UserPermissionAuthenticator) Authenticate(userID int, req *data.Permission) (*data.User, error) {
+	user, err := au.Service.GetByID(userID)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	if !au.RequirementsMet(&user.Permissions, req) {
-		err = errors.New("insufficient permissions")
-		return
+		return nil, errors.New("insufficient permissions")
 	}
-	return
+	return user, nil
 }
 
 // RequirementsMet checks if the given permissions satisfy

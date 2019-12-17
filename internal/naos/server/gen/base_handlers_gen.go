@@ -140,7 +140,13 @@ func (g *EntityTypeHandlerGroup) DeleteHandler() web.Handler {
 			}
 
 			// Delete by ID and retrieve existing
-			e, err := g.Service.Delete(id)
+			e, err := g.Service.GetByID(id)
+			if err != nil {
+				web.EncodeResponseErrorInternalServer(web.ErrorInternalServer, err, w)
+				return
+			}
+
+			err = g.Service.Delete(id)
 			if err != nil {
 				web.EncodeResponseErrorInternalServer(web.ErrorInternalServer, err, w)
 				return
@@ -175,7 +181,7 @@ func (g *EntityTypeHandlerGroup) GetAllHandler() web.Handler {
 				return
 			}
 			if list == nil {
-				list = []data.EntityType{}
+				list = []*data.EntityType{}
 			}
 
 			// Encode response
@@ -209,10 +215,7 @@ func (g *EntityTypeHandlerGroup) GetByIDHandler() web.Handler {
 			}
 
 			// Retrieve EntityType by ID
-			e := data.EntityType{
-				ID: id,
-			}
-			err = g.Service.GetByID(&e)
+			e, err := g.Service.GetByID(id)
 			if err != nil {
 				web.EncodeResponseErrorInternalServer(web.ErrorInternalServer, err, w)
 				return

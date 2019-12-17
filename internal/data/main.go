@@ -10,10 +10,10 @@ import (
 
 // Buckets provides an array of all the buckets in the database
 func Buckets() []string {
-	return []string{MediaBucketName, ProducerBucketName, GenreBucketName,
-		EpisodeBucketName, CharacterBucketName, PersonBucketName,
-		UserBucketName, MediaProducerBucketName, MediaRelationBucketName,
-		MediaGenreBucketName, MediaCharacterBucketName, UserMediaBucketName,
+	return []string{MediaBucket, ProducerBucket, GenreBucket,
+		EpisodeBucket, CharacterBucket, PersonBucket,
+		UserBucket, MediaProducerBucket, MediaRelationBucket,
+		MediaGenreBucket, MediaCharacterBucket, UserMediaBucket,
 		JWTBucket}
 }
 
@@ -55,25 +55,9 @@ func ClearDatabase(db *bolt.DB) (err error) {
 	return
 }
 
-// Entity encompasses all the entities
-// persisted in the database
-type Entity interface {
-}
-
-// Service defines methods of persistence
-// service structs
-type Service interface {
-	GetByID(e Entity) (err error)
-	GetAll() (v [][]byte, err error)
-	Create(e Entity) (err error)
-	Update(e Entity) (err error)
-
-	Validate(e Entity) (err error)
-}
-
-// GetByID is a generic function that queries the given bucket
+// GetRawByID is a generic function that queries the given bucket
 // in the given database for an entity of the given ID
-func GetByID(ID int, bucketName string, db *bolt.DB) (v []byte, err error) {
+func GetRawByID(ID int, bucketName string, db *bolt.DB) (v []byte, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		// Get bucket, exit if error
 		b, err := Bucket(bucketName, tx)
@@ -88,9 +72,9 @@ func GetByID(ID int, bucketName string, db *bolt.DB) (v []byte, err error) {
 	return
 }
 
-// GetAll returns a list of []byte of all the
+// GetRawAll returns a list of []byte of all the
 // values in the given bucket
-func GetAll(bucketName string, db *bolt.DB) (list [][]byte, err error) {
+func GetRawAll(bucketName string, db *bolt.DB) (list [][]byte, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		// Get bucket, exit if error
 		b, err := Bucket(bucketName, tx)

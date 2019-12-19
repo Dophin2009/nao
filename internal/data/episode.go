@@ -97,7 +97,7 @@ func (ser *EpisodeService) GetByID(id int) (*Episode, error) {
 
 // GetByMedia retrieves a list of instances of Episode
 // with the given Media ID.
-func (ser *EpisodeService) GetByMedia(mID int, db *bolt.DB) ([]*Episode, error) {
+func (ser *EpisodeService) GetByMedia(mID int) ([]*Episode, error) {
 	return ser.GetFilter(func(ep *Episode) bool {
 		return ep.MediaID == mID
 	})

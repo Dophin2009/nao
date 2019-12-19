@@ -10,7 +10,7 @@ import (
 
 	"gitlab.com/Dophin2009/nao/internal/config"
 	"gitlab.com/Dophin2009/nao/internal/data"
-	"gitlab.com/Dophin2009/nao/internal/naos/server"
+	"gitlab.com/Dophin2009/nao/internal/naos/handlers"
 	"gitlab.com/Dophin2009/nao/internal/web"
 	bolt "go.etcd.io/bbolt"
 )
@@ -40,7 +40,11 @@ func main() {
 
 	// Create the API controller and HTTP server
 	address := fmt.Sprintf("%s:%s", conf.Hostname, conf.Port)
-	s := initServer(address, db)
+	s, err := initServer(address, db)
+	if err != nil {
+		log.Fatal("Error initializing server")
+		return
+	}
 	shttp := s.HTTPServer()
 
 	// Launch server in goroutine
@@ -67,10 +71,26 @@ func main() {
 	log.Println("Exiting...")
 }
 
-func initServer(address string, db *bolt.DB) *web.Server {
+func initServer(address string, db *bolt.DB) (*web.Server, error) {
 	s := web.NewServer(address)
-	for _, hg := range server.NewEntityHandlerGroups(db) {
-		s.RegisterHandlerGroup(hg)
+
+	ds := &handlers.DataServices{
+		MediaService: &data.MediaService{
+			DB: db,
+		},
 	}
-	return &s
+
+	graphqlHandler, err := handlers.NewGraphQLHandler([]string{"graphql"}, ds)
+	if err != nil {
+		return nil, err
+	}
+	s.RegisterHandler(graphqlHandler)
+
+	graphiqlHandler, err := handlers.NewGraphiQLHandler([]string{"graphiql"}, graphqlHandler.PathString())
+	if err != nil {
+		return nil, err
+	}
+	s.RegisterHandler(graphiqlHandler)
+
+	return &s, nil
 }

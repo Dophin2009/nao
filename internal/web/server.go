@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,6 +12,7 @@ import (
 
 	json "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
 )
 
 // HTTPReciever is a type alias for functions that handle
@@ -30,8 +32,11 @@ type Handler struct {
 func (h *Handler) PathString() string {
 	var str strings.Builder
 	str.WriteString("/")
-	for _, s := range h.Path {
-		str.WriteString(s + "/")
+	for i, s := range h.Path {
+		str.WriteString(s)
+		if i < len(h.Path)-1 {
+			str.WriteString("/")
+		}
 	}
 	return str.String()
 }
@@ -91,13 +96,14 @@ func NewServer(address string) Server {
 func (s *Server) HTTPServer() http.Server {
 	return http.Server{
 		Addr:    s.Address,
-		Handler: s.Router,
+		Handler: cors.Default().Handler(s.Router),
 	}
 }
 
 // RegisterHandler registers the given handler with the
 // server
 func (s *Server) RegisterHandler(h Handler) {
+	log.Printf("Registering handler: %s %s", h.Method, h.PathString())
 	s.Router.Handle(h.Method, h.PathString(), h.HandlerFunc())
 }
 

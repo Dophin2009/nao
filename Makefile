@@ -20,10 +20,6 @@ clean:
 
 # Fix this
 build: clean
-	mv internal/naos/server/gen/* internal/naos/server/
-	$(GOGEN) $(REPO_NAME)/internal/naos/server 
-	mv internal/naos/server/*_gen.go internal/naos/server/gen/ 
-
 	@for module in $(MODULES) ; do \
 		$(GOBUILD) -o $(TARGET_DIR)/$$module -v $(REPO_NAME)/cmd/$$module ; \
 	done

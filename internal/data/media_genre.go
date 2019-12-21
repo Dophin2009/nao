@@ -62,7 +62,7 @@ func (ser *MediaGenreService) GetAll() ([]*MediaGenre, error) {
 // pass the filter.
 func (ser *MediaGenreService) GetFilter(keep func(mg *MediaGenre) bool) ([]*MediaGenre, error) {
 	vlist, err := GetFilter(ser, func(m Model) bool {
-		mg, err := ser.assertType(m)
+		mg, err := ser.AssertType(m)
 		if err != nil {
 			return false
 		}
@@ -82,7 +82,7 @@ func (ser *MediaGenreService) GetByID(id int) (*MediaGenre, error) {
 		return nil, err
 	}
 
-	mg, err := ser.assertType(m)
+	mg, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -107,14 +107,14 @@ func (ser *MediaGenreService) GetByGenre(gID int) ([]*MediaGenre, error) {
 
 // Clean cleans the given MediaGenre for storage.
 func (ser *MediaGenreService) Clean(m Model) error {
-	_, err := ser.assertType(m)
+	_, err := ser.AssertType(m)
 	return err
 }
 
 // Validate returns an error if the MediaGenre is
 // not valid for the database.
 func (ser *MediaGenreService) Validate(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func (ser *MediaGenreService) Validate(m Model) error {
 
 // Initialize sets initial values for some properties.
 func (ser *MediaGenreService) Initialize(m Model, id int) error {
-	mg, err := ser.assertType(m)
+	mg, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -160,11 +160,11 @@ func (ser *MediaGenreService) Initialize(m Model, id int) error {
 // PersistOldProperties maintains certain properties
 // of the existing MediaGenre in updates.
 func (ser *MediaGenreService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.assertType(n)
+	nm, err := ser.AssertType(n)
 	if err != nil {
 		return err
 	}
-	om, err := ser.assertType(o)
+	om, err := ser.AssertType(o)
 	if err != nil {
 		return err
 	}
@@ -174,7 +174,7 @@ func (ser *MediaGenreService) PersistOldProperties(n Model, o Model) error {
 
 // Marshal transforms the given MediaGenre into JSON.
 func (ser *MediaGenreService) Marshal(m Model) ([]byte, error) {
-	mg, err := ser.assertType(m)
+	mg, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +197,8 @@ func (ser *MediaGenreService) Unmarshal(buf []byte) (Model, error) {
 	return &mg, nil
 }
 
-func (ser *MediaGenreService) assertType(m Model) (*MediaGenre, error) {
+// AssertType exposes the given Model as a MediaGenre.
+func (ser *MediaGenreService) AssertType(m Model) (*MediaGenre, error) {
 	if m == nil {
 		return nil, errors.New("model must not be nil")
 	}
@@ -215,7 +216,7 @@ func (ser *MediaGenreService) mapFromModel(vlist []Model) ([]*MediaGenre, error)
 	list := make([]*MediaGenre, len(vlist))
 	var err error
 	for i, v := range vlist {
-		list[i], err = ser.assertType(v)
+		list[i], err = ser.AssertType(v)
 		if err != nil {
 			return nil, err
 		}

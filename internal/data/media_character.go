@@ -67,7 +67,7 @@ func (ser *MediaCharacterService) GetAll() ([]*MediaCharacter, error) {
 // pass the filter.
 func (ser *MediaCharacterService) GetFilter(keep func(mc *MediaCharacter) bool) ([]*MediaCharacter, error) {
 	vlist, err := GetFilter(ser, func(m Model) bool {
-		mc, err := ser.assertType(m)
+		mc, err := ser.AssertType(m)
 		if err != nil {
 			return false
 		}
@@ -87,7 +87,7 @@ func (ser *MediaCharacterService) GetByID(id int) (*MediaCharacter, error) {
 		return nil, err
 	}
 
-	mc, err := ser.assertType(m)
+	mc, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (ser *MediaCharacterService) Bucket() string {
 
 // Clean cleans the given MediaCharacter for storage.
 func (ser *MediaCharacterService) Clean(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (ser *MediaCharacterService) Clean(m Model) error {
 // Validate returns an error if the MediaCharacter is
 // not valid for the database.
 func (ser *MediaCharacterService) Validate(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func (ser *MediaCharacterService) Validate(m Model) error {
 
 // Initialize sets initial values for some properties.
 func (ser *MediaCharacterService) Initialize(m Model, id int) error {
-	mc, err := ser.assertType(m)
+	mc, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -228,11 +228,11 @@ func (ser *MediaCharacterService) Initialize(m Model, id int) error {
 // PersistOldProperties maintains certain properties
 // of the existing MediaCharacter in updates.
 func (ser *MediaCharacterService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.assertType(n)
+	nm, err := ser.AssertType(n)
 	if err != nil {
 		return err
 	}
-	om, err := ser.assertType(o)
+	om, err := ser.AssertType(o)
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func (ser *MediaCharacterService) PersistOldProperties(n Model, o Model) error {
 
 // Marshal transforms the given MediaCharacter into JSON.
 func (ser *MediaCharacterService) Marshal(m Model) ([]byte, error) {
-	mc, err := ser.assertType(m)
+	mc, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +265,8 @@ func (ser *MediaCharacterService) Unmarshal(buf []byte) (Model, error) {
 	return &mc, nil
 }
 
-func (ser *MediaCharacterService) assertType(m Model) (*MediaCharacter, error) {
+// AssertType exposes the given Model as a MediaCharacter.
+func (ser *MediaCharacterService) AssertType(m Model) (*MediaCharacter, error) {
 	if m == nil {
 		return nil, errors.New("model must not be nil")
 	}
@@ -283,7 +284,7 @@ func (ser *MediaCharacterService) mapFromModel(vlist []Model) ([]*MediaCharacter
 	list := make([]*MediaCharacter, len(vlist))
 	var err error
 	for i, v := range vlist {
-		list[i], err = ser.assertType(v)
+		list[i], err = ser.AssertType(v)
 		if err != nil {
 			return nil, err
 		}

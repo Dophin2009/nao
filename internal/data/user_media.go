@@ -138,7 +138,7 @@ func (ser *UserMediaService) GetAll() ([]*UserMedia, error) {
 // pass the filter.
 func (ser *UserMediaService) GetFilter(keep func(um *UserMedia) bool) ([]*UserMedia, error) {
 	vlist, err := GetFilter(ser, func(m Model) bool {
-		um, err := ser.assertType(m)
+		um, err := ser.AssertType(m)
 		if err != nil {
 			return false
 		}
@@ -158,7 +158,7 @@ func (ser *UserMediaService) GetByID(id int) (*UserMedia, error) {
 		return nil, err
 	}
 
-	um, err := ser.assertType(m)
+	um, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func (ser *UserMediaService) Bucket() string {
 
 // Clean cleans the given UserMedia for storage
 func (ser *UserMediaService) Clean(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -212,7 +212,7 @@ func (ser *UserMediaService) Clean(m Model) error {
 // Validate returns an error if the UserMedia is
 // not valid for the database.
 func (ser *UserMediaService) Validate(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -259,7 +259,7 @@ func (ser *UserMediaService) Validate(m Model) error {
 
 // Initialize sets initial values for some properties.
 func (ser *UserMediaService) Initialize(m Model, id int) error {
-	md, err := ser.assertType(m)
+	md, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -271,11 +271,11 @@ func (ser *UserMediaService) Initialize(m Model, id int) error {
 // PersistOldProperties maintains certain properties
 // of the existing UserMedia in updates.
 func (ser *UserMediaService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.assertType(n)
+	nm, err := ser.AssertType(n)
 	if err != nil {
 		return err
 	}
-	om, err := ser.assertType(o)
+	om, err := ser.AssertType(o)
 	if err != nil {
 		return err
 	}
@@ -285,7 +285,7 @@ func (ser *UserMediaService) PersistOldProperties(n Model, o Model) error {
 
 // Marshal transforms the given UserMedia into JSON.
 func (ser *UserMediaService) Marshal(m Model) ([]byte, error) {
-	um, err := ser.assertType(m)
+	um, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +308,8 @@ func (ser *UserMediaService) Unmarshal(buf []byte) (Model, error) {
 	return &um, nil
 }
 
-func (ser *UserMediaService) assertType(m Model) (*UserMedia, error) {
+// AssertType exposes the given Model as a UserMedia.
+func (ser *UserMediaService) AssertType(m Model) (*UserMedia, error) {
 	if m == nil {
 		return nil, errors.New("model must not be nil")
 	}
@@ -326,7 +327,7 @@ func (ser *UserMediaService) mapFromModel(vlist []Model) ([]*UserMedia, error) {
 	list := make([]*UserMedia, len(vlist))
 	var err error
 	for i, v := range vlist {
-		list[i], err = ser.assertType(v)
+		list[i], err = ser.AssertType(v)
 		if err != nil {
 			return nil, err
 		}

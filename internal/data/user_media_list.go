@@ -63,7 +63,7 @@ func (ser *UserMediaListService) GetAll() ([]*UserMediaList, error) {
 // pass the filter.
 func (ser *UserMediaListService) GetFilter(keep func(uml *UserMediaList) bool) ([]*UserMediaList, error) {
 	vlist, err := GetFilter(ser, func(m Model) bool {
-		uml, err := ser.assertType(m)
+		uml, err := ser.AssertType(m)
 		if err != nil {
 			return false
 		}
@@ -83,7 +83,7 @@ func (ser *UserMediaListService) GetByID(id int) (*UserMediaList, error) {
 		return nil, err
 	}
 
-	uml, err := ser.assertType(m)
+	uml, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (ser *UserMediaListService) Bucket() string {
 
 // Clean cleans the given UserMediaList for storage
 func (ser *UserMediaListService) Clean(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func (ser *UserMediaListService) Clean(m Model) error {
 // Validate returns an error if the UserMediaList is
 // not valid for the database.
 func (ser *UserMediaListService) Validate(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func (ser *UserMediaListService) Validate(m Model) error {
 
 // Initialize sets initial values for some properties.
 func (ser *UserMediaListService) Initialize(m Model, id int) error {
-	uml, err := ser.assertType(m)
+	uml, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -154,11 +154,11 @@ func (ser *UserMediaListService) Initialize(m Model, id int) error {
 // PersistOldProperties maintains certain properties
 // of the existing UserMediaList in updates.
 func (ser *UserMediaListService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.assertType(n)
+	nm, err := ser.AssertType(n)
 	if err != nil {
 		return err
 	}
-	om, err := ser.assertType(o)
+	om, err := ser.AssertType(o)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func (ser *UserMediaListService) PersistOldProperties(n Model, o Model) error {
 
 // Marshal transforms the given UserMediaList into JSON.
 func (ser *UserMediaListService) Marshal(m Model) ([]byte, error) {
-	uml, err := ser.assertType(m)
+	uml, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +191,8 @@ func (ser *UserMediaListService) Unmarshal(buf []byte) (Model, error) {
 	return &uml, nil
 }
 
-func (ser *UserMediaListService) assertType(m Model) (*UserMediaList, error) {
+// AssertType exposes the given Model as a UserMediaList.
+func (ser *UserMediaListService) AssertType(m Model) (*UserMediaList, error) {
 	if m == nil {
 		return nil, errors.New("model must not be nil")
 	}
@@ -209,7 +210,7 @@ func (ser *UserMediaListService) mapFromModel(vlist []Model) ([]*UserMediaList, 
 	list := make([]*UserMediaList, len(vlist))
 	var err error
 	for i, v := range vlist {
-		list[i], err = ser.assertType(v)
+		list[i], err = ser.AssertType(v)
 		if err != nil {
 			return nil, err
 		}

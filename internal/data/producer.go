@@ -63,7 +63,7 @@ func (ser *ProducerService) GetAll() ([]*Producer, error) {
 // pass the filter.
 func (ser *ProducerService) GetFilter(keep func(p *Producer) bool) ([]*Producer, error) {
 	vlist, err := GetFilter(ser, func(m Model) bool {
-		p, err := ser.assertType(m)
+		p, err := ser.AssertType(m)
 		if err != nil {
 			return false
 		}
@@ -83,7 +83,7 @@ func (ser *ProducerService) GetByID(id int) (*Producer, error) {
 		return nil, err
 	}
 
-	p, err := ser.assertType(m)
+	p, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (ser *ProducerService) Bucket() string {
 
 // Clean cleans the given Producer for storage.
 func (ser *ProducerService) Clean(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -119,13 +119,13 @@ func (ser *ProducerService) Clean(m Model) error {
 // Validate returns an error if the Producer is
 // not valid for the database.
 func (ser *ProducerService) Validate(m Model) error {
-	_, err := ser.assertType(m)
+	_, err := ser.AssertType(m)
 	return err
 }
 
 // Initialize sets initial values for some properties.
 func (ser *ProducerService) Initialize(m Model, id int) error {
-	p, err := ser.assertType(m)
+	p, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -137,11 +137,11 @@ func (ser *ProducerService) Initialize(m Model, id int) error {
 // PersistOldProperties maintains certain properties
 // of the existing Producer in updates
 func (ser *ProducerService) PersistOldProperties(n Model, o Model) error {
-	np, err := ser.assertType(n)
+	np, err := ser.AssertType(n)
 	if err != nil {
 		return err
 	}
-	op, err := ser.assertType(o)
+	op, err := ser.AssertType(o)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func (ser *ProducerService) PersistOldProperties(n Model, o Model) error {
 
 // Marshal transforms the given Producer into JSON.
 func (ser *ProducerService) Marshal(m Model) ([]byte, error) {
-	p, err := ser.assertType(m)
+	p, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,8 @@ func (ser *ProducerService) Unmarshal(buf []byte) (Model, error) {
 	return &p, nil
 }
 
-func (ser *ProducerService) assertType(m Model) (*Producer, error) {
+// AssertType exposes the given Model as a Producer.
+func (ser *ProducerService) AssertType(m Model) (*Producer, error) {
 	if m == nil {
 		return nil, errors.New("model must not be nil")
 	}
@@ -192,7 +193,7 @@ func (ser *ProducerService) mapFromModel(vlist []Model) ([]*Producer, error) {
 	list := make([]*Producer, len(vlist))
 	var err error
 	for i, v := range vlist {
-		list[i], err = ser.assertType(v)
+		list[i], err = ser.AssertType(v)
 		if err != nil {
 			return nil, err
 		}

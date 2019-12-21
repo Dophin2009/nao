@@ -82,7 +82,7 @@ func (ser *UserService) GetAll() ([]*User, error) {
 // pass the filter.
 func (ser *UserService) GetFilter(keep func(u *User) bool) ([]*User, error) {
 	vlist, err := GetFilter(ser, func(m Model) bool {
-		u, err := ser.assertType(m)
+		u, err := ser.AssertType(m)
 		if err != nil {
 			return false
 		}
@@ -102,7 +102,7 @@ func (ser *UserService) GetByID(id int) (*User, error) {
 		return nil, err
 	}
 
-	u, err := ser.assertType(m)
+	u, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func (ser *UserService) Bucket() string {
 
 // Clean cleans the given User for storage.
 func (ser *UserService) Clean(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func (ser *UserService) Clean(m Model) error {
 // Validate checks if the given User is valid
 // for the database.
 func (ser *UserService) Validate(m Model) error {
-	u, err := ser.assertType(m)
+	u, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func (ser *UserService) Validate(m Model) error {
 
 // Initialize sets initial values for some properties.
 func (ser *UserService) Initialize(m Model, id int) error {
-	u, err := ser.assertType(m)
+	u, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -258,11 +258,11 @@ func (ser *UserService) Initialize(m Model, id int) error {
 // PersistOldProperties maintains certain properties
 // of the existing User in updates.
 func (ser *UserService) PersistOldProperties(n Model, o Model) error {
-	nu, err := ser.assertType(n)
+	nu, err := ser.AssertType(n)
 	if err != nil {
 		return err
 	}
-	ou, err := ser.assertType(o)
+	ou, err := ser.AssertType(o)
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func (ser *UserService) PersistOldProperties(n Model, o Model) error {
 
 // Marshal transforms the given User into JSON.
 func (ser *UserService) Marshal(m Model) ([]byte, error) {
-	u, err := ser.assertType(m)
+	u, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +298,8 @@ func (ser *UserService) Unmarshal(buf []byte) (Model, error) {
 	return &u, nil
 }
 
-func (ser *UserService) assertType(m Model) (*User, error) {
+// AssertType exposes the given Model as a User.
+func (ser *UserService) AssertType(m Model) (*User, error) {
 	if m == nil {
 		return nil, errors.New("model must not be nil")
 	}
@@ -316,7 +317,7 @@ func (ser *UserService) mapFromModel(vlist []Model) ([]*User, error) {
 	list := make([]*User, len(vlist))
 	var err error
 	for i, v := range vlist {
-		list[i], err = ser.assertType(v)
+		list[i], err = ser.AssertType(v)
 		if err != nil {
 			return nil, err
 		}

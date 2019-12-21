@@ -61,7 +61,7 @@ func (ser *PersonService) GetAll() ([]*Person, error) {
 // pass the filter.
 func (ser *PersonService) GetFilter(keep func(p *Person) bool) ([]*Person, error) {
 	vlist, err := GetFilter(ser, func(m Model) bool {
-		p, err := ser.assertType(m)
+		p, err := ser.AssertType(m)
 		if err != nil {
 			return false
 		}
@@ -81,7 +81,7 @@ func (ser *PersonService) GetByID(id int) (*Person, error) {
 		return nil, err
 	}
 
-	p, err := ser.assertType(m)
+	p, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (ser *PersonService) Bucket() string {
 
 // Clean cleans the given Person for storage
 func (ser *PersonService) Clean(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -117,13 +117,13 @@ func (ser *PersonService) Clean(m Model) error {
 // Validate returns an error if the Person is
 // not valid for the database.
 func (ser *PersonService) Validate(m Model) error {
-	_, err := ser.assertType(m)
+	_, err := ser.AssertType(m)
 	return err
 }
 
 // Initialize sets initial values for some properties.
 func (ser *PersonService) Initialize(m Model, id int) error {
-	p, err := ser.assertType(m)
+	p, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -135,11 +135,11 @@ func (ser *PersonService) Initialize(m Model, id int) error {
 // PersistOldProperties maintains certain properties
 // of the existing Person in updates.
 func (ser *PersonService) PersistOldProperties(n Model, o Model) error {
-	np, err := ser.assertType(n)
+	np, err := ser.AssertType(n)
 	if err != nil {
 		return err
 	}
-	op, err := ser.assertType(o)
+	op, err := ser.AssertType(o)
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func (ser *PersonService) PersistOldProperties(n Model, o Model) error {
 
 // Marshal transforms the given Person into JSON.
 func (ser *PersonService) Marshal(m Model) ([]byte, error) {
-	p, err := ser.assertType(m)
+	p, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,8 @@ func (ser *PersonService) Unmarshal(buf []byte) (Model, error) {
 	return &p, nil
 }
 
-func (ser *PersonService) assertType(m Model) (*Person, error) {
+// AssertType exposes the given Model as a Person.
+func (ser *PersonService) AssertType(m Model) (*Person, error) {
 	if m == nil {
 		return nil, errors.New("model must not be nil")
 	}
@@ -190,7 +191,7 @@ func (ser *PersonService) mapFromModel(vlist []Model) ([]*Person, error) {
 	list := make([]*Person, len(vlist))
 	var err error
 	for i, v := range vlist {
-		list[i], err = ser.assertType(v)
+		list[i], err = ser.AssertType(v)
 		if err != nil {
 			return nil, err
 		}

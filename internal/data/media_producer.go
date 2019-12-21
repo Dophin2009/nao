@@ -64,7 +64,7 @@ func (ser *MediaProducerService) GetAll() ([]*MediaProducer, error) {
 // pass the filter.
 func (ser *MediaProducerService) GetFilter(keep func(mp *MediaProducer) bool) ([]*MediaProducer, error) {
 	vlist, err := GetFilter(ser, func(m Model) bool {
-		mp, err := ser.assertType(m)
+		mp, err := ser.AssertType(m)
 		if err != nil {
 			return false
 		}
@@ -84,7 +84,7 @@ func (ser *MediaProducerService) GetByID(id int) (*MediaProducer, error) {
 		return nil, err
 	}
 
-	mp, err := ser.assertType(m)
+	mp, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (ser *MediaProducerService) Bucket() string {
 
 // Clean cleans the given MediaProducer for storage.
 func (ser *MediaProducerService) Clean(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func (ser *MediaProducerService) Clean(m Model) error {
 // Validate returns an error if the MediaProducer is
 // not valid for the database.
 func (ser *MediaProducerService) Validate(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func (ser *MediaProducerService) Validate(m Model) error {
 
 // Initialize sets initial values for some properties.
 func (ser *MediaProducerService) Initialize(m Model, id int) error {
-	mp, err := ser.assertType(m)
+	mp, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -176,11 +176,11 @@ func (ser *MediaProducerService) Initialize(m Model, id int) error {
 // PersistOldProperties maintains certain properties
 // of the existing MediaProducer in updates.
 func (ser *MediaProducerService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.assertType(n)
+	nm, err := ser.AssertType(n)
 	if err != nil {
 		return err
 	}
-	om, err := ser.assertType(o)
+	om, err := ser.AssertType(o)
 	if err != nil {
 		return err
 	}
@@ -190,7 +190,7 @@ func (ser *MediaProducerService) PersistOldProperties(n Model, o Model) error {
 
 // Marshal transforms the given MediaProducer into JSON.
 func (ser *MediaProducerService) Marshal(m Model) ([]byte, error) {
-	mp, err := ser.assertType(m)
+	mp, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,8 @@ func (ser *MediaProducerService) Unmarshal(buf []byte) (Model, error) {
 	return &mp, nil
 }
 
-func (ser *MediaProducerService) assertType(m Model) (*MediaProducer, error) {
+// AssertType exposes the given Model as a MediaProducer.
+func (ser *MediaProducerService) AssertType(m Model) (*MediaProducer, error) {
 	if m == nil {
 		return nil, errors.New("model must not be nil")
 	}
@@ -231,7 +232,7 @@ func (ser *MediaProducerService) mapFromModel(vlist []Model) ([]*MediaProducer, 
 	list := make([]*MediaProducer, len(vlist))
 	var err error
 	for i, v := range vlist {
-		list[i], err = ser.assertType(v)
+		list[i], err = ser.AssertType(v)
 		if err != nil {
 			return nil, err
 		}

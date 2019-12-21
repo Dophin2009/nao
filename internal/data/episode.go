@@ -68,7 +68,7 @@ func (ser *EpisodeService) GetAll() ([]*Episode, error) {
 // pass the filter.
 func (ser *EpisodeService) GetFilter(keep func(ep *Episode) bool) ([]*Episode, error) {
 	vlist, err := GetFilter(ser, func(m Model) bool {
-		ep, err := ser.assertType(m)
+		ep, err := ser.AssertType(m)
 		if err != nil {
 			return false
 		}
@@ -88,7 +88,7 @@ func (ser *EpisodeService) GetByID(id int) (*Episode, error) {
 		return nil, err
 	}
 
-	ep, err := ser.assertType(m)
+	ep, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (ser *EpisodeService) Bucket() string {
 
 // Clean cleans the given Episode for storage
 func (ser *EpisodeService) Clean(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -132,13 +132,13 @@ func (ser *EpisodeService) Clean(m Model) error {
 // Validate returns an error if the Episode is
 // not valid for the database.
 func (ser *EpisodeService) Validate(m Model) error {
-	_, err := ser.assertType(m)
+	_, err := ser.AssertType(m)
 	return err
 }
 
 // Initialize sets initial values for some properties.
 func (ser *EpisodeService) Initialize(m Model, id int) error {
-	ep, err := ser.assertType(m)
+	ep, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -150,11 +150,11 @@ func (ser *EpisodeService) Initialize(m Model, id int) error {
 // PersistOldProperties maintains certain properties
 // of the existing Episode in updates.
 func (ser *EpisodeService) PersistOldProperties(n Model, o Model) error {
-	nep, err := ser.assertType(n)
+	nep, err := ser.AssertType(n)
 	if err != nil {
 		return err
 	}
-	oep, err := ser.assertType(o)
+	oep, err := ser.AssertType(o)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func (ser *EpisodeService) PersistOldProperties(n Model, o Model) error {
 
 // Marshal transforms the given Episode into JSON.
 func (ser *EpisodeService) Marshal(m Model) ([]byte, error) {
-	ep, err := ser.assertType(m)
+	ep, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +187,8 @@ func (ser *EpisodeService) Unmarshal(buf []byte) (Model, error) {
 	return &ep, nil
 }
 
-func (ser *EpisodeService) assertType(m Model) (*Episode, error) {
+// AssertType exposes the Model as an Episode.
+func (ser *EpisodeService) AssertType(m Model) (*Episode, error) {
 	if m == nil {
 		return nil, errors.New("model must not be nil")
 	}
@@ -205,7 +206,7 @@ func (ser *EpisodeService) mapFromModel(vlist []Model) ([]*Episode, error) {
 	list := make([]*Episode, len(vlist))
 	var err error
 	for i, v := range vlist {
-		list[i], err = ser.assertType(v)
+		list[i], err = ser.AssertType(v)
 		if err != nil {
 			return nil, err
 		}

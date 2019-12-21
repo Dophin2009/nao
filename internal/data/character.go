@@ -61,7 +61,7 @@ func (ser *CharacterService) GetAll() ([]*Character, error) {
 // pass the filter.
 func (ser *CharacterService) GetFilter(keep func(c *Character) bool) ([]*Character, error) {
 	vlist, err := GetFilter(ser, func(m Model) bool {
-		c, err := ser.assertType(m)
+		c, err := ser.AssertType(m)
 		if err != nil {
 			return false
 		}
@@ -81,7 +81,7 @@ func (ser *CharacterService) GetByID(id int) (*Character, error) {
 		return nil, err
 	}
 
-	c, err := ser.assertType(m)
+	c, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (ser *CharacterService) Bucket() string {
 
 // Clean cleans the given Character for storage
 func (ser *CharacterService) Clean(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -117,13 +117,13 @@ func (ser *CharacterService) Clean(m Model) error {
 // Validate returns an error if the Character is
 // not valid for the database.
 func (ser *CharacterService) Validate(m Model) error {
-	_, err := ser.assertType(m)
+	_, err := ser.AssertType(m)
 	return err
 }
 
 // Initialize sets initial values for some properties.
 func (ser *CharacterService) Initialize(m Model, id int) error {
-	c, err := ser.assertType(m)
+	c, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -135,11 +135,11 @@ func (ser *CharacterService) Initialize(m Model, id int) error {
 // PersistOldProperties maintains certain properties
 // of the existing Character in updates.
 func (ser *CharacterService) PersistOldProperties(n Model, o Model) error {
-	nc, err := ser.assertType(n)
+	nc, err := ser.AssertType(n)
 	if err != nil {
 		return err
 	}
-	oc, err := ser.assertType(o)
+	oc, err := ser.AssertType(o)
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func (ser *CharacterService) PersistOldProperties(n Model, o Model) error {
 
 // Marshal transforms the given Character into JSON.
 func (ser *CharacterService) Marshal(m Model) ([]byte, error) {
-	c, err := ser.assertType(m)
+	c, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,8 @@ func (ser *CharacterService) Unmarshal(buf []byte) (Model, error) {
 	return &c, nil
 }
 
-func (ser *CharacterService) assertType(m Model) (*Character, error) {
+// AssertType exposes the given Model as a Character.
+func (ser *CharacterService) AssertType(m Model) (*Character, error) {
 	if m == nil {
 		return nil, errors.New("model must not be nil")
 	}
@@ -190,7 +191,7 @@ func (ser *CharacterService) mapFromModel(vlist []Model) ([]*Character, error) {
 	list := make([]*Character, len(vlist))
 	var err error
 	for i, v := range vlist {
-		list[i], err = ser.assertType(v)
+		list[i], err = ser.AssertType(v)
 		if err != nil {
 			return nil, err
 		}

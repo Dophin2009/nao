@@ -101,7 +101,7 @@ func (ser *MediaService) GetAll() ([]*Media, error) {
 // pass the filter.
 func (ser *MediaService) GetFilter(keep func(md *Media) bool) ([]*Media, error) {
 	vlist, err := GetFilter(ser, func(m Model) bool {
-		md, err := ser.assertType(m)
+		md, err := ser.AssertType(m)
 		if err != nil {
 			return false
 		}
@@ -121,7 +121,7 @@ func (ser *MediaService) GetByID(id int) (*Media, error) {
 		return nil, err
 	}
 
-	md, err := ser.assertType(m)
+	md, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func (ser *MediaService) Bucket() string {
 
 // Clean cleans the given Media for storage
 func (ser *MediaService) Clean(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -165,13 +165,13 @@ func (ser *MediaService) Clean(m Model) error {
 
 // Validate checks if the given Media is valid.
 func (ser *MediaService) Validate(m Model) error {
-	_, err := ser.assertType(m)
+	_, err := ser.AssertType(m)
 	return err
 }
 
 // Initialize sets initial values for some properties.
 func (ser *MediaService) Initialize(m Model, id int) error {
-	md, err := ser.assertType(m)
+	md, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -183,11 +183,11 @@ func (ser *MediaService) Initialize(m Model, id int) error {
 // PersistOldProperties maintains certain properties
 // of the existing Media in updates.
 func (ser *MediaService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.assertType(n)
+	nm, err := ser.AssertType(n)
 	if err != nil {
 		return err
 	}
-	om, err := ser.assertType(o)
+	om, err := ser.AssertType(o)
 	if err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func (ser *MediaService) PersistOldProperties(n Model, o Model) error {
 
 // Marshal transforms the given Media into JSON.
 func (ser *MediaService) Marshal(m Model) ([]byte, error) {
-	md, err := ser.assertType(m)
+	md, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +220,8 @@ func (ser *MediaService) Unmarshal(buf []byte) (Model, error) {
 	return &md, nil
 }
 
-func (ser *MediaService) assertType(m Model) (*Media, error) {
+// AssertType exposes the given Model as a Media.
+func (ser *MediaService) AssertType(m Model) (*Media, error) {
 	if m == nil {
 		return nil, errors.New("model must not be nil")
 	}
@@ -238,7 +239,7 @@ func (ser *MediaService) mapFromModel(vlist []Model) ([]*Media, error) {
 	list := make([]*Media, len(vlist))
 	var err error
 	for i, v := range vlist {
-		list[i], err = ser.assertType(v)
+		list[i], err = ser.AssertType(v)
 		if err != nil {
 			return nil, err
 		}

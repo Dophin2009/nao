@@ -60,7 +60,7 @@ func (ser *GenreService) GetAll() ([]*Genre, error) {
 // pass the filter.
 func (ser *GenreService) GetFilter(keg func(g *Genre) bool) ([]*Genre, error) {
 	vlist, err := GetFilter(ser, func(m Model) bool {
-		g, err := ser.assertType(m)
+		g, err := ser.AssertType(m)
 		if err != nil {
 			return false
 		}
@@ -80,7 +80,7 @@ func (ser *GenreService) GetByID(id int) (*Genre, error) {
 		return nil, err
 	}
 
-	g, err := ser.assertType(m)
+	g, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (ser *GenreService) Bucket() string {
 
 // Clean cleans the given Genre for storage
 func (ser *GenreService) Clean(m Model) error {
-	e, err := ser.assertType(m)
+	e, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -116,13 +116,13 @@ func (ser *GenreService) Clean(m Model) error {
 // Validate returns an error if the Genre is
 // not valid for the database.
 func (ser *GenreService) Validate(m Model) error {
-	_, err := ser.assertType(m)
+	_, err := ser.AssertType(m)
 	return err
 }
 
 // Initialize sets initial values for some properties.
 func (ser *GenreService) Initialize(m Model, id int) error {
-	g, err := ser.assertType(m)
+	g, err := ser.AssertType(m)
 	if err != nil {
 		return err
 	}
@@ -134,11 +134,11 @@ func (ser *GenreService) Initialize(m Model, id int) error {
 // PersistOldProperties maintains certain properties
 // of the existing Genre in updates.
 func (ser *GenreService) PersistOldProperties(n Model, o Model) error {
-	ng, err := ser.assertType(n)
+	ng, err := ser.AssertType(n)
 	if err != nil {
 		return err
 	}
-	og, err := ser.assertType(o)
+	og, err := ser.AssertType(o)
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func (ser *GenreService) PersistOldProperties(n Model, o Model) error {
 
 // Marshal transforms the given Genre into JSON.
 func (ser *GenreService) Marshal(m Model) ([]byte, error) {
-	g, err := ser.assertType(m)
+	g, err := ser.AssertType(m)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,8 @@ func (ser *GenreService) Unmarshal(buf []byte) (Model, error) {
 	return &g, nil
 }
 
-func (ser *GenreService) assertType(m Model) (*Genre, error) {
+// AssertType exposes the given Model as a Genre.
+func (ser *GenreService) AssertType(m Model) (*Genre, error) {
 	if m == nil {
 		return nil, errors.New("model must not be nil")
 	}
@@ -189,7 +190,7 @@ func (ser *GenreService) mapFromModel(vlist []Model) ([]*Genre, error) {
 	list := make([]*Genre, len(vlist))
 	var err error
 	for i, v := range vlist {
-		list[i], err = ser.assertType(v)
+		list[i], err = ser.AssertType(v)
 		if err != nil {
 			return nil, err
 		}

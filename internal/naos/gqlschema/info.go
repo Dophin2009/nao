@@ -10,12 +10,25 @@ import (
 var InfoListType = graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(InfoType)))
 
 // InfoType is the GraphQL object type for Info.
-var InfoType = graphql.NewObject(graphql.ObjectConfig{
+var InfoType = BuildQueryType(infoBuilderConfig)
+
+// InfoInputListType is the GraphQL object type for a
+// list of InfoInput.
+var InfoInputListType = graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(InfoInputType)))
+
+// InfoInputType sit he GraphQL input object type
+// for Info.
+var InfoInputType = BuildMutationType(infoBuilderConfig)
+
+var infoBuilderConfig = TypeBuilderConfig{
 	Name: "Info",
-	Fields: graphql.Fields{
-		"data": &graphql.Field{
-			Type:        graphql.NewNonNull(graphql.String),
-			Description: "The data, typically text.",
+	Fields: []FieldBuilderConfig{
+		FieldBuilderConfig{
+			Name:         "data",
+			OutputType:   graphql.NewNonNull(graphql.String),
+			InputType:    graphql.NewNonNull(graphql.String),
+			Description:  "The data, typically a text.",
+			DefaultValue: "",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				if info, ok := p.Source.(data.Info); ok {
 					return info.Data, nil
@@ -23,9 +36,12 @@ var InfoType = graphql.NewObject(graphql.ObjectConfig{
 				return nil, nil
 			},
 		},
-		"language": &graphql.Field{
-			Type:        graphql.NewNonNull(graphql.String),
-			Description: "The language the data is in.",
+		FieldBuilderConfig{
+			Name:         "language",
+			OutputType:   graphql.NewNonNull(graphql.String),
+			InputType:    graphql.NewNonNull(graphql.String),
+			Description:  "The langauge the data is in.",
+			DefaultValue: "English",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				if info, ok := p.Source.(data.Info); ok {
 					return info.Language, nil
@@ -34,26 +50,4 @@ var InfoType = graphql.NewObject(graphql.ObjectConfig{
 			},
 		},
 	},
-})
-
-// InfoInputListType is the GraphQL object type for a
-// list of InfoInput.
-var InfoInputListType = graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(InfoInputType)))
-
-// InfoInputType sit he GraphQL input object type
-// for Info.
-var InfoInputType = graphql.NewInputObject(graphql.InputObjectConfig{
-	Name: "InfoInput",
-	Fields: graphql.InputObjectConfigFieldMap{
-		"data": &graphql.InputObjectFieldConfig{
-			Type:         graphql.NewNonNull(graphql.String),
-			Description:  "The data, typically text.",
-			DefaultValue: "",
-		},
-		"language": &graphql.InputObjectFieldConfig{
-			Type:         graphql.NewNonNull(graphql.String),
-			Description:  "The language the data is in.",
-			DefaultValue: "English",
-		},
-	},
-})
+}

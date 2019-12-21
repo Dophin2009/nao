@@ -227,7 +227,7 @@ var createMediaMutationField = &graphql.Field{
 	Description: "Create a new Media",
 	Args: graphql.FieldConfigArgument{
 		"media": &graphql.ArgumentConfig{
-			Type: MediaInputType,
+			Type: graphql.NewNonNull(MediaInputType),
 		},
 	},
 	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -249,8 +249,11 @@ var updateMediaMutationField = &graphql.Field{
 	Type:        MediaType,
 	Description: "Update a Media",
 	Args: graphql.FieldConfigArgument{
+		"id": &graphql.ArgumentConfig{
+			Type: graphql.NewNonNull(graphql.Int),
+		},
 		"media": &graphql.ArgumentConfig{
-			Type: MediaInputType,
+			Type: graphql.NewNonNull(MediaInputType),
 		},
 	},
 	Resolve: func(p graphql.ResolveParams) (interface{}, error) {

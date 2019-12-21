@@ -7,6 +7,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/friendsofgo/graphiql"
+	"github.com/graphql-go/graphql"
 	gqlhandler "github.com/graphql-go/handler"
 	json "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
@@ -16,14 +17,9 @@ import (
 
 // NewGraphQLHandler returns a POST endpoint handler for
 // the GraphQL API.
-func NewGraphQLHandler(path []string, services *DataServices) (web.Handler, error) {
-	schema, err := Schema()
-	if err != nil {
-		return web.Handler{}, err
-	}
-
+func NewGraphQLHandler(ctx context.Context, schema *graphql.Schema, path []string) web.Handler {
 	graphQLHandler := gqlhandler.New(&gqlhandler.Config{
-		Schema:     &schema,
+		Schema:     schema,
 		Pretty:     true,
 		GraphiQL:   false,
 		Playground: false,
@@ -32,10 +28,9 @@ func NewGraphQLHandler(path []string, services *DataServices) (web.Handler, erro
 		Method: http.MethodPost,
 		Path:   path,
 		Func: func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-			ctx := context.WithValue(context.Background(), contextDataServices, services)
 			graphQLHandler.ContextHandler(ctx, w, r)
 		},
-	}, nil
+	}
 }
 
 // NewGraphiQLHandler returns a new GET endpoint handler

@@ -10,6 +10,7 @@ import (
 
 	"gitlab.com/Dophin2009/nao/internal/config"
 	"gitlab.com/Dophin2009/nao/internal/data"
+	"gitlab.com/Dophin2009/nao/internal/naos/gqlschema"
 	"gitlab.com/Dophin2009/nao/internal/naos/handlers"
 	"gitlab.com/Dophin2009/nao/internal/web"
 	bolt "go.etcd.io/bbolt"
@@ -42,7 +43,7 @@ func main() {
 	address := fmt.Sprintf("%s:%s", conf.Hostname, conf.Port)
 	s, err := initServer(address, db)
 	if err != nil {
-		log.Fatal("Error initializing server")
+		log.Fatalf("Error initializing server: %v", err)
 		return
 	}
 	shttp := s.HTTPServer()
@@ -74,16 +75,19 @@ func main() {
 func initServer(address string, db *bolt.DB) (*web.Server, error) {
 	s := web.NewServer(address)
 
-	ds := &handlers.DataServices{
+	ds := &gqlschema.DataServices{
 		MediaService: &data.MediaService{
 			DB: db,
 		},
 	}
 
-	graphqlHandler, err := handlers.NewGraphQLHandler([]string{"graphql"}, ds)
+	schema, err := gqlschema.Schema()
 	if err != nil {
 		return nil, err
 	}
+
+	ctx := context.WithValue(context.Background(), gqlschema.ContextDataServices, ds)
+	graphqlHandler := handlers.NewGraphQLHandler(ctx, &schema, []string{"graphql"})
 	s.RegisterHandler(graphqlHandler)
 
 	graphiqlHandler, err := handlers.NewGraphiQLHandler([]string{"graphiql"}, graphqlHandler.PathString())

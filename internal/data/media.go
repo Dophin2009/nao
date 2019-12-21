@@ -17,7 +17,7 @@ type Media struct {
 	Background      []Info
 	StartDate       *time.Time
 	EndDate         *time.Time
-	SeasonPremiered *Season
+	SeasonPremiered Season
 	Type            *string
 	Source          *string
 	Version         int
@@ -32,8 +32,8 @@ func (m *Media) Iden() int {
 // Season contains information about the quarter
 // and year
 type Season struct {
-	Quarter Quarter
-	Year    int
+	Quarter *Quarter
+	Year    *int
 }
 
 // Quarter represents the quarter of the year
@@ -44,7 +44,7 @@ const (
 	// Winter is the first quarter of the year,
 	// encapsulating the months January, February,
 	// and March
-	Winter Quarter = iota
+	Winter Quarter = iota + 1
 
 	// Spring is the second quarter of the year,
 	// encapsulating the months April, May, and June
@@ -154,11 +154,16 @@ func (ser *MediaService) Clean(m Model) error {
 	if err := infoListClean(e.Background); err != nil {
 		return err
 	}
+
 	if e.Type != nil {
 		*e.Type = strings.Trim(*e.Type, " ")
 	}
 	if e.Source != nil {
 		*e.Source = strings.Trim(*e.Source, " ")
+	}
+
+	if e.SeasonPremiered.Quarter != nil && *e.SeasonPremiered.Quarter > 4 {
+		*e.SeasonPremiered.Quarter = 0
 	}
 	return nil
 }

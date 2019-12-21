@@ -11,6 +11,32 @@ var MediaType = BuildQueryType(mediaBuilderConfig)
 // MediaInputType is the GraphQL input object type for Media.
 var MediaInputType = BuildMutationType(mediaBuilderConfig)
 
+// SeasonType is the GraphQL object type for Season.
+var SeasonType = BuildQueryType(seasonBuilderConfig)
+
+// SeasonInputType is the GraphQL input object type for Season.
+var SeasonInputType = BuildMutationType(seasonBuilderConfig)
+
+// QuarterEnumType is the GraphQL enum type for Quarter of
+// a Season.
+var QuarterEnumType = graphql.NewEnum(graphql.EnumConfig{
+	Name: "Quarter",
+	Values: graphql.EnumValueConfigMap{
+		"Winter": &graphql.EnumValueConfig{
+			Value: data.Winter,
+		},
+		"Spring": &graphql.EnumValueConfig{
+			Value: data.Spring,
+		},
+		"Summer": &graphql.EnumValueConfig{
+			Value: data.Summer,
+		},
+		"Fall": &graphql.EnumValueConfig{
+			Value: data.Fall,
+		},
+	},
+})
+
 var mediaBuilderConfig = TypeBuilderConfig{
 	Name: "Media",
 	Fields: []FieldBuilderConfig{
@@ -73,7 +99,7 @@ var mediaBuilderConfig = TypeBuilderConfig{
 			Description:  "The date the Media began release.",
 			DefaultValue: nil,
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if md, ok := p.Source.(data.Media); ok {
+				if md, ok := p.Source.(data.Media); ok && md.StartDate != nil {
 					return *md.StartDate, nil
 				}
 				return nil, nil
@@ -86,8 +112,80 @@ var mediaBuilderConfig = TypeBuilderConfig{
 			Description:  "The date the Media ended release.",
 			DefaultValue: nil,
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if md, ok := p.Source.(data.Media); ok {
+				if md, ok := p.Source.(data.Media); ok && md.EndDate != nil {
 					return *md.EndDate, nil
+				}
+				return nil, nil
+			},
+		},
+		FieldBuilderConfig{
+			Name:        "seasonPremiered",
+			OutputType:  SeasonType,
+			InputType:   SeasonInputType,
+			Description: "The year and season the Media premiered.",
+			DefaultValue: data.Season{
+				Quarter: nil,
+				Year:    nil,
+			},
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if md, ok := p.Source.(data.Media); ok {
+					return md.SeasonPremiered, nil
+				}
+				return nil, nil
+			},
+		},
+		FieldBuilderConfig{
+			Name:         "type",
+			OutputType:   graphql.String,
+			InputType:    graphql.String,
+			Description:  "The type of the Media.",
+			DefaultValue: nil,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if md, ok := p.Source.(data.Media); ok {
+					return md.Type, nil
+				}
+				return nil, nil
+			},
+		},
+		FieldBuilderConfig{
+			Name:         "source",
+			OutputType:   graphql.String,
+			InputType:    graphql.String,
+			Description:  "The source material the Media is derived from.",
+			DefaultValue: nil,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if md, ok := p.Source.(data.Media); ok {
+					return md.Source, nil
+				}
+				return nil, nil
+			},
+		},
+	},
+}
+
+var seasonBuilderConfig = TypeBuilderConfig{
+	Name: "Season",
+	Fields: []FieldBuilderConfig{
+		FieldBuilderConfig{
+			Name:        "quarter",
+			OutputType:  QuarterEnumType,
+			InputType:   QuarterEnumType,
+			Description: "A quarter of the year, by season, of the year.",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if sn, ok := p.Source.(data.Season); ok {
+					return sn.Quarter, nil
+				}
+				return nil, nil
+			},
+		},
+		FieldBuilderConfig{
+			Name:        "year",
+			OutputType:  graphql.Int,
+			InputType:   graphql.Int,
+			Description: "A single year.",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if sn, ok := p.Source.(data.Season); ok {
+					return sn.Year, nil
 				}
 				return nil, nil
 			},

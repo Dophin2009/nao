@@ -55,7 +55,7 @@ var mediaBuilderConfig = TypeBuilderConfig{
 		},
 		FieldBuilderConfig{
 			Name:         "titles",
-			OutputType:   InfoListType,
+			OutputType:   graphql.NewNonNull(InfoListType),
 			InputType:    InfoInputListType,
 			Description:  "A list of titles used to name the Media.",
 			DefaultValue: []data.Info{},
@@ -68,7 +68,7 @@ var mediaBuilderConfig = TypeBuilderConfig{
 		},
 		FieldBuilderConfig{
 			Name:         "synopses",
-			OutputType:   InfoListType,
+			OutputType:   graphql.NewNonNull(InfoListType),
 			InputType:    InfoInputListType,
 			Description:  "A list of synopses, typically in different languages.",
 			DefaultValue: []data.Info{},
@@ -81,7 +81,7 @@ var mediaBuilderConfig = TypeBuilderConfig{
 		},
 		FieldBuilderConfig{
 			Name:         "background",
-			OutputType:   InfoListType,
+			OutputType:   graphql.NewNonNull(InfoListType),
 			InputType:    InfoInputListType,
 			Description:  "A list of background information segments, typically in different languages.",
 			DefaultValue: []data.Info{},
@@ -261,6 +261,12 @@ var updateMediaMutationField = &graphql.Field{
 		if err != nil {
 			return nil, err
 		}
+
+		id, ok := p.Args["id"].(int)
+		if !ok {
+			return nil, err
+		}
+		md.ID = id
 
 		err = ser.Update(md)
 		if err != nil {

@@ -7,14 +7,14 @@ import (
 
 // InfoListType is the GraphQL object type for a list
 // of Info.
-var InfoListType = graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(InfoType)))
+var InfoListType = graphql.NewList(graphql.NewNonNull(InfoType))
 
 // InfoType is the GraphQL object type for Info.
 var InfoType = BuildQueryType(infoBuilderConfig)
 
 // InfoInputListType is the GraphQL object type for a
 // list of InfoInput.
-var InfoInputListType = graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(InfoInputType)))
+var InfoInputListType = graphql.NewList(graphql.NewNonNull(InfoInputType))
 
 // InfoInputType sit he GraphQL input object type
 // for Info.

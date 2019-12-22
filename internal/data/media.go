@@ -12,9 +12,9 @@ import (
 // Media represents a single instance of a media
 type Media struct {
 	ID              int
-	Titles          []Info
-	Synopses        []Info
-	Background      []Info
+	Titles          map[string]string
+	Synopses        map[string]string
+	Background      map[string]string
 	StartDate       *time.Time
 	EndDate         *time.Time
 	SeasonPremiered Season
@@ -142,16 +142,6 @@ func (ser *MediaService) Bucket() string {
 func (ser *MediaService) Clean(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
-		return err
-	}
-
-	if err := infoListClean(e.Titles); err != nil {
-		return err
-	}
-	if err := infoListClean(e.Synopses); err != nil {
-		return err
-	}
-	if err := infoListClean(e.Background); err != nil {
 		return err
 	}
 

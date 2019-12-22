@@ -12,8 +12,8 @@ import (
 type UserMediaList struct {
 	ID           int
 	UserID       int
-	Names        []Info
-	Descriptions []Info
+	Names        map[string]string
+	Descriptions map[string]string
 	Version      int
 	Model
 }
@@ -102,18 +102,8 @@ func (ser *UserMediaListService) Bucket() string {
 
 // Clean cleans the given UserMediaList for storage
 func (ser *UserMediaListService) Clean(m Model) error {
-	e, err := ser.AssertType(m)
-	if err != nil {
-		return err
-	}
-
-	if err := infoListClean(e.Names); err != nil {
-		return err
-	}
-	if err := infoListClean(e.Descriptions); err != nil {
-		return err
-	}
-	return nil
+	_, err := ser.AssertType(m)
+	return err
 }
 
 // Validate returns an error if the UserMediaList is

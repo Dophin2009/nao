@@ -12,7 +12,7 @@ import (
 // licensor, etc.
 type Producer struct {
 	ID      int
-	Titles  []Info
+	Titles  map[string]string
 	Types   []string
 	Version int
 	Model
@@ -107,9 +107,6 @@ func (ser *ProducerService) Clean(m Model) error {
 		return err
 	}
 
-	if err = infoListClean(e.Titles); err != nil {
-		return err
-	}
 	for i, t := range e.Types {
 		e.Types[i] = strings.Trim(t, " ")
 	}

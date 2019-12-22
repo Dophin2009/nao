@@ -10,8 +10,8 @@ import (
 // Person represents a single person
 type Person struct {
 	ID          int
-	Names       []Info
-	Information []Info
+	Names       map[string]string
+	Information map[string]string
 	Version     int
 	Model
 }
@@ -100,18 +100,8 @@ func (ser *PersonService) Bucket() string {
 
 // Clean cleans the given Person for storage
 func (ser *PersonService) Clean(m Model) error {
-	e, err := ser.AssertType(m)
-	if err != nil {
-		return err
-	}
-
-	if err := infoListClean(e.Names); err != nil {
-		return err
-	}
-	if err := infoListClean(e.Information); err != nil {
-		return err
-	}
-	return nil
+	_, err := ser.AssertType(m)
+	return err
 }
 
 // Validate returns an error if the Person is

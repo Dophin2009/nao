@@ -20,7 +20,7 @@ type UserMedia struct {
 	Score            *int
 	Recommended      *int
 	WatchedInstances []WatchedInstance
-	Comments         []Info
+	Comments         map[string]string
 	UserMediaListIDs []int
 	Version          int
 }
@@ -37,7 +37,7 @@ type WatchedInstance struct {
 	Ongoing   bool
 	StartDate *time.Time
 	EndDate   *time.Time
-	Comments  []Info
+	Comments  map[string]string
 }
 
 // WatchStatus is an enum that represents the
@@ -193,20 +193,8 @@ func (ser *UserMediaService) Bucket() string {
 
 // Clean cleans the given UserMedia for storage
 func (ser *UserMediaService) Clean(m Model) error {
-	e, err := ser.AssertType(m)
-	if err != nil {
-		return err
-	}
-
-	if err := infoListClean(e.Comments); err != nil {
-		return err
-	}
-	for _, wi := range e.WatchedInstances {
-		if err := infoListClean(wi.Comments); err != nil {
-			return err
-		}
-	}
-	return nil
+	_, err := ser.AssertType(m)
+	return err
 }
 
 // Validate returns an error if the UserMedia is

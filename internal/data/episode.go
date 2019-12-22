@@ -13,9 +13,10 @@ import (
 type Episode struct {
 	ID       int
 	MediaID  int
-	Titles   []Info
+	Number   int
+	Titles   map[string]string
+	Synopses map[string]string
 	Date     *time.Time
-	Synopses []Info
 	Duration *uint
 	Filler   bool
 	Recap    bool
@@ -115,18 +116,9 @@ func (ser *EpisodeService) Bucket() string {
 
 // Clean cleans the given Episode for storage
 func (ser *EpisodeService) Clean(m Model) error {
-	e, err := ser.AssertType(m)
-	if err != nil {
-		return err
-	}
+	_, err := ser.AssertType(m)
+	return err
 
-	if err = infoListClean(e.Titles); err != nil {
-		return err
-	}
-	if err = infoListClean(e.Synopses); err != nil {
-		return err
-	}
-	return nil
 }
 
 // Validate returns an error if the Episode is

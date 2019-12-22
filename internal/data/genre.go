@@ -10,8 +10,8 @@ import (
 // Genre represents a single instance of a genre.
 type Genre struct {
 	ID           int
-	Names        []Info
-	Descriptions []Info
+	Names        map[string]string
+	Descriptions map[string]string
 	Version      int
 }
 
@@ -99,18 +99,8 @@ func (ser *GenreService) Bucket() string {
 
 // Clean cleans the given Genre for storage
 func (ser *GenreService) Clean(m Model) error {
-	e, err := ser.AssertType(m)
-	if err != nil {
-		return err
-	}
-
-	if err = infoListClean(e.Names); err != nil {
-		return err
-	}
-	if err = infoListClean(e.Descriptions); err != nil {
-		return err
-	}
-	return nil
+	_, err := ser.AssertType(m)
+	return err
 }
 
 // Validate returns an error if the Genre is

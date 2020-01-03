@@ -14,7 +14,7 @@ type Genre {
   """
   A list of Media that are in the Genre.
   """
-  media: [MediaGenre!]!
+  media(first: Int!, prefix: Int): [MediaGenre!]!
 }
 
 """

@@ -6,6 +6,9 @@ import (
 	"gitlab.com/Dophin2009/nao/internal/data"
 )
 
+// TODO: Implement Automatic Persisted Queries?
+// TODO: Implement authentication
+
 // Resolver is the root GraphQL resolver object.
 type Resolver struct{}
 
@@ -112,14 +115,14 @@ func (r *mutationResolver) CreateMedia(ctx context.Context, media data.Media) (*
 type characterResolver struct{ *Resolver }
 
 // Media resolves the MediaCharacter list for Character objects.
-func (r *characterResolver) Media(ctx context.Context, obj *data.Character) ([]*data.MediaCharacter, error) {
+func (r *characterResolver) Media(ctx context.Context, obj *data.Character, first int, prefix *int) ([]*data.MediaCharacter, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	ser := ds.MediaCharacterService
-	list, err := ser.GetByCharacter(obj.ID)
+	list, err := ser.GetByCharacter(obj.ID, first, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -140,14 +143,14 @@ type genreResolver struct{ *Resolver }
 
 // Media resolves the Media in the relationship for
 // MediaGenre objects.
-func (r *genreResolver) Media(ctx context.Context, obj *data.Genre) ([]*data.MediaGenre, error) {
+func (r *genreResolver) Media(ctx context.Context, obj *data.Genre, first int, prefix *int) ([]*data.MediaGenre, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	ser := ds.MediaGenreService
-	list, err := ser.GetByGenre(obj.ID)
+	list, err := ser.GetByGenre(obj.ID, first, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -159,14 +162,14 @@ func (r *genreResolver) Media(ctx context.Context, obj *data.Genre) ([]*data.Med
 type mediaResolver struct{ *Resolver }
 
 // Episodes resolves the Episodes for Media objects.
-func (r *mediaResolver) Episodes(ctx context.Context, obj *data.Media) ([]*data.Episode, error) {
+func (r *mediaResolver) Episodes(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.Episode, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	ser := ds.EpisodeService
-	list, err := ser.GetByMedia(obj.ID)
+	list, err := ser.GetByMedia(obj.ID, first, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -176,14 +179,14 @@ func (r *mediaResolver) Episodes(ctx context.Context, obj *data.Media) ([]*data.
 
 // Producers resolves the MediaProducer relationships for
 // Media objects.
-func (r *mediaResolver) Producers(ctx context.Context, obj *data.Media) ([]*data.MediaProducer, error) {
+func (r *mediaResolver) Producers(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.MediaProducer, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	ser := ds.MediaProducerService
-	list, err := ser.GetByMedia(obj.ID)
+	list, err := ser.GetByMedia(obj.ID, first, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -193,14 +196,14 @@ func (r *mediaResolver) Producers(ctx context.Context, obj *data.Media) ([]*data
 
 // Characters resolves the MediaCharacter relationships for
 // Media objects.
-func (r *mediaResolver) Characters(ctx context.Context, obj *data.Media) ([]*data.MediaCharacter, error) {
+func (r *mediaResolver) Characters(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.MediaCharacter, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	ser := ds.MediaCharacterService
-	list, err := ser.GetByMedia(obj.ID)
+	list, err := ser.GetByMedia(obj.ID, first, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -210,14 +213,14 @@ func (r *mediaResolver) Characters(ctx context.Context, obj *data.Media) ([]*dat
 
 // Genres resolves the MediaGenre relationships for
 // Media objects.
-func (r *mediaResolver) Genres(ctx context.Context, obj *data.Media) ([]*data.MediaGenre, error) {
+func (r *mediaResolver) Genres(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.MediaGenre, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	ser := ds.MediaGenreService
-	list, err := ser.GetByMedia(obj.ID)
+	list, err := ser.GetByMedia(obj.ID, first, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -353,14 +356,14 @@ type personResolver struct{ *Resolver }
 
 // Media resolves the MediaCharacter relationships for
 // Person objects.
-func (r *personResolver) Media(ctx context.Context, obj *data.Person) ([]*data.MediaCharacter, error) {
+func (r *personResolver) Media(ctx context.Context, obj *data.Person, first int, prefix *int) ([]*data.MediaCharacter, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	ser := ds.MediaCharacterService
-	list, err := ser.GetByPerson(obj.ID)
+	list, err := ser.GetByPerson(obj.ID, first, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -372,14 +375,14 @@ func (r *personResolver) Media(ctx context.Context, obj *data.Person) ([]*data.M
 // objects.
 type producerResolver struct{ *Resolver }
 
-func (r *producerResolver) Media(ctx context.Context, obj *data.Producer) ([]*data.MediaProducer, error) {
+func (r *producerResolver) Media(ctx context.Context, obj *data.Producer, first int, prefix *int) ([]*data.MediaProducer, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	ser := ds.MediaProducerService
-	list, err := ser.GetByProducer(obj.ID)
+	list, err := ser.GetByProducer(obj.ID, first, prefix)
 	if err != nil {
 		return nil, err
 	}

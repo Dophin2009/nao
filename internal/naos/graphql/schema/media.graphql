@@ -28,21 +28,21 @@ type Media {
   """
   The list of Episodes in this Media.
   """
-  episodes: [Episode!]!
+  episodes(first: Int!, prefix: Int): [Episode!]!
   """
   A list of Producers involved in creation
   of the Media.
   """
-  producers: [MediaProducer!]!
+  producers(first: Int!, prefix: Int): [MediaProducer!]!
   """
   A list of Characters/People related to the
   Media.
   """
-  characters: [MediaCharacter!]!
+  characters(first: Int!, prefix: Int): [MediaCharacter!]!
   """
   A list of Genres the Media is a part of.
   """
-  genres: [MediaGenre!]!
+  genres(first: Int!, prefix: Int): [MediaGenre!]!
 }
 
 """

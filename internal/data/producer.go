@@ -50,8 +50,8 @@ func (ser *ProducerService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of Producer.
-func (ser *ProducerService) GetAll() ([]*Producer, error) {
-	vlist, err := GetAll(ser)
+func (ser *ProducerService) GetAll(first int, prefixID *int) ([]*Producer, error) {
+	vlist, err := GetAll(ser, first, prefixID)
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +61,8 @@ func (ser *ProducerService) GetAll() ([]*Producer, error) {
 
 // GetFilter retrieves all persisted values of Producer that
 // pass the filter.
-func (ser *ProducerService) GetFilter(keep func(p *Producer) bool) ([]*Producer, error) {
-	vlist, err := GetFilter(ser, func(m Model) bool {
+func (ser *ProducerService) GetFilter(first int, prefixID *int, keep func(p *Producer) bool) ([]*Producer, error) {
+	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
 		p, err := ser.AssertType(m)
 		if err != nil {
 			return false

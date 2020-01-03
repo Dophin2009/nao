@@ -12,7 +12,7 @@ type Person {
   A list of MediaCharacter describing the Media the
   Person is involved in.
   """
-  media: [MediaCharacter!]!
+  media(first: Int!, prefix: Int): [MediaCharacter!]!
 }
 
 """

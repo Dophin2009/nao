@@ -125,8 +125,8 @@ func (ser *UserMediaService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of UserMedia.
-func (ser *UserMediaService) GetAll() ([]*UserMedia, error) {
-	vlist, err := GetAll(ser)
+func (ser *UserMediaService) GetAll(first int, prefixID *int) ([]*UserMedia, error) {
+	vlist, err := GetAll(ser, first, prefixID)
 	if err != nil {
 		return nil, err
 	}
@@ -136,8 +136,8 @@ func (ser *UserMediaService) GetAll() ([]*UserMedia, error) {
 
 // GetFilter retrieves all persisted values of UserMedia that
 // pass the filter.
-func (ser *UserMediaService) GetFilter(keep func(um *UserMedia) bool) ([]*UserMedia, error) {
-	vlist, err := GetFilter(ser, func(m Model) bool {
+func (ser *UserMediaService) GetFilter(first int, prefixID *int, keep func(um *UserMedia) bool) ([]*UserMedia, error) {
+	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
 		um, err := ser.AssertType(m)
 		if err != nil {
 			return false
@@ -167,16 +167,16 @@ func (ser *UserMediaService) GetByID(id int) (*UserMedia, error) {
 
 // GetByUser retrieves the persisted UserMedia with the given
 // User ID.
-func (ser *UserMediaService) GetByUser(uID int) ([]*UserMedia, error) {
-	return ser.GetFilter(func(um *UserMedia) bool {
+func (ser *UserMediaService) GetByUser(uID int, first int, prefixID *int) ([]*UserMedia, error) {
+	return ser.GetFilter(first, prefixID, func(um *UserMedia) bool {
 		return um.UserID == uID
 	})
 }
 
 // GetByMedia retrieves the persisted UserMedia with the given
 // Media ID.
-func (ser *UserMediaService) GetByMedia(mID int) ([]*UserMedia, error) {
-	return ser.GetFilter(func(um *UserMedia) bool {
+func (ser *UserMediaService) GetByMedia(mID int, first int, prefixID *int) ([]*UserMedia, error) {
+	return ser.GetFilter(first, prefixID, func(um *UserMedia) bool {
 		return um.MediaID == mID
 	})
 }

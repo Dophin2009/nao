@@ -10,7 +10,7 @@ type Query {
 The root mutation type.
 """
 type Mutation {
-  "Create a new Media. The ID is required but will be overriden."""
+  "Create a new Media. The ID is required but will be overriden."
   createMedia(media: MediaInput!): Media!
 }
 

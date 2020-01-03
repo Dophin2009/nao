@@ -48,8 +48,8 @@ func (ser *PersonService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of Person.
-func (ser *PersonService) GetAll() ([]*Person, error) {
-	vlist, err := GetAll(ser)
+func (ser *PersonService) GetAll(first int, prefixID *int) ([]*Person, error) {
+	vlist, err := GetAll(ser, first, prefixID)
 	if err != nil {
 		return nil, err
 	}
@@ -59,8 +59,8 @@ func (ser *PersonService) GetAll() ([]*Person, error) {
 
 // GetFilter retrieves all persisted values of Person that
 // pass the filter.
-func (ser *PersonService) GetFilter(keep func(p *Person) bool) ([]*Person, error) {
-	vlist, err := GetFilter(ser, func(m Model) bool {
+func (ser *PersonService) GetFilter(first int, prefixID *int, keep func(p *Person) bool) ([]*Person, error) {
+	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
 		p, err := ser.AssertType(m)
 		if err != nil {
 			return false

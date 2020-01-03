@@ -51,8 +51,8 @@ func (ser *MediaProducerService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of MediaProducer.
-func (ser *MediaProducerService) GetAll() ([]*MediaProducer, error) {
-	vlist, err := GetAll(ser)
+func (ser *MediaProducerService) GetAll(first int, prefixID *int) ([]*MediaProducer, error) {
+	vlist, err := GetAll(ser, first, prefixID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,8 +62,8 @@ func (ser *MediaProducerService) GetAll() ([]*MediaProducer, error) {
 
 // GetFilter retrieves all persisted values of MediaProducer that
 // pass the filter.
-func (ser *MediaProducerService) GetFilter(keep func(mp *MediaProducer) bool) ([]*MediaProducer, error) {
-	vlist, err := GetFilter(ser, func(m Model) bool {
+func (ser *MediaProducerService) GetFilter(first int, prefixID *int, keep func(mp *MediaProducer) bool) ([]*MediaProducer, error) {
+	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
 		mp, err := ser.AssertType(m)
 		if err != nil {
 			return false
@@ -93,16 +93,16 @@ func (ser *MediaProducerService) GetByID(id int) (*MediaProducer, error) {
 
 // GetByMedia retrieves a list of instances of MediaProducer
 // with the given Media ID.
-func (ser *MediaProducerService) GetByMedia(mID int) ([]*MediaProducer, error) {
-	return ser.GetFilter(func(mp *MediaProducer) bool {
+func (ser *MediaProducerService) GetByMedia(mID int, first int, prefixID *int) ([]*MediaProducer, error) {
+	return ser.GetFilter(first, prefixID, func(mp *MediaProducer) bool {
 		return mp.MediaID == mID
 	})
 }
 
 // GetByProducer retrieves a list of instances of MediaProducer
 // with the given Producer ID.
-func (ser *MediaProducerService) GetByProducer(pID int) ([]*MediaProducer, error) {
-	return ser.GetFilter(func(mp *MediaProducer) bool {
+func (ser *MediaProducerService) GetByProducer(pID int, first int, prefixID *int) ([]*MediaProducer, error) {
+	return ser.GetFilter(first, prefixID, func(mp *MediaProducer) bool {
 		return mp.ProducerID == pID
 	})
 }

@@ -13,7 +13,9 @@ TARGET_DIR=bin
 REPO_NAME=gitlab.com/Dophin2009/nao
 MODULES=naos
 
-default: build
+SRC_FILES=find . -name '*.go' ! -name '*.gen.go'
+
+default: check
 
 clean:
 	rm -rf $(TARGET_DIR)/
@@ -27,3 +29,11 @@ build: clean generate
 
 generate: clean
 	$(GORUN) scripts/gqlgen.go -v
+
+check: nakedret nargs
+
+nakedret:
+	$(GORUN) github.com/alexkohler/nakedret $$($(SRC_FILES))
+
+nargs:
+	$(GORUN) github.com/alexkohler/nargs/cmd/nargs $$($(SRC_FILES))

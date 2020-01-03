@@ -1,0 +1,28 @@
+"""
+A type that describes a Person.
+"""
+type Person {
+  "An integer identifier for the Person."
+  id: Int!
+  "A list of names used to name the Person."
+  names: StringMap
+  "A list of information segments to describe the Person."
+  information: StringMap
+  """
+  A list of MediaCharacter describing the Media the
+  Person is involved in.
+  """
+  media: [MediaCharacter!]!
+}
+
+"""
+An input to create or update a Person.
+"""
+type PersonInput @goModel(model: "data.Person") {
+  "An integer identifier for the Person."
+  id: Int!
+  "A list of names used to name the Person."
+  names: StringMap
+  "A list of information segments to describe the Person."
+  information: StringMap
+}

@@ -5,6 +5,7 @@ GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
+GORUN=$(GOCMD) run
 GOGEN=$(GOCMD) generate
 
 # Project variables
@@ -16,9 +17,13 @@ default: build
 
 clean:
 	rm -rf $(TARGET_DIR)/
+	find . -type f -name '*.gen.go' -delete
 
 # Fix this
-build: clean
+build: clean generate
 	@for module in $(MODULES) ; do \
 		$(GOBUILD) -o $(TARGET_DIR)/$$module -v $(REPO_NAME)/cmd/$$module ; \
 	done
+
+generate: clean
+	$(GORUN) scripts/gqlgen.go -v

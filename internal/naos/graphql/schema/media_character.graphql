@@ -1,0 +1,46 @@
+"""
+A type to describe a relationship between a Media and
+a Character or a Person.
+"""
+type MediaCharacter {
+  "An integer identifier for the relationship."
+  id: Int!
+  "The Media in the relationship."
+  media: Media!
+  "The Character in the relationship."
+  character: Character
+  "The role of the Character in the relationship."
+  characterRole: String
+  "The Person in the relationship."
+  person: Person
+  "The role of the Person in the relationship."
+  personRole: String
+}
+
+"""
+An input to create or update a relationship between a
+Media and a Character or a Person.
+"""
+type MediaCharacterInput @goModel(model: "data.MediaCharacter") {
+  "An integer identifier for the MediaCharacter."
+  id: Int!
+  """
+  The ID of the Media in the relationship. The Media
+  referenced by this ID must already exist.
+  """
+  mediaID: Int!
+  """
+  The ID of the Character in the relationship. The
+  Character referenced by this ID must already exist.
+  """
+  characterID: Int
+  "The role of the Character in the relationship."
+  characterRole: String
+  """
+  The ID of the Person in the relationship. The
+  Person referenced by this ID must already exist.
+  """
+  personID: Int
+  "The role of the Person in the relationship."
+  personRole: String
+}

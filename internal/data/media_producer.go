@@ -99,9 +99,9 @@ func (ser *MediaProducerService) GetByMedia(mID int) ([]*MediaProducer, error) {
 	})
 }
 
-// GetMediaProducerByProducer retrieves a list of instances of MediaProducer
+// GetByProducer retrieves a list of instances of MediaProducer
 // with the given Producer ID.
-func GetMediaProducerByProducer(pID int, ser *MediaProducerService) ([]*MediaProducer, error) {
+func (ser *MediaProducerService) GetByProducer(pID int) ([]*MediaProducer, error) {
 	return ser.GetFilter(func(mp *MediaProducer) bool {
 		return mp.ProducerID == pID
 	})

@@ -2,6 +2,9 @@ package data
 
 import (
 	"errors"
+	"fmt"
+	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -60,6 +63,53 @@ const (
 	// November, and December
 	Fall
 )
+
+func (q Quarter) IsValid() bool {
+	switch q {
+	case Winter, Spring, Summer, Fall:
+		return true
+	}
+	return false
+}
+
+func (q Quarter) String() string {
+	switch q {
+	case Winter:
+		return "Winter"
+	case Spring:
+		return "Spring"
+	case Summer:
+		return "Summer"
+	case Fall:
+		return "Fall"
+	}
+	return fmt.Sprintf("%d", int(q))
+}
+
+func (q *Quarter) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("invalid Quarter")
+	}
+
+	switch str {
+	case "Winter":
+		*q = Winter
+	case "Spring":
+		*q = Spring
+	case "Summer":
+		*q = Summer
+	case "Fall":
+		*q = Fall
+	default:
+		return fmt.Errorf("%s is not a valid Quarter", str)
+	}
+	return nil
+}
+
+func (q Quarter) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(q.String()))
+}
 
 // MediaBucket is the name of the database bucket for
 // Media.

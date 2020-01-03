@@ -1,0 +1,23 @@
+schema:
+  - "internal/naos/graphql/schema/**/*.graphql"
+
+exec:
+  filename: internal/naos/graphql/schema.gen.go
+  package: graphql
+
+model:
+  filename: internal/naos/graphql/models.gen.go
+  package: graphql
+
+resolver:
+  filename: internal/naos/graphql/resolver.go
+  type: Resolver
+
+# omit_slice_element_pointers: true
+
+autobind:
+  - gitlab.com/Dophin2009/nao/internal/data
+
+models:
+  StringMap:
+    model: gitlab.com/Dophin2009/nao/internal/naos/graphql.StringMap

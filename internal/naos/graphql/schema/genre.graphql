@@ -1,0 +1,33 @@
+"""
+A type that describes a Genre.
+"""
+type Genre {
+  "An integer identifier for the Genre."
+  id: Int!
+  "A list of names used to name the Genre."
+  names: StringMap!
+  """
+  A list of descriptions used to name the Genre,
+  typically in different languages.
+  """
+  descriptions: StringMap!
+  """
+  A list of Media that are in the Genre.
+  """
+  media: [MediaGenre!]!
+}
+
+"""
+An input to create or update a Genre.
+"""
+input GenreInput @goModel(model: "data.Genre") {
+  "An integer identifier for the Genre."
+  id: Int
+  "A list of names used to name the Genre."
+  names: StringMap!
+  """
+  A list of descriptions used to name the Genre,
+  typically in different languages.
+  """
+  descriptions: StringMap!
+}

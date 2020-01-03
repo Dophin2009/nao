@@ -1,4 +1,4 @@
-package handlers
+package naos
 
 import (
 	"errors"

@@ -1,34 +1,36 @@
-package handlers
+package naos
 
 import (
 	"context"
 	"net/http"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/friendsofgo/graphiql"
-	"github.com/graphql-go/graphql"
-	gqlhandler "github.com/graphql-go/handler"
 	json "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
 	"gitlab.com/Dophin2009/nao/internal/data"
+	"gitlab.com/Dophin2009/nao/internal/naos/graphql"
 	"gitlab.com/Dophin2009/nao/internal/web"
 )
 
 // NewGraphQLHandler returns a POST endpoint handler for
 // the GraphQL API.
-func NewGraphQLHandler(ctx context.Context, schema *graphql.Schema, path []string) web.Handler {
-	graphQLHandler := gqlhandler.New(&gqlhandler.Config{
-		Schema:     schema,
-		Pretty:     true,
-		GraphiQL:   false,
-		Playground: false,
-	})
+func NewGraphQLHandler(path []string, ds *graphql.DataServices) web.Handler {
+	cfg := graphql.Config{
+		Resolvers: &graphql.Resolver{},
+	}
+	gqlHandler := handler.NewDefaultServer(graphql.NewExecutableSchema(cfg))
+
+	ctx := context.WithValue(context.Background(), graphql.DataServicesKey, ds)
 	return web.Handler{
 		Method: http.MethodPost,
 		Path:   path,
 		Func: func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-			graphQLHandler.ContextHandler(ctx, w, r)
+			r = r.WithContext(ctx)
+			gqlHandler.ServeHTTP(w, r)
 		},
 	}
 }
@@ -47,6 +49,21 @@ func NewGraphiQLHandler(path []string, graphqlPath string) (web.Handler, error) 
 			graphiqlHandler.ServeHTTP(w, r)
 		},
 	}, nil
+}
+
+// NewGraphQLPlaygroundHandler returns a new GET endpoint
+// handler for rendering a GraphQL Playgorund page for the given
+// GraphQL API endpoint.
+func NewGraphQLPlaygroundHandler(path []string, graphqlPath string) web.Handler {
+	playgroundHandler := playground.Handler("Nao", graphqlPath)
+
+	return web.Handler{
+		Method: http.MethodGet,
+		Path:   path,
+		Func: func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+			playgroundHandler.ServeHTTP(w, r)
+		},
+	}
 }
 
 // LoginCredentials is passed in response body with

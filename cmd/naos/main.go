@@ -10,8 +10,8 @@ import (
 
 	"gitlab.com/Dophin2009/nao/internal/config"
 	"gitlab.com/Dophin2009/nao/internal/data"
-	"gitlab.com/Dophin2009/nao/internal/naos/gqlschema"
-	"gitlab.com/Dophin2009/nao/internal/naos/handlers"
+	"gitlab.com/Dophin2009/nao/internal/naos"
+	"gitlab.com/Dophin2009/nao/internal/naos/graphql"
 	"gitlab.com/Dophin2009/nao/internal/web"
 	bolt "go.etcd.io/bbolt"
 )
@@ -75,26 +75,35 @@ func main() {
 func initServer(address string, db *bolt.DB) (*web.Server, error) {
 	s := web.NewServer(address)
 
-	ds := &gqlschema.DataServices{
-		MediaService: &data.MediaService{
-			DB: db,
-		},
+	ds := graphql.DataServices{
+		CharacterService:      &data.CharacterService{DB: db},
+		EpisodeService:        &data.EpisodeService{DB: db},
+		GenreService:          &data.GenreService{DB: db},
+		MediaService:          &data.MediaService{DB: db},
+		MediaCharacterService: &data.MediaCharacterService{DB: db},
+		MediaGenreService:     &data.MediaGenreService{DB: db},
+		MediaProducerService:  &data.MediaProducerService{DB: db},
+		MediaRelationSerivce:  &data.MediaRelationService{DB: db},
+		PersonService:         &data.PersonService{DB: db},
+		ProducerService:       &data.ProducerService{DB: db},
+		UserService:           &data.UserService{DB: db},
+		UserMediaService:      &data.UserMediaService{DB: db},
+		UserMediaListService:  &data.UserMediaListService{DB: db},
 	}
 
-	schema, err := gqlschema.Schema()
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.WithValue(context.Background(), gqlschema.ContextDataServices, ds)
-	graphqlHandler := handlers.NewGraphQLHandler(ctx, &schema, []string{"graphql"})
+	graphqlHandler := naos.NewGraphQLHandler([]string{"graphql"}, &ds)
 	s.RegisterHandler(graphqlHandler)
 
-	graphiqlHandler, err := handlers.NewGraphiQLHandler([]string{"graphiql"}, graphqlHandler.PathString())
+	graphiqlHandler, err := naos.NewGraphiQLHandler(
+		[]string{"graphiql"}, graphqlHandler.PathString(),
+	)
 	if err != nil {
 		return nil, err
 	}
 	s.RegisterHandler(graphiqlHandler)
+
+	playgroundHandler := naos.NewGraphQLPlaygroundHandler([]string{"playground"}, graphqlHandler.PathString())
+	s.RegisterHandler(playgroundHandler)
 
 	return &s, nil
 }

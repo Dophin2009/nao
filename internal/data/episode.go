@@ -17,7 +17,7 @@ type Episode struct {
 	Titles   map[string]string
 	Synopses map[string]string
 	Date     *time.Time
-	Duration *uint
+	Duration *int
 	Filler   bool
 	Recap    bool
 	Version  int

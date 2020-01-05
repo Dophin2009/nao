@@ -16,6 +16,4 @@ Command line and web interfaces coming soon.
 Nao requires [Go](https://golang.org). 
 
 Clone this repo and run `make build` in the project root directory.
-Compiled binaries will be found in the `target` directory.
-
-Alternatively, run with Docker.
+Compiled binaries will be found in the `bin` directory.

@@ -1,0 +1,61 @@
+"""
+A type that describes an Episode.
+"""
+type Episode {
+  "An integer identifier for the Episode."
+  id: Int!
+  "The Media the Episode belongs to."
+  media: Media!
+  """
+  The ordinal value of the Episode in relation to
+  all other episodes
+  """
+  number: Int!
+  "A list of titles used to name the Episode."
+  titles: StringMap!
+  "A list of synopses to describe the Episode."
+  synopses: StringMap!
+  "The duration in minutes of the Episode."
+  duration: Int
+  """
+  A flag indicating whether the Episode is a filler
+  one or not.
+  """
+  filler: Boolean!
+  """
+  A flag indicating whether the Episode is a recap
+  one or not.
+  """
+  recap: Boolean!
+}
+
+"""
+An input to create or update an Episode.
+"""
+input EpisodeInput @goModel(model: "data.Episode") {
+  "An integer identifier for the Episode."
+  id: Int
+  "The Media the Episode belongs to."
+  mediaID: Int!
+  """
+  The ordinal value of the Episode in relation to
+  all other episodes
+  """
+  number: Int!
+  "A list of titles used to name the Episode."
+  titles: StringMap!
+  "A list of synopses to describe the Episode."
+  synopses: StringMap!
+  "The duration in minutes of the Episode."
+  duration: Int
+  """
+  A flag indicating whether the Episode is a filler
+  one or not.
+  """
+  filler: Boolean!
+  """
+  A flag indicating whether the Episode is a recap
+  one or not.
+  """
+  recap: Boolean!
+}

@@ -1,0 +1,30 @@
+"""
+The root query type.
+"""
+type Query {
+  "Query single Media by ID."
+  mediaByID(id: Int!): Media
+}
+
+"""
+The root mutation type.
+"""
+type Mutation {
+  "Create a new Media. The ID is required but will be overriden."
+  createMedia(media: MediaInput!): Media!
+}
+
+"""
+Map where both key and value are strings.
+"""
+scalar StringMap
+
+directive @goModel(
+  model: String
+  models: [String!]
+) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+
+directive @goField(
+  forceResolver: Boolean
+  name: String
+) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION

@@ -1,0 +1,34 @@
+"""
+A type that describes a Producer.
+"""
+type Producer {
+  "An integer identifier for the Producer."
+  id: Int!
+  "A list of titles used to name the Producer."
+  titles: StringMap!
+  """
+  A list of phrases describing the types of
+  functions the Producer takes on.
+  """
+  types: [String!]!
+  """
+  A list of MediaProducer describing the Media
+  created by the Producer.
+  """
+  media(first: Int!, prefix: Int): [MediaProducer!]!
+}
+
+"""
+An input to create or update an existing Producer.
+"""
+input ProducerInput @goModel(model: "data.Producer") {
+  "An integer identifier for the Producer."
+  id: Int
+  "A list of titles used to name the Producer."
+  titles: StringMap!
+  """
+  A list of phrases describing the types of
+  functions the Producer takes on.
+  """
+  types: [String!]!
+}

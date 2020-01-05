@@ -1,0 +1,125 @@
+"""
+A type that describes a Media.
+"""
+type Media {
+  "An integer identifier for the Media."
+  id: Int!
+  "A list of titles used to named the Media."
+  titles: StringMap!
+  """
+  A list of synopses describing the Media,
+  typically in different languages.
+  """
+  synopses: StringMap!
+  """
+  A list of background information segments,
+  typically in different languages.
+  """
+  background: StringMap!
+  "The year and season the Media premiered in."
+  seasonPremiered: Season!
+  "The type of the Media."
+  type: String
+  """
+  The type of the source material the Media
+  is derived from.
+  """
+  source: String
+  """
+  The list of Episodes in this Media.
+  """
+  episodes(first: Int!, prefix: Int): [Episode!]!
+  """
+  A list of Producers involved in creation
+  of the Media.
+  """
+  producers(first: Int!, prefix: Int): [MediaProducer!]!
+  """
+  A list of Characters/People related to the
+  Media.
+  """
+  characters(first: Int!, prefix: Int): [MediaCharacter!]!
+  """
+  A list of Genres the Media is a part of.
+  """
+  genres(first: Int!, prefix: Int): [MediaGenre!]!
+}
+
+"""
+An input to create or update an existing Media.
+"""
+input MediaInput @goModel(model: "data.Media") {
+  "An integer identifier for the Media"
+  id: Int!
+  "A list of titles used to named the Media."
+  titles: StringMap!
+  """
+  A list of synopses describing the Media,
+  typically in different languages.
+  """
+  synopses: StringMap!
+  """
+  A list of background information segments,
+  typically in different languages.
+  """
+  background: StringMap!
+  "The year and season the Media premiered in."
+  seasonPremiered: SeasonInput!
+  "The type of the Media."
+  type: String
+  """
+  The type of the source material the Media
+  is derived from.
+  """
+  source: String
+}
+
+"""
+A type that describes a single season/cour.
+"""
+type Season {
+  """
+  An enumerated value describing which of
+  the four seasons the season is.
+  """
+  quarter: Quarter
+  "The year of the season."
+  year: Int
+}
+
+"""
+An input that describes a single season/cour.
+"""
+input SeasonInput @goModel(model: "data.Season") {
+  "An enumerated identifier for the cour."
+  quarter: Quarter
+  "The year of the season."
+  year: Int
+}
+
+"""
+An enumerated type for the four quarters of
+the year that each correspond to a season.
+"""
+enum Quarter @goModel(model: "data.Quarter") {
+  """
+  Winter encompasses the months of January,
+  February, and March.
+  """
+  Winter
+  """
+  Spring encompasses the months of April,
+  May, and June.
+  """
+  Spring
+  """
+  Summer encompasses the months of July,
+  August, and September.
+  """
+  Summer
+  """
+  Fall encmopasses the months of October,
+  November, and December.
+  """
+  Fall
+}

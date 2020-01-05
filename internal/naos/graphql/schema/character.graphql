@@ -1,0 +1,34 @@
+"""
+A type that describes a Character.
+"""
+type Character {
+  "An integer identifier for the Character."
+  id: Int!
+  "A list of names used to name the Character."
+  names: StringMap!
+  """
+  A list of information segments, typically in different
+  languages
+  """
+  information: StringMap!
+  """
+  A list of MediaCharacter describing the Media the
+  Character is in.
+  """
+  media(first: Int!, prefix: Int): [MediaCharacter!]!
+}
+
+"""
+A input to create or update an existing Media.
+"""
+input CharacterInput @goModel(model: "data.Character") {
+  "An integer identifier for the Character."
+  id: Int
+  "A list of names used to name the Character."
+  names: StringMap!
+  """
+  A list of information segments, typically in different
+  languages
+  """
+  information: StringMap!
+}

@@ -1,0 +1,35 @@
+"""
+A type that describes a relationship between two Media.
+"""
+type MediaRelation {
+  "An integer identifier for the relationship."
+  id: Int!
+  "The owning Media of the relationship."
+  owner: Media!
+  "The related (non-owning) Media of the relationship."
+  related: Media!
+  "The type of relationship between the two Media."
+  relationship: String!
+}
+
+"""
+A type to create or update a relationship between two
+Media.
+"""
+type MediaRelationInput @goModel(model: "data.MediaRelation") {
+  "An integer identifier for the relationship."
+  id: Int!
+  """
+  The ID of the owning Media of the relationship. The
+  Media referenced by this ID must already exist.
+  """
+  ownerID: Int!
+  """
+  The ID of the related (non-owning) Media of the
+  relationship. The Media referenced by this ID must
+  already exist.
+  """
+  relatedID: Int!
+  "The type of relationship between the two Media."
+  relationship: String!
+}

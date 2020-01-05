@@ -1,8 +1,8 @@
 # Generated code
-**/gen-*
+**/*.gen.go
 
 # Target directories
-target/
+bin/
 
 # IDE configs
 .vscode/

@@ -1,0 +1,31 @@
+"""
+A type to describe a relationship between a Media
+and a Genre.
+"""
+type MediaGenre {
+  "An integer identifier for the Genre."
+  id: Int!
+  "The Media in the relationship."
+  media: Media!
+  "The Genre in the relationship."
+  genre: Genre!
+}
+
+"""
+An input to create or update a relationship between
+a Media and a Genre.
+"""
+input MediaGenreInput @goModel(model: "data.MediaGenre") {
+  "An integer identifier for the Genre."
+  id: Int!
+  """
+  The ID for the Media in the relationship. The Media
+  referenced by this ID must already exist.
+  """
+  mediaID: Int!
+  """
+  The ID for the Genre in the relationship. The Genre
+  referenced by this ID must already exist.
+  """
+  genreID: Int!
+}

@@ -1,0 +1,59 @@
+# """
+# A type that describes a User.
+# """
+# type User {
+  # "An integer identifier for the User."
+  # id: Int!
+  # "The username of the User."
+  # username: String!
+  # "The email of the User."
+  # email: String!
+  # """
+  # The permissions regarding global data allowed to
+  # the User.
+  # """
+  # permissions: Permission!
+# }
+
+# """
+# A type that describes a User's global permissions.
+# """
+# type Permission {
+  # """
+  # The flag that determines if the User can read
+  # or query all Media data.
+  # """
+  # readMedia: Boolean!
+  # """
+  # A flag that determines if the User can read
+  # or query all Users and their data.
+  # """
+  # readUsers: Boolean!
+  # """
+  # A flag that determines if the User can write
+  # or mutate global Media data.
+  # """
+  # writeMedia: Boolean!
+  # """
+  # A flag that determines if the User can write
+  # or mutate all User data.
+  # """
+  # writeUsers: Boolean!
+# }
+
+# """
+# An input to create or update Users.
+# """
+# input UserInput {
+  # "An integer identifier for the User."
+  # id: Int
+  # "The username of the User."
+  # username: String!
+  # "The email of the User."
+  # email: String!
+  # """
+  # The permissions regarding global data allowed to
+  # the User.
+  # """
+  # permissions: Permission!
+# }

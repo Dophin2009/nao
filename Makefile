@@ -5,28 +5,35 @@ GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
+GORUN=$(GOCMD) run
 GOGEN=$(GOCMD) generate
 
 # Project variables
-TARGET_DIR=target
+TARGET_DIR=bin
 REPO_NAME=gitlab.com/Dophin2009/nao
 MODULES=naos
 
-default: build
+SRC_FILES=find . -name '*.go' ! -name '*.gen.go'
+
+default: check
 
 clean:
 	rm -rf $(TARGET_DIR)/
+	find . -type f -name '*.gen.go' -delete
 
 # Fix this
-build: clean
-	mv pkg/data/gen/service.go pkg/data/service.go
-	$(GOGEN) $(REPO_NAME)/pkg/data
-	mv pkg/data/service.go pkg/data/gen/service.go
-
-	mv cmd/naos/gen/routers.go cmd/naos/routers.go
-	$(GOGEN) $(REPO_NAME)/cmd/naos
-	mv cmd/naos/routers.go cmd/naos/gen/routers.go
-
+build: clean generate
 	@for module in $(MODULES) ; do \
 		$(GOBUILD) -o $(TARGET_DIR)/$$module -v $(REPO_NAME)/cmd/$$module ; \
 	done
+
+generate: clean
+	$(GORUN) scripts/gqlgen.go -v
+
+check: nakedret nargs
+
+nakedret:
+	$(GORUN) github.com/alexkohler/nakedret -l 0 $$($(SRC_FILES))
+
+nargs:
+	$(GORUN) github.com/alexkohler/nargs/cmd/nargs $$($(SRC_FILES))

@@ -4,9 +4,7 @@ go 1.12
 
 require (
 	github.com/99designs/gqlgen v0.10.3-0.20191128123652-f869f5a85385
-	github.com/OpenPeeDeeP/xdg v0.2.0
-	github.com/alexkohler/nakedret v1.0.0 // indirect
-	github.com/alexkohler/nargs v0.0.0-20190601183533-5ef696e27c16 // indirect
+	github.com/adrg/xdg v0.2.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/friendsofgo/graphiql v0.2.2
 	github.com/json-iterator/go v1.1.8

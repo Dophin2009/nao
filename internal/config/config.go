@@ -1,45 +1,34 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/OpenPeeDeeP/xdg"
 	"github.com/spf13/viper"
 )
 
-// Configuration contains config properties
-// read from config files.
-type Configuration struct {
-	Hostname string `mapstructure:"hostname"`
-	Port     string `mapstructure:"port"`
-	DB       struct {
-		Path     string `mapstructure:"path"`
-		Filemode uint32 `mapstructure:"filemode"`
-	} `mapstructure:"db"`
-}
-
-// ReadLinuxConfigs looks for config files from
-// the default Linux config locations and returns
-//a parsed Configuration struct
-func ReadLinuxConfigs(subpath string) (Configuration, error) {
-	etcDir := fmt.Sprintf("/etc/%s/", subpath)
-	userDir := fmt.Sprintf("%s/%s/", xdg.ConfigHome(), subpath)
-	confFileDirs := []string{etcDir, userDir}
-	return ReadConfig(confFileDirs)
-}
-
-// ReadConfig returns a Configuration struct
-// parsed from config files in the given directories
-func ReadConfig(filedirs []string) (conf Configuration, err error) {
-	viper.SetConfigName("naos")
-	for _, f := range filedirs {
-		viper.AddConfigPath(f)
+// ReadConfigs reads config files in the given directories
+// with the given filename (without extension). The overall
+// config is unmarshalled into the given pointer.
+func ReadConfigs(filename string, dirs []string, structure interface{}) error {
+	if structure == nil {
+		return fmt.Errorf("structure: %w", errors.New("is nil"))
 	}
-	err = viper.ReadInConfig()
+
+	viper.SetConfigName(filename)
+	for _, d := range dirs {
+		viper.AddConfigPath(d)
+	}
+
+	err := viper.ReadInConfig()
 	if err != nil {
-		return
+		return fmt.Errorf("failed to read in configs: %w", err)
 	}
 
-	err = viper.Unmarshal(&conf)
-	return
+	err = viper.Unmarshal(structure)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	return nil
 }

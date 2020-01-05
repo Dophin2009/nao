@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"time"
 
-	"gitlab.com/Dophin2009/nao/internal/config"
 	"gitlab.com/Dophin2009/nao/internal/data"
 	"gitlab.com/Dophin2009/nao/internal/naos"
 	"gitlab.com/Dophin2009/nao/internal/naos/graphql"
@@ -23,7 +22,7 @@ func main() {
 	println("-------------------: NAO SERVER :-------------------")
 
 	// Read configuration files
-	conf, err := config.ReadLinuxConfigs("nao")
+	conf, err := naos.ReadConfigs()
 	if err != nil {
 		log.Fatalf("Error reading config: %v", err)
 	}

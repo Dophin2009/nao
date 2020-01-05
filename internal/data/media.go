@@ -12,6 +12,13 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+// TODO: Revert Media.Titles, Media.Synopses, Media.Background
+// and other similar ones to list of own struct; multiple
+// entries for each language and possibly other properties such
+// as priority.
+// TODO: Move UnmarshalGQL and MarshalGQL of Quarter to graphql
+// package; they do not belong in this package.
+
 // Media represents a single instance of a media
 type Media struct {
 	ID              int
@@ -64,6 +71,8 @@ const (
 	Fall
 )
 
+// IsValid checks if the Quarter has a value that is a
+// valid one.
 func (q Quarter) IsValid() bool {
 	switch q {
 	case Winter, Spring, Summer, Fall:
@@ -72,6 +81,7 @@ func (q Quarter) IsValid() bool {
 	return false
 }
 
+// String returns the written name of the Quarter.
 func (q Quarter) String() string {
 	switch q {
 	case Winter:
@@ -86,10 +96,12 @@ func (q Quarter) String() string {
 	return fmt.Sprintf("%d", int(q))
 }
 
+// UnmarshalGQL casts the type of the given value to
+// a Quarter.
 func (q *Quarter) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
-		return fmt.Errorf("invalid Quarter")
+		return fmt.Errorf("%v: %w", v, errInvalid)
 	}
 
 	switch str {
@@ -102,11 +114,13 @@ func (q *Quarter) UnmarshalGQL(v interface{}) error {
 	case "Fall":
 		*q = Fall
 	default:
-		return fmt.Errorf("%s is not a valid Quarter", str)
+		return fmt.Errorf("%s: %w", str, errInvalid)
 	}
 	return nil
 }
 
+// MarshalGQL serializes the Quarter into a GraphQL
+// readable form.
 func (q Quarter) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(q.String()))
 }
@@ -144,7 +158,11 @@ func (ser *MediaService) GetAll(first int, prefixID *int) ([]*Media, error) {
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Media: %w", err)
+	}
+	return list, nil
 }
 
 // GetFilter retrieves all persisted values of Media that
@@ -161,7 +179,11 @@ func (ser *MediaService) GetFilter(first int, prefixID *int, keep func(md *Media
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Media: %w", err)
+	}
+	return list, nil
 }
 
 // GetByID retrieves the persisted Media with the given ID.
@@ -173,7 +195,7 @@ func (ser *MediaService) GetByID(id int) (*Media, error) {
 
 	md, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	return md, nil
 }
@@ -192,7 +214,7 @@ func (ser *MediaService) Bucket() string {
 func (ser *MediaService) Clean(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	if e.Type != nil {
@@ -211,14 +233,17 @@ func (ser *MediaService) Clean(m Model) error {
 // Validate checks if the given Media is valid.
 func (ser *MediaService) Validate(m Model) error {
 	_, err := ser.AssertType(m)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+	}
+	return nil
 }
 
 // Initialize sets initial values for some properties.
 func (ser *MediaService) Initialize(m Model, id int) error {
 	md, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	md.ID = id
 	md.Version = 0
@@ -230,11 +255,11 @@ func (ser *MediaService) Initialize(m Model, id int) error {
 func (ser *MediaService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	om, err := ser.AssertType(o)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	nm.Version = om.Version + 1
 	return nil
@@ -244,12 +269,12 @@ func (ser *MediaService) PersistOldProperties(n Model, o Model) error {
 func (ser *MediaService) Marshal(m Model) ([]byte, error) {
 	md, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	v, err := json.Marshal(md)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 	}
 
 	return v, nil
@@ -260,7 +285,7 @@ func (ser *MediaService) Unmarshal(buf []byte) (Model, error) {
 	var md Media
 	err := json.Unmarshal(buf, &md)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
 	return &md, nil
 }
@@ -268,12 +293,12 @@ func (ser *MediaService) Unmarshal(buf []byte) (Model, error) {
 // AssertType exposes the given Model as a Media.
 func (ser *MediaService) AssertType(m Model) (*Media, error) {
 	if m == nil {
-		return nil, errors.New("model must not be nil")
+		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
 	md, ok := m.(*Media)
 	if !ok {
-		return nil, errors.New("model must be of Media type")
+		return nil, fmt.Errorf("model: %w", errors.New("not of Media type"))
 	}
 	return md, nil
 }
@@ -286,7 +311,7 @@ func (ser *MediaService) mapFromModel(vlist []Model) ([]*Media, error) {
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 		}
 	}
 	return list, nil

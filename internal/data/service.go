@@ -32,121 +32,170 @@ type Service interface {
 	Unmarshal(buf []byte) (Model, error)
 }
 
+var (
+	// errNil is an error returned when some pointer is nil.
+	errNil = errors.New("is nil")
+	// errNotFound is an error returned when the requested
+	// object is not found.
+	errNotFound = errors.New("not found")
+	// errAlreadyExists is an error returned when a unique
+	// value already exists.
+	errAlreadyExists = errors.New("already exists")
+	// errInvalid is an error returned when some value is
+	// invalid.
+	errInvalid = errors.New("invalid")
+)
+
+const (
+	errmsgModelCleaning   = "failed to clean model"
+	errmsgModelValidation = "failed to validate model"
+	errmsgModelInitialize = "failed to initialize model values"
+	errmsgModelPersistOld = "failed to persist old model values"
+	errmsgModelMarshal    = "failed to marshal model"
+	errmsgModelUnmarshal  = "failed to unmarshal model"
+	errmsgModelAssertType = "failed to assert type of model"
+	errmsgBucketOpen      = "failed to open bucket"
+	errmsgBucketNextSeq   = "failed to generate next sequence ID"
+	errmsgBucketPut       = "failed to put value in bucket"
+	errmsgBucketDelete    = "failed to delete value in bucket"
+
+	errmsgJSONMarshal   = "failed to marshal to JSON"
+	errmsgJSONUnmarshal = "failed to unmarshal from JSON"
+)
+
 // Create persists the given Model.
 func Create(m Model, ser Service) error {
-	if ser == nil {
-		return errors.New("service must not be nil")
+	// Check service
+	if err := checkService(ser); err != nil {
+		return err
 	}
 
 	err := ser.Clean(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelCleaning, err)
 	}
 
 	// Verify validity of model
 	err = ser.Validate(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelValidation, err)
 	}
 
 	return ser.Database().Update(func(tx *bolt.Tx) error {
 		// Get bucket, exit if error
 		b, err := Bucket(ser.Bucket(), tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 		}
 
 		// Get next ID in sequence and assign to
 		// model
 		id, err := b.NextSequence()
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %w", errmsgBucketNextSeq, err)
 		}
 
 		err = ser.Initialize(m, int(id))
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %w", errmsgModelInitialize, err)
 		}
 
 		// Save model in bucket
 		buf, err := ser.Marshal(m)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %w", errmsgModelMarshal, err)
 		}
 
-		return b.Put(itob(m.Iden()), buf)
+		err = b.Put(itob(m.Iden()), buf)
+		if err != nil {
+			return fmt.Errorf("%s %q: %w", errmsgBucketPut, ser.Bucket(), err)
+		}
+
+		return nil
 	})
 }
 
 // Update replaces the value of the model with the given
 // ID.
 func Update(m Model, ser Service) error {
-	if ser == nil {
-		return errors.New("service must not be nil")
+	// Check service
+	if err := checkService(ser); err != nil {
+		return err
 	}
 
 	err := ser.Clean(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelCleaning, err)
 	}
 
 	// Verify validity of model
 	err = ser.Validate(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelValidation, err)
 	}
 
 	return ser.Database().Update(func(tx *bolt.Tx) error {
 		// Check if entity with ID exists
 		v, err := GetRawByID(m.Iden(), ser.Bucket(), ser.Database())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get by id %q: %w", m.Iden(), err)
 		}
 
 		// Unmarshall old
 		o, err := ser.Unmarshal(v)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
 		}
 
 		// Get bucket, exit if error
 		b, err := Bucket(ser.Bucket(), tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 		}
 
 		// Replace properties of updated with certain frozen
 		// ones of old
 		err = ser.PersistOldProperties(m, o)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %w", errmsgModelPersistOld, err)
 		}
 
 		// Save model
 		buf, err := ser.Marshal(m)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %w", errmsgModelMarshal, err)
 		}
 
-		return b.Put(itob(m.Iden()), buf)
+		err = b.Put(itob(m.Iden()), buf)
+		if err != nil {
+			return fmt.Errorf("%s %q: %w", errmsgBucketPut, ser.Bucket(), err)
+		}
+
+		return nil
 	})
 }
 
 // Delete deletes the model with the given ID.
 func Delete(id int, ser Service) error {
-	if ser == nil {
-		return errors.New("service must not be nil")
+	// Check service
+	if err := checkService(ser); err != nil {
+		return err
 	}
 
 	return ser.Database().Update(func(tx *bolt.Tx) error {
 		// Get bucket, exit if error
 		b, err := Bucket(ser.Bucket(), tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 		}
 
 		// Store existing model to return
-		return b.Delete(itob(id))
+		err = b.Delete(itob(id))
+		if err != nil {
+			return fmt.Errorf("%s %q: %w", errmsgBucketDelete, ser.Bucket(), err)
+		}
+
+		return nil
 	})
 }
 
@@ -154,17 +203,17 @@ func Delete(id int, ser Service) error {
 // The given service and its DB should not be nil.
 func GetByID(id int, ser Service) (Model, error) {
 	if ser == nil {
-		return nil, errors.New("service must not be nil")
+		return nil, fmt.Errorf("service: %w", errNil)
 	}
 
 	v, err := GetRawByID(id, ser.Bucket(), ser.Database())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get by id %q: %w", id, err)
 	}
 
 	m, err := ser.Unmarshal(v)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelMarshal, err)
 	}
 
 	return m, nil
@@ -173,9 +222,9 @@ func GetByID(id int, ser Service) (Model, error) {
 // GetRawByID is a generic function that queries the given bucket
 // in the given database for an entity of the given ID.
 // The given DB pointer should not be nil.
-func GetRawByID(ID int, bucketName string, db *bolt.DB) ([]byte, error) {
+func GetRawByID(id int, bucketName string, db *bolt.DB) ([]byte, error) {
 	if db == nil {
-		return nil, errors.New("db must not be nil")
+		return nil, fmt.Errorf("DB: %w", errNil)
 	}
 
 	// Raw value to return
@@ -186,13 +235,13 @@ func GetRawByID(ID int, bucketName string, db *bolt.DB) ([]byte, error) {
 		// Get bucket, exit if error
 		b, err := Bucket(bucketName, tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, bucketName, err)
 		}
 
 		// Get entity by ID, exit if error
-		v = b.Get(itob(ID))
+		v = b.Get(itob(id))
 		if v == nil {
-			return fmt.Errorf("entity with id %d not found", ID)
+			return fmt.Errorf("model with id %q: %w", id, errNotFound)
 		}
 		return err
 	})
@@ -229,7 +278,7 @@ func GetAll(ser Service, first int, prefixID *int) ([]Model, error) {
 		// Get bucket, exit if error
 		b, err := Bucket(ser.Bucket(), tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 		}
 
 		// Get cursor for bucket
@@ -248,8 +297,9 @@ func GetAll(ser Service, first int, prefixID *int) ([]Model, error) {
 		} else {
 			// Begin on element right after prefix if provided
 			k, v = c.Seek(itob(*prefixID))
+			// If key not found, throw err
 			if k == nil {
-				return errors.New("prefix not found")
+				return fmt.Errorf("prefix key: %w", errNotFound)
 			}
 			k, v = c.Next()
 		}
@@ -261,7 +311,7 @@ func GetAll(ser Service, first int, prefixID *int) ([]Model, error) {
 				// Unmarshal and add all entities to slice
 				m, err := ser.Unmarshal(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
 				}
 				list = append(list, m)
 			}
@@ -274,7 +324,7 @@ func GetAll(ser Service, first int, prefixID *int) ([]Model, error) {
 				// Unmarshal and add entities to slice
 				m, err := ser.Unmarshal(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
 				}
 				list[i] = m
 
@@ -308,7 +358,7 @@ func GetFilter(ser Service, first int, prefixID *int, keep func(m Model) bool) (
 
 	// Filter function should not be nil.
 	if keep == nil {
-		return nil, errors.New("no filter function provided")
+		return nil, fmt.Errorf("filter function: %w", errNil)
 	}
 
 	// Return empty slice if number of elements to get is 0
@@ -324,7 +374,7 @@ func GetFilter(ser Service, first int, prefixID *int, keep func(m Model) bool) (
 		// Get bucket, exit if error
 		b, err := Bucket(ser.Bucket(), tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 		}
 
 		// Get cursor for bucket
@@ -346,8 +396,9 @@ func GetFilter(ser Service, first int, prefixID *int, keep func(m Model) bool) (
 			// Begin on element right after prefix if prefixID is
 			// provided
 			k, v = c.Seek(itob(*prefixID))
+			// If key not found, return error
 			if k == nil {
-				return errors.New("prefix not found")
+				return fmt.Errorf("prefix key: %w", errNotFound)
 			}
 			k, v = c.Next()
 		}
@@ -359,7 +410,7 @@ func GetFilter(ser Service, first int, prefixID *int, keep func(m Model) bool) (
 				// Unmarshal value and check filter
 				m, err := ser.Unmarshal(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
 				}
 
 				if keep(m) {
@@ -377,7 +428,7 @@ func GetFilter(ser Service, first int, prefixID *int, keep func(m Model) bool) (
 				// Unmarshal value and check filter
 				m, err := ser.Unmarshal(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
 				}
 
 				if keep(m) {
@@ -396,14 +447,16 @@ func GetFilter(ser Service, first int, prefixID *int, keep func(m Model) bool) (
 	return list, nil
 }
 
-func get(ID int, bucket *bolt.Bucket) ([]byte, error) {
+// get returns the raw value stored at the given key in the
+// given bucket.
+func get(id int, bucket *bolt.Bucket) ([]byte, error) {
 	if bucket == nil {
-		return nil, fmt.Errorf("bucket must not be nil")
+		return nil, fmt.Errorf("bucket: %w", errNil)
 	}
 
-	v := bucket.Get(itob(ID))
+	v := bucket.Get(itob(id))
 	if v == nil {
-		return nil, fmt.Errorf("entity with id %d not found", ID)
+		return nil, fmt.Errorf("model with id %q: %w", id, errNotFound)
 	}
 	return v, nil
 }
@@ -412,10 +465,10 @@ func get(ID int, bucket *bolt.Bucket) ([]byte, error) {
 // DB are nil.
 func checkService(ser Service) error {
 	if ser == nil {
-		return errors.New("service must not be nil")
+		return fmt.Errorf("service: %w", errNil)
 	}
 	if ser.Database() == nil {
-		return errors.New("db must not be nil")
+		return fmt.Errorf("DB: %w", errNil)
 	}
 	return nil
 }

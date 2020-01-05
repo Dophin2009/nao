@@ -10,6 +10,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// TODO: Delete all things related to User when deleting
+// User
+
 // User represents a single user.
 type User struct {
 	ID       int
@@ -75,7 +78,11 @@ func (ser *UserService) GetAll(first int, prefixID *int) ([]*User, error) {
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Users: %w", err)
+	}
+	return list, nil
 }
 
 // GetFilter retrieves all persisted values of User that
@@ -92,7 +99,11 @@ func (ser *UserService) GetFilter(first int, prefixID *int, keep func(u *User) b
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Users: %w", err)
+	}
+	return list, nil
 }
 
 // GetByID retrieves the persisted User with the given ID.
@@ -104,7 +115,7 @@ func (ser *UserService) GetByID(id int) (*User, error) {
 
 	u, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	return u, nil
 }
@@ -114,28 +125,38 @@ func (ser *UserService) GetByID(id int) (*User, error) {
 func (ser *UserService) GetByUsername(username string) (*User, error) {
 	var e User
 	err := ser.DB.View(func(tx *bolt.Tx) error {
+		// Open User bucket
 		b, err := Bucket(ser.Bucket(), tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 		}
 
+		// Iterate through values until username matches
 		c := b.Cursor()
 		for id, v := c.First(); id != nil; id, v = c.Next() {
-			var u User
-			err := json.Unmarshal(v, &u)
+			m, err := ser.Unmarshal(v)
 			if err != nil {
-				return err
+				return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
+			}
+
+			u, err := ser.AssertType(m)
+			if err != nil {
+				return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 			}
 
 			if u.Username == username {
-				e = u
+				e = *u
 				return nil
 			}
 		}
 
-		return fmt.Errorf("username %s not found", e.Username)
+		return fmt.Errorf("username %q: %w", username, errNotFound)
 	})
-	return &e, err
+	if err != nil {
+		return nil, err
+	}
+
+	return &e, nil
 }
 
 // AuthenticateWithPassword checks if the password for
@@ -145,9 +166,15 @@ func (ser *UserService) GetByUsername(username string) (*User, error) {
 func (ser *UserService) AuthenticateWithPassword(username string, password string) error {
 	u, err := ser.GetByUsername(username)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get User by username %q: %w", username, err)
 	}
-	return bcrypt.CompareHashAndPassword(u.Password, []byte(password))
+
+	err = bcrypt.CompareHashAndPassword(u.Password, []byte(password))
+	if err != nil {
+		return fmt.Errorf("failed to match passwords: %w", err)
+	}
+
+	return nil
 }
 
 // ChangePassword replaces the password of the User specified
@@ -155,12 +182,12 @@ func (ser *UserService) AuthenticateWithPassword(username string, password strin
 func (ser *UserService) ChangePassword(userID int, password string) error {
 	u, err := ser.GetByID(userID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get User by ID %q: %w", userID, err)
 	}
 
 	pass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to generate password hash: %w", err)
 	}
 	u.Password = pass
 
@@ -168,16 +195,21 @@ func (ser *UserService) ChangePassword(userID int, password string) error {
 		// Get bucket, exit if error
 		b, err := Bucket(ser.Bucket(), tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 		}
 
 		// Save entity in bucket
 		buf, err := json.Marshal(u)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 		}
 
-		return b.Put(itob(int(u.ID)), buf)
+		err = b.Put(itob(int(u.ID)), buf)
+		if err != nil {
+			return fmt.Errorf("%s: %w", errmsgBucketPut, err)
+		}
+
+		return nil
 	})
 }
 
@@ -195,7 +227,7 @@ func (ser *UserService) Bucket() string {
 func (ser *UserService) Clean(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	e.Username = strings.Trim(e.Username, " ")
@@ -208,7 +240,7 @@ func (ser *UserService) Clean(m Model) error {
 func (ser *UserService) Validate(m Model) error {
 	u, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	// Check that username does not already exist
@@ -216,37 +248,45 @@ func (ser *UserService) Validate(m Model) error {
 		// Get bucket, exit if error
 		b, err := Bucket(ser.Bucket(), tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 		}
 
 		// Check for duplicate username
 		c := b.Cursor()
 		for id, v := c.First(); id != nil; id, v = c.Next() {
-			var w User
-			err := json.Unmarshal(v, &w)
+			m, err := ser.Unmarshal(v)
 			if err != nil {
-				return err
+				return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
+			}
+
+			w, err := ser.AssertType(m)
+			if err != nil {
+				return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 			}
 
 			if w.Username == u.Username {
-				return errors.New("username already exists")
+				return fmt.Errorf("username %q: %w", u.Username, errAlreadyExists)
 			}
 		}
 		return nil
 	})
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to verify uniqueness of username: %w", err)
+	}
+
+	return nil
 }
 
 // Initialize sets initial values for some properties.
 func (ser *UserService) Initialize(m Model, id int) error {
 	u, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	pass, err := bcrypt.GenerateFromPassword(u.Password, bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to generate password hash: %w", err)
 	}
 	u.Password = pass
 
@@ -260,11 +300,11 @@ func (ser *UserService) Initialize(m Model, id int) error {
 func (ser *UserService) PersistOldProperties(n Model, o Model) error {
 	nu, err := ser.AssertType(n)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	ou, err := ser.AssertType(o)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	// Password may not be changed through update;
 	// must use ChangePassword
@@ -277,12 +317,12 @@ func (ser *UserService) PersistOldProperties(n Model, o Model) error {
 func (ser *UserService) Marshal(m Model) ([]byte, error) {
 	u, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	v, err := json.Marshal(u)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 	}
 
 	return v, nil
@@ -293,7 +333,7 @@ func (ser *UserService) Unmarshal(buf []byte) (Model, error) {
 	var u User
 	err := json.Unmarshal(buf, &u)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
 	return &u, nil
 }
@@ -301,12 +341,12 @@ func (ser *UserService) Unmarshal(buf []byte) (Model, error) {
 // AssertType exposes the given Model as a User.
 func (ser *UserService) AssertType(m Model) (*User, error) {
 	if m == nil {
-		return nil, errors.New("model must not be nil")
+		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
 	u, ok := m.(*User)
 	if !ok {
-		return nil, errors.New("model must be of User type")
+		return nil, fmt.Errorf("model: %w", errors.New("not of User type"))
 	}
 	return u, nil
 }
@@ -319,7 +359,7 @@ func (ser *UserService) mapFromModel(vlist []Model) ([]*User, error) {
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 		}
 	}
 	return list, nil

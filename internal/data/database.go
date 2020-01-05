@@ -1,6 +1,7 @@
 package data
 
 import (
+	"fmt"
 	"os"
 
 	bolt "go.etcd.io/bbolt"
@@ -21,6 +22,9 @@ func Buckets() []string {
 func ConnectDatabase(dbPath string, mode os.FileMode, create bool) (*bolt.DB, error) {
 	// open database connection
 	db, err := bolt.Open(dbPath, mode, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database: %w", err)
+	}
 
 	// if specified to create buckets, cycle through all strings in
 	// Buckets() and create buckets
@@ -29,34 +33,43 @@ func ConnectDatabase(dbPath string, mode os.FileMode, create bool) (*bolt.DB, er
 			for _, bucket := range Buckets() {
 				_, err = tx.CreateBucketIfNotExists([]byte(bucket))
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to create bucket: %w", err)
 				}
 			}
 			return nil
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return db, err
+	return db, nil
 }
 
 // ClearDatabase removes all buckets in the given database
-func ClearDatabase(db *bolt.DB) (err error) {
-	err = db.Update(func(tx *bolt.Tx) error {
+func ClearDatabase(db *bolt.DB) error {
+	err := db.Update(func(tx *bolt.Tx) error {
 		for _, bucket := range Buckets() {
-			err = tx.DeleteBucket([]byte(bucket))
+			err := tx.DeleteBucket([]byte(bucket))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to delete bucket: %w", err)
 			}
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
 
-	return
+	return nil
 }
 
 // Bucket returns the database bucket with the
 // given name
-func Bucket(name string, tx *bolt.Tx) (bucket *bolt.Bucket, err error) {
-	bucket = tx.Bucket([]byte(name))
-	return
+func Bucket(name string, tx *bolt.Tx) (*bolt.Bucket, error) {
+	bucket := tx.Bucket([]byte(name))
+	if bucket == nil {
+		return nil, fmt.Errorf("bucket: %w", errNotFound)
+	}
+	return bucket, nil
 }

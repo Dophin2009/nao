@@ -1,7 +1,7 @@
 package data
 
 import (
-	"errors"
+	"fmt"
 	"math/rand"
 
 	"github.com/dgrijalva/jwt-go"
@@ -28,30 +28,36 @@ type JWTClaims struct {
 
 // CreateTokenString returns an encoded token string
 // from the given claims
-func (ser *JWTService) CreateTokenString(claims *JWTClaims) (tokenString string, err error) {
+func (ser *JWTService) CreateTokenString(claims *JWTClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	secret, err := ser.secret()
 	if err != nil {
-		return
+		return "", fmt.Errorf("failed to get stored key: %w", err)
 	}
-	tokenString, err = token.SignedString(secret)
-	return
+
+	tokenString, err := token.SignedString(secret)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate signed token string: %w", err)
+	}
+
+	return tokenString, nil
 }
 
 // CheckTokenString checks if the token string is valid.
-func (ser *JWTService) CheckTokenString(tokenString string) (claims JWTClaims, err error) {
-	claims = JWTClaims{}
+func (ser *JWTService) CheckTokenString(tokenString string) (JWTClaims, error) {
+	claims := JWTClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
 		return ser.secret()
 	})
 	if err != nil {
-		return
+		return JWTClaims{}, fmt.Errorf("failed to parse JWT token string: %w", err)
 	}
 
 	if !token.Valid {
-		err = errors.New("token invalid")
+		return JWTClaims{}, fmt.Errorf("token: %w", errInvalid)
 	}
-	return
+
+	return claims, nil
 }
 
 // GenerateNewSecret returns a new randomly generated
@@ -67,14 +73,16 @@ func (ser *JWTService) generateNewSecret(length int) string {
 // secret returns the cached JWT secret key,
 // or retrieves the secret from the database if it
 // has not been cached.
-func (ser *JWTService) secret() (secret string, err error) {
+func (ser *JWTService) secret() (string, error) {
 	// Check if secret has already been cached in service
 	if ser.secretKey != nil {
-		secret = *ser.secretKey
-		return
+		secret := *ser.secretKey
+		return secret, nil
 	}
+
 	// If not cached, check database for secret
-	err = ser.DB.Update(func(tx *bolt.Tx) error {
+	var secret string
+	err := ser.DB.Update(func(tx *bolt.Tx) error {
 		// Retrieve secret from database
 		b := tx.Bucket([]byte(JWTBucket))
 		v := b.Get([]byte("secret"))
@@ -83,9 +91,9 @@ func (ser *JWTService) secret() (secret string, err error) {
 		if v == nil {
 			secret = ser.generateNewSecret(15)
 			ser.secretKey = &secret
-			err = b.Put([]byte("secret"), []byte(secret))
+			err := b.Put([]byte("secret"), []byte(secret))
 			if err != nil {
-				return err
+				return fmt.Errorf("%s: %w", errmsgBucketPut, err)
 			}
 		} else {
 			secret = string(v)
@@ -93,5 +101,9 @@ func (ser *JWTService) secret() (secret string, err error) {
 		}
 		return nil
 	})
-	return
+	if err != nil {
+		return "", err
+	}
+
+	return secret, nil
 }

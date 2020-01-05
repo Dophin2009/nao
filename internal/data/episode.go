@@ -2,11 +2,14 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	json "github.com/json-iterator/go"
 	bolt "go.etcd.io/bbolt"
 )
+
+// TODO: User rating/comments/etc. of Episodes
 
 // Episode represents a single episode or chapter
 // for some media.
@@ -62,7 +65,11 @@ func (ser *EpisodeService) GetAll(first int, prefixID *int) ([]*Episode, error) 
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Episodes: %w", err)
+	}
+	return list, nil
 }
 
 // GetFilter retrieves all persisted values of Episode that
@@ -79,7 +86,11 @@ func (ser *EpisodeService) GetFilter(first int, prefixID *int, keep func(ep *Epi
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Episodes: %w", err)
+	}
+	return list, nil
 }
 
 // GetByID retrieves the persisted Episode with the given ID.
@@ -91,7 +102,7 @@ func (ser *EpisodeService) GetByID(id int) (*Episode, error) {
 
 	ep, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	return ep, nil
 }
@@ -117,22 +128,27 @@ func (ser *EpisodeService) Bucket() string {
 // Clean cleans the given Episode for storage
 func (ser *EpisodeService) Clean(m Model) error {
 	_, err := ser.AssertType(m)
-	return err
-
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+	}
+	return nil
 }
 
 // Validate returns an error if the Episode is
 // not valid for the database.
 func (ser *EpisodeService) Validate(m Model) error {
 	_, err := ser.AssertType(m)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+	}
+	return nil
 }
 
 // Initialize sets initial values for some properties.
 func (ser *EpisodeService) Initialize(m Model, id int) error {
 	ep, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	ep.ID = id
 	ep.Version = 0
@@ -144,11 +160,11 @@ func (ser *EpisodeService) Initialize(m Model, id int) error {
 func (ser *EpisodeService) PersistOldProperties(n Model, o Model) error {
 	nep, err := ser.AssertType(n)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	oep, err := ser.AssertType(o)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	nep.Version = oep.Version + 1
 	return nil
@@ -158,12 +174,12 @@ func (ser *EpisodeService) PersistOldProperties(n Model, o Model) error {
 func (ser *EpisodeService) Marshal(m Model) ([]byte, error) {
 	ep, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	v, err := json.Marshal(ep)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 	}
 
 	return v, nil
@@ -174,7 +190,7 @@ func (ser *EpisodeService) Unmarshal(buf []byte) (Model, error) {
 	var ep Episode
 	err := json.Unmarshal(buf, &ep)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
 	return &ep, nil
 }
@@ -182,12 +198,12 @@ func (ser *EpisodeService) Unmarshal(buf []byte) (Model, error) {
 // AssertType exposes the Model as an Episode.
 func (ser *EpisodeService) AssertType(m Model) (*Episode, error) {
 	if m == nil {
-		return nil, errors.New("model must not be nil")
+		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
 	ep, ok := m.(*Episode)
 	if !ok {
-		return nil, errors.New("model must be of Episode type")
+		return nil, fmt.Errorf("model: %w", errors.New("not of Episode type"))
 	}
 	return ep, nil
 }
@@ -200,7 +216,7 @@ func (ser *EpisodeService) mapFromModel(vlist []Model) ([]*Episode, error) {
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 		}
 	}
 	return list, nil

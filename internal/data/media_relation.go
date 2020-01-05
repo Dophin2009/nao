@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	json "github.com/json-iterator/go"
@@ -56,7 +57,11 @@ func (ser *MediaRelationService) GetAll(first int, prefixID *int) ([]*MediaRelat
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to MediaRelations: %w", err)
+	}
+	return list, nil
 }
 
 // GetFilter retrieves all persisted values of MediaRelation that
@@ -73,7 +78,11 @@ func (ser *MediaRelationService) GetFilter(first int, prefixID *int, keep func(m
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to MediaRelations: %w", err)
+	}
+	return list, nil
 }
 
 // GetByID retrieves the persisted MediaRelation with the given ID.
@@ -85,7 +94,7 @@ func (ser *MediaRelationService) GetByID(id int) (*MediaRelation, error) {
 
 	mr, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	return mr, nil
 }
@@ -128,8 +137,9 @@ func (ser *MediaRelationService) Bucket() string {
 func (ser *MediaRelationService) Clean(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
+
 	e.Relationship = strings.Trim(e.Relationship, " ")
 	return nil
 }
@@ -139,26 +149,26 @@ func (ser *MediaRelationService) Clean(m Model) error {
 func (ser *MediaRelationService) Validate(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	return ser.DB.View(func(tx *bolt.Tx) error {
 		// Get Media bucket, exit if error
 		mb, err := Bucket(MediaBucket, tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, MediaBucket, err)
 		}
 
 		// Check if owning Media with ID specified in new MediaRelation exists
 		_, err = get(e.OwnerID, mb)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get Media with ID %q: %w", e.OwnerID, err)
 		}
 
 		// Check if related Media with ID specified in new MediaRelation exists
 		_, err = get(e.RelatedID, mb)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get Media with ID %q: %w", e.RelatedID, err)
 		}
 
 		return nil
@@ -169,7 +179,7 @@ func (ser *MediaRelationService) Validate(m Model) error {
 func (ser *MediaRelationService) Initialize(m Model, id int) error {
 	mr, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	mr.ID = id
 	mr.Version = 0
@@ -181,11 +191,11 @@ func (ser *MediaRelationService) Initialize(m Model, id int) error {
 func (ser *MediaRelationService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	om, err := ser.AssertType(o)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	nm.Version = om.Version + 1
 	return nil
@@ -195,12 +205,12 @@ func (ser *MediaRelationService) PersistOldProperties(n Model, o Model) error {
 func (ser *MediaRelationService) Marshal(m Model) ([]byte, error) {
 	mr, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	v, err := json.Marshal(mr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 	}
 
 	return v, nil
@@ -211,7 +221,7 @@ func (ser *MediaRelationService) Unmarshal(buf []byte) (Model, error) {
 	var mr MediaRelation
 	err := json.Unmarshal(buf, &mr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
 	return &mr, nil
 }
@@ -219,12 +229,12 @@ func (ser *MediaRelationService) Unmarshal(buf []byte) (Model, error) {
 // AssertType exposes the given Model as a MediaRelation.
 func (ser *MediaRelationService) AssertType(m Model) (*MediaRelation, error) {
 	if m == nil {
-		return nil, errors.New("model must not be nil")
+		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
 	mr, ok := m.(*MediaRelation)
 	if !ok {
-		return nil, errors.New("model must be of MediaRelation type")
+		return nil, fmt.Errorf("model: %w", errors.New("not of MediaRelation type"))
 	}
 	return mr, nil
 }
@@ -237,7 +247,7 @@ func (ser *MediaRelationService) mapFromModel(vlist []Model) ([]*MediaRelation, 
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 		}
 	}
 	return list, nil

@@ -2,10 +2,13 @@ package data
 
 import (
 	"errors"
+	"fmt"
 
 	json "github.com/json-iterator/go"
 	bolt "go.etcd.io/bbolt"
 )
+
+// TODO: User rating/favoriting/comments/etc. of Persons
 
 // Person represents a single person
 type Person struct {
@@ -54,7 +57,11 @@ func (ser *PersonService) GetAll(first int, prefixID *int) ([]*Person, error) {
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Persons: %w", err)
+	}
+	return list, nil
 }
 
 // GetFilter retrieves all persisted values of Person that
@@ -71,7 +78,11 @@ func (ser *PersonService) GetFilter(first int, prefixID *int, keep func(p *Perso
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Persons: %w", err)
+	}
+	return list, nil
 }
 
 // GetByID retrieves the persisted Person with the given ID.
@@ -83,7 +94,7 @@ func (ser *PersonService) GetByID(id int) (*Person, error) {
 
 	p, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	return p, nil
 }
@@ -101,21 +112,27 @@ func (ser *PersonService) Bucket() string {
 // Clean cleans the given Person for storage
 func (ser *PersonService) Clean(m Model) error {
 	_, err := ser.AssertType(m)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+	}
+	return nil
 }
 
 // Validate returns an error if the Person is
 // not valid for the database.
 func (ser *PersonService) Validate(m Model) error {
 	_, err := ser.AssertType(m)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+	}
+	return nil
 }
 
 // Initialize sets initial values for some properties.
 func (ser *PersonService) Initialize(m Model, id int) error {
 	p, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	p.ID = id
 	p.Version = 0
@@ -127,11 +144,11 @@ func (ser *PersonService) Initialize(m Model, id int) error {
 func (ser *PersonService) PersistOldProperties(n Model, o Model) error {
 	np, err := ser.AssertType(n)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	op, err := ser.AssertType(o)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	np.Version = op.Version + 1
 	return nil
@@ -141,12 +158,12 @@ func (ser *PersonService) PersistOldProperties(n Model, o Model) error {
 func (ser *PersonService) Marshal(m Model) ([]byte, error) {
 	p, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	v, err := json.Marshal(p)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 	}
 
 	return v, nil
@@ -157,7 +174,7 @@ func (ser *PersonService) Unmarshal(buf []byte) (Model, error) {
 	var p Person
 	err := json.Unmarshal(buf, &p)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
 	return &p, nil
 }
@@ -165,12 +182,12 @@ func (ser *PersonService) Unmarshal(buf []byte) (Model, error) {
 // AssertType exposes the given Model as a Person.
 func (ser *PersonService) AssertType(m Model) (*Person, error) {
 	if m == nil {
-		return nil, errors.New("model must not be nil")
+		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
 	p, ok := m.(*Person)
 	if !ok {
-		return nil, errors.New("model must be of Person type")
+		return nil, fmt.Errorf("model: %w", errors.New("not of Person type"))
 	}
 	return p, nil
 }
@@ -183,7 +200,7 @@ func (ser *PersonService) mapFromModel(vlist []Model) ([]*Person, error) {
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 		}
 	}
 	return list, nil

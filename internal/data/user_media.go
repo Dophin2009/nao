@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	json "github.com/json-iterator/go"
@@ -69,16 +70,17 @@ func (ws *WatchStatus) UnmarshalJSON(data []byte) (err error) {
 	var s string
 	err = json.Unmarshal(data, &s)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
 
-	value, ok := map[string]WatchStatus{"Completed": Completed,
-		"Planning": Planning,
-		"Dropped":  Dropped,
-		"Hold":     Hold,
+	value, ok := map[string]WatchStatus{
+		"Completed": Completed,
+		"Planning":  Planning,
+		"Dropped":   Dropped,
+		"Hold":      Hold,
 	}[s]
 	if !ok {
-		return errors.New("invalid watch status value '" + s + "'")
+		return fmt.Errorf("watch status value %q: %w", s, errInvalid)
 	}
 	*ws = value
 	return nil
@@ -87,15 +89,22 @@ func (ws *WatchStatus) UnmarshalJSON(data []byte) (err error) {
 // MarshalJSON defines custom JSON serialization for
 // WatchStatus.
 func (ws *WatchStatus) MarshalJSON() (v []byte, err error) {
-	value, ok := map[WatchStatus]string{Completed: "Completed",
-		Planning: "Planning",
-		Dropped:  "Dropped",
-		Hold:     "Hold",
+	value, ok := map[WatchStatus]string{
+		Completed: "Completed",
+		Planning:  "Planning",
+		Dropped:   "Dropped",
+		Hold:      "Hold",
 	}[*ws]
 	if !ok {
-		return nil, errors.New("Invalid watch status value")
+		return nil, fmt.Errorf("watch status value %q: %w", *ws, err)
 	}
-	return json.Marshal(value)
+
+	v, err = json.Marshal(value)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
+	}
+
+	return v, nil
 }
 
 // UserMediaBucket is the name of the database bucket
@@ -131,7 +140,11 @@ func (ser *UserMediaService) GetAll(first int, prefixID *int) ([]*UserMedia, err
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to UserMedia: %w", err)
+	}
+	return list, nil
 }
 
 // GetFilter retrieves all persisted values of UserMedia that
@@ -148,7 +161,11 @@ func (ser *UserMediaService) GetFilter(first int, prefixID *int, keep func(um *U
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to UserMedia: %w", err)
+	}
+	return list, nil
 }
 
 // GetByID retrieves the persisted UserMedia with the given ID.
@@ -160,7 +177,7 @@ func (ser *UserMediaService) GetByID(id int) (*UserMedia, error) {
 
 	um, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	return um, nil
 }
@@ -202,7 +219,7 @@ func (ser *UserMediaService) Clean(m Model) error {
 func (ser *UserMediaService) Validate(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	return ser.DB.View(func(tx *bolt.Tx) error {
@@ -210,34 +227,34 @@ func (ser *UserMediaService) Validate(m Model) error {
 		// Get User bucket, exit if error
 		ub, err := Bucket(UserBucket, tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, UserBucket, err)
 		}
 		_, err = get(e.UserID, ub)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get User with ID %q: %w", e.UserID, err)
 		}
 
 		// Check if Media with ID specified in MediaCharacter exists
 		// Get Media bucket, exit if error
 		mb, err := Bucket(MediaBucket, tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, MediaBucket, err)
 		}
 		_, err = get(e.MediaID, mb)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get Media with ID %q: %w", e.MediaID, err)
 		}
 
 		// Check if UserMediaLists with IDs specified in UserMedia exists
 		// Get User bucket, exit if error
 		umlb, err := Bucket(UserMediaListBucket, tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, UserMediaListBucket, err)
 		}
 		for _, listID := range e.UserMediaListIDs {
 			_, err = get(listID, umlb)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get UserMediaList with ID %q: %w", listID, err)
 			}
 		}
 
@@ -249,7 +266,7 @@ func (ser *UserMediaService) Validate(m Model) error {
 func (ser *UserMediaService) Initialize(m Model, id int) error {
 	md, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	md.ID = id
 	md.Version = 0
@@ -261,11 +278,11 @@ func (ser *UserMediaService) Initialize(m Model, id int) error {
 func (ser *UserMediaService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	om, err := ser.AssertType(o)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	nm.Version = om.Version + 1
 	return nil
@@ -275,12 +292,12 @@ func (ser *UserMediaService) PersistOldProperties(n Model, o Model) error {
 func (ser *UserMediaService) Marshal(m Model) ([]byte, error) {
 	um, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	v, err := json.Marshal(um)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 	}
 
 	return v, nil
@@ -291,7 +308,7 @@ func (ser *UserMediaService) Unmarshal(buf []byte) (Model, error) {
 	var um UserMedia
 	err := json.Unmarshal(buf, &um)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
 	return &um, nil
 }
@@ -299,12 +316,12 @@ func (ser *UserMediaService) Unmarshal(buf []byte) (Model, error) {
 // AssertType exposes the given Model as a UserMedia.
 func (ser *UserMediaService) AssertType(m Model) (*UserMedia, error) {
 	if m == nil {
-		return nil, errors.New("model must not be nil")
+		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
 	um, ok := m.(*UserMedia)
 	if !ok {
-		return nil, errors.New("model must be of UserMedia type")
+		return nil, fmt.Errorf("model: %w", errors.New("not of UserMedia type"))
 	}
 	return um, nil
 }
@@ -317,7 +334,7 @@ func (ser *UserMediaService) mapFromModel(vlist []Model) ([]*UserMedia, error) {
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 		}
 	}
 	return list, nil

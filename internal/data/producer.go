@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	json "github.com/json-iterator/go"
@@ -56,7 +57,11 @@ func (ser *ProducerService) GetAll(first int, prefixID *int) ([]*Producer, error
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Producers: %w", err)
+	}
+	return list, nil
 }
 
 // GetFilter retrieves all persisted values of Producer that
@@ -73,7 +78,11 @@ func (ser *ProducerService) GetFilter(first int, prefixID *int, keep func(p *Pro
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Producers: %w", err)
+	}
+	return list, nil
 }
 
 // GetByID retrieves the persisted Producer with the given ID.
@@ -85,7 +94,7 @@ func (ser *ProducerService) GetByID(id int) (*Producer, error) {
 
 	p, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	return p, nil
 }
@@ -104,7 +113,7 @@ func (ser *ProducerService) Bucket() string {
 func (ser *ProducerService) Clean(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	for i, t := range e.Types {
@@ -117,14 +126,17 @@ func (ser *ProducerService) Clean(m Model) error {
 // not valid for the database.
 func (ser *ProducerService) Validate(m Model) error {
 	_, err := ser.AssertType(m)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+	}
+	return nil
 }
 
 // Initialize sets initial values for some properties.
 func (ser *ProducerService) Initialize(m Model, id int) error {
 	p, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	p.ID = id
 	p.Version = 0
@@ -136,11 +148,11 @@ func (ser *ProducerService) Initialize(m Model, id int) error {
 func (ser *ProducerService) PersistOldProperties(n Model, o Model) error {
 	np, err := ser.AssertType(n)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	op, err := ser.AssertType(o)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	np.Version = op.Version + 1
 	return nil
@@ -150,12 +162,12 @@ func (ser *ProducerService) PersistOldProperties(n Model, o Model) error {
 func (ser *ProducerService) Marshal(m Model) ([]byte, error) {
 	p, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	v, err := json.Marshal(p)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 	}
 
 	return v, nil
@@ -166,7 +178,7 @@ func (ser *ProducerService) Unmarshal(buf []byte) (Model, error) {
 	var p Producer
 	err := json.Unmarshal(buf, &p)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
 	return &p, nil
 }
@@ -174,12 +186,12 @@ func (ser *ProducerService) Unmarshal(buf []byte) (Model, error) {
 // AssertType exposes the given Model as a Producer.
 func (ser *ProducerService) AssertType(m Model) (*Producer, error) {
 	if m == nil {
-		return nil, errors.New("model must not be nil")
+		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
 	p, ok := m.(*Producer)
 	if !ok {
-		return nil, errors.New("model must be of Producer type")
+		return nil, fmt.Errorf("model: %w", errors.New("not of Producer type"))
 	}
 	return p, nil
 }
@@ -192,7 +204,7 @@ func (ser *ProducerService) mapFromModel(vlist []Model) ([]*Producer, error) {
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 		}
 	}
 	return list, nil

@@ -60,7 +60,11 @@ func (ser *MediaCharacterService) GetAll(first int, prefixID *int) ([]*MediaChar
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to MediaCharacters: %w", err)
+	}
+	return list, nil
 }
 
 // GetFilter retrieves all persisted values of MediaCharacter that
@@ -77,7 +81,11 @@ func (ser *MediaCharacterService) GetFilter(first int, prefixID *int, keep func(
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to MediaCharacters: %w", err)
+	}
+	return list, nil
 }
 
 // GetByID retrieves the persisted MediaCharacter with the given ID.
@@ -89,7 +97,7 @@ func (ser *MediaCharacterService) GetByID(id int) (*MediaCharacter, error) {
 
 	mc, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	return mc, nil
 }
@@ -132,7 +140,7 @@ func (ser *MediaCharacterService) Bucket() string {
 func (ser *MediaCharacterService) Clean(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	if e.CharacterID != nil {
@@ -149,7 +157,7 @@ func (ser *MediaCharacterService) Clean(m Model) error {
 func (ser *MediaCharacterService) Validate(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	return ser.DB.View(func(tx *bolt.Tx) error {
@@ -157,43 +165,53 @@ func (ser *MediaCharacterService) Validate(m Model) error {
 		// Get Media bucket, exit if error
 		mb, err := Bucket(MediaBucket, tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, MediaBucket, err)
 		}
 		_, err = get(e.MediaID, mb)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get Media with ID %q: %w", e.MediaID, err)
 		}
 
+		// Invalid if both Character and Person are not specified
 		if e.CharacterID == nil && e.PersonID == nil {
-			return fmt.Errorf("either character id or person id must be specified")
+			nsterr := fmt.Errorf("character ID and person ID: %w", errNil)
+			return fmt.Errorf("either character ID or person ID must be specified: %w", nsterr)
 		}
 
 		// Check if Character with ID specified in new MediaCharacter exists
-		// CharacterID may be not specified
+		// CharacterID might be not specified
 		if e.CharacterID != nil {
+			// CharacterRole must be present if CharacterID is specified
 			if e.CharacterRole == nil {
-				return errors.New("character role must not be nil if character id is specified")
+				nsterr := fmt.Errorf("character role: %w", errNil)
+				return fmt.Errorf("character role must not be nil if character ID is specified: %w", nsterr)
 			}
+
 			// Get Character bucket, exit if error
+			cID := *e.CharacterID
 			cb, err := Bucket(CharacterBucket, tx)
 			if err != nil {
-				return err
+				return fmt.Errorf("%s %q: %w", errmsgBucketOpen, CharacterBucket, err)
 			}
-			_, err = get(*e.CharacterID, cb)
+			_, err = get(cID, cb)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get Character with ID %q: %w", cID, err)
 			}
 		} else {
+			// CharacterRole must not be specified if CharacterID is not
 			if e.CharacterRole != nil {
-				return fmt.Errorf("character role must be nil if character id is not specified")
+				nsterr := fmt.Errorf("character ID: %w", errNil)
+				return fmt.Errorf("character role must be nil if character ID is not specified: %w", nsterr)
 			}
 		}
 
 		// Check if Person with ID specified in new MediaCharacter exists
 		// PersonID may be not specified
 		if e.PersonID != nil {
+			// PersonRole must be present if PersonID is specified
 			if e.PersonRole == nil {
-				return errors.New("person role must not be nil if person id is specified")
+				nsterr := fmt.Errorf("person role: %w", errNil)
+				return fmt.Errorf("person role must not be nil if person ID is specified: %w", nsterr)
 			}
 			// Get Person bucket, exit if error
 			pb, err := Bucket(PersonBucket, tx)
@@ -205,8 +223,10 @@ func (ser *MediaCharacterService) Validate(m Model) error {
 				return err
 			}
 		} else {
+			// PersonRole must not be specified if PersonID is not
 			if e.PersonRole != nil {
-				return fmt.Errorf("person role must be nil if person id is not specified")
+				nsterr := fmt.Errorf("person ID: %w", errNil)
+				return fmt.Errorf("person role must be nil if person ID is not specified: %w", nsterr)
 			}
 		}
 
@@ -218,7 +238,7 @@ func (ser *MediaCharacterService) Validate(m Model) error {
 func (ser *MediaCharacterService) Initialize(m Model, id int) error {
 	mc, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	mc.ID = id
 	mc.Version = 0
@@ -230,11 +250,11 @@ func (ser *MediaCharacterService) Initialize(m Model, id int) error {
 func (ser *MediaCharacterService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	om, err := ser.AssertType(o)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	nm.Version = om.Version + 1
 	return nil
@@ -244,12 +264,12 @@ func (ser *MediaCharacterService) PersistOldProperties(n Model, o Model) error {
 func (ser *MediaCharacterService) Marshal(m Model) ([]byte, error) {
 	mc, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	v, err := json.Marshal(mc)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 	}
 
 	return v, nil
@@ -260,7 +280,7 @@ func (ser *MediaCharacterService) Unmarshal(buf []byte) (Model, error) {
 	var mc MediaCharacter
 	err := json.Unmarshal(buf, &mc)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
 	return &mc, nil
 }
@@ -268,12 +288,12 @@ func (ser *MediaCharacterService) Unmarshal(buf []byte) (Model, error) {
 // AssertType exposes the given Model as a MediaCharacter.
 func (ser *MediaCharacterService) AssertType(m Model) (*MediaCharacter, error) {
 	if m == nil {
-		return nil, errors.New("model must not be nil")
+		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
 	mc, ok := m.(*MediaCharacter)
 	if !ok {
-		return nil, errors.New("model must be of MediaCharacter type")
+		return nil, fmt.Errorf("model: %w", errors.New("not of MediaCharacter type"))
 	}
 	return mc, nil
 }
@@ -286,7 +306,7 @@ func (ser *MediaCharacterService) mapFromModel(vlist []Model) ([]*MediaCharacter
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 		}
 	}
 	return list, nil

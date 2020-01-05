@@ -2,10 +2,13 @@ package data
 
 import (
 	"errors"
+	"fmt"
 
 	json "github.com/json-iterator/go"
 	bolt "go.etcd.io/bbolt"
 )
+
+// TODO: User ratings/favoriting/comments/etc. of Characters
 
 // Character represents a single character.
 type Character struct {
@@ -54,7 +57,11 @@ func (ser *CharacterService) GetAll(first int, prefixID *int) ([]*Character, err
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Characters: %w", err)
+	}
+	return list, nil
 }
 
 // GetFilter retrieves all persisted values of Character that
@@ -71,7 +78,11 @@ func (ser *CharacterService) GetFilter(first int, prefixID *int, keep func(c *Ch
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Characters: %w", err)
+	}
+	return list, nil
 }
 
 // GetByID retrieves the persisted Character with the given ID.
@@ -83,7 +94,7 @@ func (ser *CharacterService) GetByID(id int) (*Character, error) {
 
 	c, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	return c, nil
 }
@@ -101,21 +112,27 @@ func (ser *CharacterService) Bucket() string {
 // Clean cleans the given Character for storage
 func (ser *CharacterService) Clean(m Model) error {
 	_, err := ser.AssertType(m)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+	}
+	return nil
 }
 
 // Validate returns an error if the Character is
 // not valid for the database.
 func (ser *CharacterService) Validate(m Model) error {
 	_, err := ser.AssertType(m)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+	}
+	return nil
 }
 
 // Initialize sets initial values for some properties.
 func (ser *CharacterService) Initialize(m Model, id int) error {
 	c, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	c.ID = id
 	c.Version = 0
@@ -127,11 +144,11 @@ func (ser *CharacterService) Initialize(m Model, id int) error {
 func (ser *CharacterService) PersistOldProperties(n Model, o Model) error {
 	nc, err := ser.AssertType(n)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	oc, err := ser.AssertType(o)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	nc.Version = oc.Version + 1
 	return nil
@@ -141,12 +158,12 @@ func (ser *CharacterService) PersistOldProperties(n Model, o Model) error {
 func (ser *CharacterService) Marshal(m Model) ([]byte, error) {
 	c, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	v, err := json.Marshal(c)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 	}
 
 	return v, nil
@@ -157,7 +174,7 @@ func (ser *CharacterService) Unmarshal(buf []byte) (Model, error) {
 	var c Character
 	err := json.Unmarshal(buf, &c)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
 	return &c, nil
 }
@@ -165,12 +182,12 @@ func (ser *CharacterService) Unmarshal(buf []byte) (Model, error) {
 // AssertType exposes the given Model as a Character.
 func (ser *CharacterService) AssertType(m Model) (*Character, error) {
 	if m == nil {
-		return nil, errors.New("model must not be nil")
+		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
 	c, ok := m.(*Character)
 	if !ok {
-		return nil, errors.New("model must be of Character type")
+		return nil, fmt.Errorf("model: %w", errors.New("not of Character type"))
 	}
 	return c, nil
 }
@@ -183,7 +200,7 @@ func (ser *CharacterService) mapFromModel(vlist []Model) ([]*Character, error) {
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 		}
 	}
 	return list, nil

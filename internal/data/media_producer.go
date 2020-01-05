@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	json "github.com/json-iterator/go"
@@ -57,7 +58,11 @@ func (ser *MediaProducerService) GetAll(first int, prefixID *int) ([]*MediaProdu
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to MediaProducer: %w", err)
+	}
+	return list, nil
 }
 
 // GetFilter retrieves all persisted values of MediaProducer that
@@ -74,7 +79,11 @@ func (ser *MediaProducerService) GetFilter(first int, prefixID *int, keep func(m
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to MediaProducer: %w", err)
+	}
+	return list, nil
 }
 
 // GetByID retrieves the persisted MediaProducer with the given ID.
@@ -86,7 +95,7 @@ func (ser *MediaProducerService) GetByID(id int) (*MediaProducer, error) {
 
 	mp, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	return mp, nil
 }
@@ -121,7 +130,7 @@ func (ser *MediaProducerService) Bucket() string {
 func (ser *MediaProducerService) Clean(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	e.Role = strings.Trim(e.Role, " ")
 	return nil
@@ -132,7 +141,7 @@ func (ser *MediaProducerService) Clean(m Model) error {
 func (ser *MediaProducerService) Validate(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	return ser.DB.View(func(tx *bolt.Tx) error {
@@ -140,22 +149,22 @@ func (ser *MediaProducerService) Validate(m Model) error {
 		// Get Media bucket, exit if error
 		mb, err := Bucket(MediaBucket, tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, MediaBucket, err)
 		}
 		_, err = get(e.MediaID, mb)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get Media with ID %q: %w", e.MediaID, err)
 		}
 
 		// Check if Producer with ID specified in new MediaProducer exists
 		// Get Producer bucket, exit if error
 		pb, err := Bucket(ProducerBucket, tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ProducerBucket, err)
 		}
 		_, err = get(e.ProducerID, pb)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get Producer with ID %q: %w", e.ProducerID, err)
 		}
 
 		return nil
@@ -166,7 +175,7 @@ func (ser *MediaProducerService) Validate(m Model) error {
 func (ser *MediaProducerService) Initialize(m Model, id int) error {
 	mp, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	mp.ID = id
 	mp.Version = 0
@@ -178,11 +187,11 @@ func (ser *MediaProducerService) Initialize(m Model, id int) error {
 func (ser *MediaProducerService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	om, err := ser.AssertType(o)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	nm.Version = om.Version + 1
 	return nil
@@ -192,12 +201,12 @@ func (ser *MediaProducerService) PersistOldProperties(n Model, o Model) error {
 func (ser *MediaProducerService) Marshal(m Model) ([]byte, error) {
 	mp, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	v, err := json.Marshal(mp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 	}
 
 	return v, nil
@@ -208,7 +217,7 @@ func (ser *MediaProducerService) Unmarshal(buf []byte) (Model, error) {
 	var mp MediaProducer
 	err := json.Unmarshal(buf, &mp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
 	return &mp, nil
 }
@@ -216,12 +225,12 @@ func (ser *MediaProducerService) Unmarshal(buf []byte) (Model, error) {
 // AssertType exposes the given Model as a MediaProducer.
 func (ser *MediaProducerService) AssertType(m Model) (*MediaProducer, error) {
 	if m == nil {
-		return nil, errors.New("model must not be nil")
+		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
 	mp, ok := m.(*MediaProducer)
 	if !ok {
-		return nil, errors.New("model must be of MediaProducer type")
+		return nil, fmt.Errorf("model: %w", errors.New("not of MediaProducer type"))
 	}
 	return mp, nil
 }
@@ -234,7 +243,7 @@ func (ser *MediaProducerService) mapFromModel(vlist []Model) ([]*MediaProducer, 
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 		}
 	}
 	return list, nil

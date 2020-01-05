@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"fmt"
 
 	json "github.com/json-iterator/go"
 	bolt "go.etcd.io/bbolt"
@@ -55,7 +56,11 @@ func (ser *MediaGenreService) GetAll(first int, prefixID *int) ([]*MediaGenre, e
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to MediaGenres: %w", err)
+	}
+	return list, nil
 }
 
 // GetFilter retrieves all persisted values of MediaGenre that
@@ -72,7 +77,11 @@ func (ser *MediaGenreService) GetFilter(first int, prefixID *int, keep func(mg *
 		return nil, err
 	}
 
-	return ser.mapFromModel(vlist)
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to MediaGenres: %w", err)
+	}
+	return list, nil
 }
 
 // GetByID retrieves the persisted MediaGenre with the given ID.
@@ -84,7 +93,7 @@ func (ser *MediaGenreService) GetByID(id int) (*MediaGenre, error) {
 
 	mg, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	return mg, nil
 }
@@ -124,22 +133,22 @@ func (ser *MediaGenreService) Validate(m Model) error {
 		// Get Media bucket, exit if error
 		mb, err := Bucket(MediaBucket, tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, MediaBucket, err)
 		}
 		_, err = get(e.MediaID, mb)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get Media with ID %q: %w", e.MediaID, err)
 		}
 
 		// Check if Genre with ID specified in new MediaGenre exists
 		// Get Genre bucket, exit if error
 		gb, err := Bucket(GenreBucket, tx)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, GenreBucket, err)
 		}
 		_, err = get(e.GenreID, gb)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get Genre with ID %q: %w", e.GenreID, err)
 		}
 
 		return nil
@@ -150,7 +159,7 @@ func (ser *MediaGenreService) Validate(m Model) error {
 func (ser *MediaGenreService) Initialize(m Model, id int) error {
 	mg, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	mg.ID = id
 	mg.Version = 0
@@ -162,11 +171,11 @@ func (ser *MediaGenreService) Initialize(m Model, id int) error {
 func (ser *MediaGenreService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	om, err := ser.AssertType(o)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 	nm.Version = om.Version + 1
 	return nil
@@ -176,12 +185,12 @@ func (ser *MediaGenreService) PersistOldProperties(n Model, o Model) error {
 func (ser *MediaGenreService) Marshal(m Model) ([]byte, error) {
 	mg, err := ser.AssertType(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	v, err := json.Marshal(mg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 	}
 
 	return v, nil
@@ -192,7 +201,7 @@ func (ser *MediaGenreService) Unmarshal(buf []byte) (Model, error) {
 	var mg MediaGenre
 	err := json.Unmarshal(buf, &mg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
 	return &mg, nil
 }
@@ -200,12 +209,12 @@ func (ser *MediaGenreService) Unmarshal(buf []byte) (Model, error) {
 // AssertType exposes the given Model as a MediaGenre.
 func (ser *MediaGenreService) AssertType(m Model) (*MediaGenre, error) {
 	if m == nil {
-		return nil, errors.New("model must not be nil")
+		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
 	mg, ok := m.(*MediaGenre)
 	if !ok {
-		return nil, errors.New("model must be of MediaGenre type")
+		return nil, fmt.Errorf("model: %w", errors.New("not of MediaGenre type"))
 	}
 	return mg, nil
 }
@@ -218,7 +227,7 @@ func (ser *MediaGenreService) mapFromModel(vlist []Model) ([]*MediaGenre, error)
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 		}
 	}
 	return list, nil

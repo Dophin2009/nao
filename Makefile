@@ -33,7 +33,7 @@ generate: clean
 check: nakedret nargs
 
 nakedret:
-	$(GORUN) github.com/alexkohler/nakedret $$($(SRC_FILES))
+	$(GORUN) github.com/alexkohler/nakedret -l 0 $$($(SRC_FILES))
 
 nargs:
 	$(GORUN) github.com/alexkohler/nargs/cmd/nargs $$($(SRC_FILES))

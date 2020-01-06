@@ -2,11 +2,11 @@ package graphql
 
 import (
 	"context"
+	"fmt"
 
 	"gitlab.com/Dophin2009/nao/internal/data"
 )
 
-// TODO: Implement Automatic Persisted Queries?
 // TODO: Implement authentication
 
 // Resolver is the root GraphQL resolver object.
@@ -80,13 +80,13 @@ type queryResolver struct{ *Resolver }
 func (r *queryResolver) MediaByID(ctx context.Context, id int) (*data.Media, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.MediaService
 	md, err := ser.GetByID(id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get Media by id %d: %w", id, err)
 	}
 
 	return md, nil
@@ -99,13 +99,13 @@ type mutationResolver struct{ *Resolver }
 func (r *mutationResolver) CreateMedia(ctx context.Context, media data.Media) (*data.Media, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.MediaService
 	err = ser.Create(&media)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create Media: %w", err)
 	}
 
 	return &media, nil
@@ -118,13 +118,13 @@ type characterResolver struct{ *Resolver }
 func (r *characterResolver) Media(ctx context.Context, obj *data.Character, first int, prefix *int) ([]*data.MediaCharacter, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.MediaCharacterService
 	list, err := ser.GetByCharacter(obj.ID, first, prefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get MediaCharacters by Character id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
@@ -146,13 +146,13 @@ type genreResolver struct{ *Resolver }
 func (r *genreResolver) Media(ctx context.Context, obj *data.Genre, first int, prefix *int) ([]*data.MediaGenre, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.MediaGenreService
 	list, err := ser.GetByGenre(obj.ID, first, prefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get MediaGenres by Genre id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
@@ -165,13 +165,13 @@ type mediaResolver struct{ *Resolver }
 func (r *mediaResolver) Episodes(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.Episode, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.EpisodeService
 	list, err := ser.GetByMedia(obj.ID, first, prefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get Episodes by Media id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
@@ -182,13 +182,13 @@ func (r *mediaResolver) Episodes(ctx context.Context, obj *data.Media, first int
 func (r *mediaResolver) Producers(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.MediaProducer, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.MediaProducerService
 	list, err := ser.GetByMedia(obj.ID, first, prefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get MediaProducers by Media id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
@@ -199,13 +199,13 @@ func (r *mediaResolver) Producers(ctx context.Context, obj *data.Media, first in
 func (r *mediaResolver) Characters(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.MediaCharacter, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.MediaCharacterService
 	list, err := ser.GetByMedia(obj.ID, first, prefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get MediaCharacters by Media id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
@@ -216,13 +216,13 @@ func (r *mediaResolver) Characters(ctx context.Context, obj *data.Media, first i
 func (r *mediaResolver) Genres(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.MediaGenre, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.MediaGenreService
 	list, err := ser.GetByMedia(obj.ID, first, prefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get MediaGenres by Media id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
@@ -243,7 +243,7 @@ func (r *mediaCharacterResolver) Media(ctx context.Context, obj *data.MediaChara
 func (r *mediaCharacterResolver) Character(ctx context.Context, obj *data.MediaCharacter) (*data.Character, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.CharacterService
@@ -253,7 +253,7 @@ func (r *mediaCharacterResolver) Character(ctx context.Context, obj *data.MediaC
 
 	c, err := ser.GetByID(*obj.CharacterID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get Character by id %d: %w", *obj.CharacterID, err)
 	}
 
 	return c, nil
@@ -264,7 +264,7 @@ func (r *mediaCharacterResolver) Character(ctx context.Context, obj *data.MediaC
 func (r *mediaCharacterResolver) Person(ctx context.Context, obj *data.MediaCharacter) (*data.Person, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.PersonService
@@ -274,7 +274,7 @@ func (r *mediaCharacterResolver) Person(ctx context.Context, obj *data.MediaChar
 
 	p, err := ser.GetByID(*obj.PersonID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get Person by id %d: %w", *obj.PersonID, err)
 	}
 
 	return p, nil
@@ -295,13 +295,13 @@ func (r *mediaGenreResolver) Media(ctx context.Context, obj *data.MediaGenre) (*
 func (r *mediaGenreResolver) Genre(ctx context.Context, obj *data.MediaGenre) (*data.Genre, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.GenreService
 	g, err := ser.GetByID(obj.GenreID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get Genre by id %d: %w", obj.GenreID, err)
 	}
 
 	return g, nil
@@ -322,13 +322,13 @@ func (r *mediaProducerResolver) Media(ctx context.Context, obj *data.MediaProduc
 func (r *mediaProducerResolver) Producer(ctx context.Context, obj *data.MediaProducer) (*data.Producer, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.ProducerService
 	p, err := ser.GetByID(obj.ProducerID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get Producer by id %d: %w", obj.ProducerID, err)
 	}
 
 	return p, nil
@@ -359,13 +359,13 @@ type personResolver struct{ *Resolver }
 func (r *personResolver) Media(ctx context.Context, obj *data.Person, first int, prefix *int) ([]*data.MediaCharacter, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.MediaCharacterService
 	list, err := ser.GetByPerson(obj.ID, first, prefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get MediaCharacters by Person id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
@@ -378,13 +378,13 @@ type producerResolver struct{ *Resolver }
 func (r *producerResolver) Media(ctx context.Context, obj *data.Producer, first int, prefix *int) ([]*data.MediaProducer, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.MediaProducerService
 	list, err := ser.GetByProducer(obj.ID, first, prefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get MediaProducers by Producer id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
@@ -393,14 +393,22 @@ func (r *producerResolver) Media(ctx context.Context, obj *data.Producer, first 
 func resolveMediaByID(ctx context.Context, mID int) (*data.Media, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.MediaService
 	md, err := ser.GetByID(mID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get Media by id %d: %w", mID, err)
 	}
 
 	return md, nil
+}
+
+const (
+	errmsgGetDataServices = "failed to get data services"
+)
+
+func errorGetDataServices(err error) error {
+	return fmt.Errorf("failed to get data services: %w", err)
 }

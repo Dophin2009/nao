@@ -162,13 +162,13 @@ func (ser *MediaRelationService) Validate(m Model) error {
 		// Check if owning Media with ID specified in new MediaRelation exists
 		_, err = get(e.OwnerID, mb)
 		if err != nil {
-			return fmt.Errorf("failed to get Media with ID %q: %w", e.OwnerID, err)
+			return fmt.Errorf("failed to get Media with ID %d: %w", e.OwnerID, err)
 		}
 
 		// Check if related Media with ID specified in new MediaRelation exists
 		_, err = get(e.RelatedID, mb)
 		if err != nil {
-			return fmt.Errorf("failed to get Media with ID %q: %w", e.RelatedID, err)
+			return fmt.Errorf("failed to get Media with ID %d: %w", e.RelatedID, err)
 		}
 
 		return nil

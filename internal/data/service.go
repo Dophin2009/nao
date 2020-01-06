@@ -138,7 +138,7 @@ func Update(m Model, ser Service) error {
 		// Check if entity with ID exists
 		v, err := GetRawByID(m.Iden(), ser.Bucket(), ser.Database())
 		if err != nil {
-			return fmt.Errorf("failed to get by id %q: %w", m.Iden(), err)
+			return fmt.Errorf("failed to get by id %d: %w", m.Iden(), err)
 		}
 
 		// Unmarshall old
@@ -192,7 +192,7 @@ func Delete(id int, ser Service) error {
 		// Store existing model to return
 		err = b.Delete(itob(id))
 		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketDelete, ser.Bucket(), err)
+			return fmt.Errorf("failed to delete by id %d: %w", id, err)
 		}
 
 		return nil
@@ -208,7 +208,7 @@ func GetByID(id int, ser Service) (Model, error) {
 
 	v, err := GetRawByID(id, ser.Bucket(), ser.Database())
 	if err != nil {
-		return nil, fmt.Errorf("failed to get by id %q: %w", id, err)
+		return nil, fmt.Errorf("failed to get by id %d: %w", id, err)
 	}
 
 	m, err := ser.Unmarshal(v)
@@ -241,7 +241,7 @@ func GetRawByID(id int, bucketName string, db *bolt.DB) ([]byte, error) {
 		// Get entity by ID, exit if error
 		v = b.Get(itob(id))
 		if v == nil {
-			return fmt.Errorf("model with id %q: %w", id, errNotFound)
+			return fmt.Errorf("model with id %d: %w", id, errNotFound)
 		}
 		return err
 	})
@@ -456,7 +456,7 @@ func get(id int, bucket *bolt.Bucket) ([]byte, error) {
 
 	v := bucket.Get(itob(id))
 	if v == nil {
-		return nil, fmt.Errorf("model with id %q: %w", id, errNotFound)
+		return nil, fmt.Errorf("model with id %d: %w", id, errNotFound)
 	}
 	return v, nil
 }

@@ -96,7 +96,7 @@ func (ws *WatchStatus) MarshalJSON() (v []byte, err error) {
 		Hold:      "Hold",
 	}[*ws]
 	if !ok {
-		return nil, fmt.Errorf("watch status value %q: %w", *ws, err)
+		return nil, fmt.Errorf("watch status value %d: %w", *ws, err)
 	}
 
 	v, err = json.Marshal(value)
@@ -231,7 +231,7 @@ func (ser *UserMediaService) Validate(m Model) error {
 		}
 		_, err = get(e.UserID, ub)
 		if err != nil {
-			return fmt.Errorf("failed to get User with ID %q: %w", e.UserID, err)
+			return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
 		}
 
 		// Check if Media with ID specified in MediaCharacter exists
@@ -242,7 +242,7 @@ func (ser *UserMediaService) Validate(m Model) error {
 		}
 		_, err = get(e.MediaID, mb)
 		if err != nil {
-			return fmt.Errorf("failed to get Media with ID %q: %w", e.MediaID, err)
+			return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
 		}
 
 		// Check if UserMediaLists with IDs specified in UserMedia exists
@@ -254,7 +254,7 @@ func (ser *UserMediaService) Validate(m Model) error {
 		for _, listID := range e.UserMediaListIDs {
 			_, err = get(listID, umlb)
 			if err != nil {
-				return fmt.Errorf("failed to get UserMediaList with ID %q: %w", listID, err)
+				return fmt.Errorf("failed to get UserMediaList with ID %d: %w", listID, err)
 			}
 		}
 

@@ -153,7 +153,7 @@ func (ser *MediaProducerService) Validate(m Model) error {
 		}
 		_, err = get(e.MediaID, mb)
 		if err != nil {
-			return fmt.Errorf("failed to get Media with ID %q: %w", e.MediaID, err)
+			return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
 		}
 
 		// Check if Producer with ID specified in new MediaProducer exists
@@ -164,7 +164,7 @@ func (ser *MediaProducerService) Validate(m Model) error {
 		}
 		_, err = get(e.ProducerID, pb)
 		if err != nil {
-			return fmt.Errorf("failed to get Producer with ID %q: %w", e.ProducerID, err)
+			return fmt.Errorf("failed to get Producer with ID %d: %w", e.ProducerID, err)
 		}
 
 		return nil

@@ -137,7 +137,7 @@ func (ser *MediaGenreService) Validate(m Model) error {
 		}
 		_, err = get(e.MediaID, mb)
 		if err != nil {
-			return fmt.Errorf("failed to get Media with ID %q: %w", e.MediaID, err)
+			return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
 		}
 
 		// Check if Genre with ID specified in new MediaGenre exists
@@ -148,7 +148,7 @@ func (ser *MediaGenreService) Validate(m Model) error {
 		}
 		_, err = get(e.GenreID, gb)
 		if err != nil {
-			return fmt.Errorf("failed to get Genre with ID %q: %w", e.GenreID, err)
+			return fmt.Errorf("failed to get Genre with ID %d: %w", e.GenreID, err)
 		}
 
 		return nil

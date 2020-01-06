@@ -182,7 +182,7 @@ func (ser *UserService) AuthenticateWithPassword(username string, password strin
 func (ser *UserService) ChangePassword(userID int, password string) error {
 	u, err := ser.GetByID(userID)
 	if err != nil {
-		return fmt.Errorf("failed to get User by ID %q: %w", userID, err)
+		return fmt.Errorf("failed to get User by ID %d: %w", userID, err)
 	}
 
 	pass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

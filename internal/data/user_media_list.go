@@ -135,7 +135,7 @@ func (ser *UserMediaListService) Validate(m Model) error {
 		}
 		_, err = get(e.UserID, ub)
 		if err != nil {
-			return fmt.Errorf("failed to get User with ID %q: %w", e.UserID, err)
+			return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
 		}
 
 		return nil

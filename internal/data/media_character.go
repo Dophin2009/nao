@@ -169,7 +169,7 @@ func (ser *MediaCharacterService) Validate(m Model) error {
 		}
 		_, err = get(e.MediaID, mb)
 		if err != nil {
-			return fmt.Errorf("failed to get Media with ID %q: %w", e.MediaID, err)
+			return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
 		}
 
 		// Invalid if both Character and Person are not specified
@@ -195,7 +195,7 @@ func (ser *MediaCharacterService) Validate(m Model) error {
 			}
 			_, err = get(cID, cb)
 			if err != nil {
-				return fmt.Errorf("failed to get Character with ID %q: %w", cID, err)
+				return fmt.Errorf("failed to get Character with ID %d: %w", cID, err)
 			}
 		} else {
 			// CharacterRole must not be specified if CharacterID is not

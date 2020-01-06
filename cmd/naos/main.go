@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -10,46 +9,35 @@ import (
 
 	"gitlab.com/Dophin2009/nao/internal/data"
 	"gitlab.com/Dophin2009/nao/internal/naos"
-	"gitlab.com/Dophin2009/nao/internal/naos/graphql"
-	"gitlab.com/Dophin2009/nao/internal/web"
-	bolt "go.etcd.io/bbolt"
 )
+
+// TODO: Parse command line flags
 
 func main() {
 	// Exit with status code 0 at the end
 	defer os.Exit(0)
 
 	println("-------------------: NAO SERVER :-------------------")
-
 	// Read configuration files
 	conf, err := naos.ReadConfigs()
 	if err != nil {
-		log.Fatalf("Error reading config: %v", err)
+		log.Fatalf("Failed to read config: %v", err)
+		return
 	}
 
-	// Open database connection
-	log.Println("Establishing database connection")
-	db, err := data.ConnectDatabase(conf.DB.Path, os.FileMode(conf.DB.Filemode), true)
+	s, err := naos.NewApplication(conf)
 	if err != nil {
-		log.Fatal("Error connecting to database ")
+		log.Fatalf("Failed to initialize application: %v", err)
 		return
 	}
 	// Clear database and close connection at the end
-	defer db.Close()
-	defer data.ClearDatabase(db)
-
-	// Create the API controller and HTTP server
-	address := fmt.Sprintf("%s:%s", conf.Hostname, conf.Port)
-	s, err := initServer(address, db)
-	if err != nil {
-		log.Fatalf("Error initializing server: %v", err)
-		return
-	}
-	shttp := s.HTTPServer()
+	defer s.DB.Close()
+	defer data.ClearDatabase(s.DB)
 
 	// Launch server in goroutine
+	shttp := s.HTTPServer()
 	go func() {
-		log.Println("Launching server on", s.Address)
+		log.Println("Launching server on", shttp.Addr)
 		err := shttp.ListenAndServe()
 		if err != nil {
 			log.Fatal(err)
@@ -69,40 +57,4 @@ func main() {
 
 	println()
 	log.Println("Exiting...")
-}
-
-func initServer(address string, db *bolt.DB) (*web.Server, error) {
-	s := web.NewServer(address)
-
-	ds := graphql.DataServices{
-		CharacterService:      &data.CharacterService{DB: db},
-		EpisodeService:        &data.EpisodeService{DB: db},
-		GenreService:          &data.GenreService{DB: db},
-		MediaService:          &data.MediaService{DB: db},
-		MediaCharacterService: &data.MediaCharacterService{DB: db},
-		MediaGenreService:     &data.MediaGenreService{DB: db},
-		MediaProducerService:  &data.MediaProducerService{DB: db},
-		MediaRelationSerivce:  &data.MediaRelationService{DB: db},
-		PersonService:         &data.PersonService{DB: db},
-		ProducerService:       &data.ProducerService{DB: db},
-		UserService:           &data.UserService{DB: db},
-		UserMediaService:      &data.UserMediaService{DB: db},
-		UserMediaListService:  &data.UserMediaListService{DB: db},
-	}
-
-	graphqlHandler := naos.NewGraphQLHandler([]string{"graphql"}, &ds)
-	s.RegisterHandler(graphqlHandler)
-
-	graphiqlHandler, err := naos.NewGraphiQLHandler(
-		[]string{"graphiql"}, graphqlHandler.PathString(),
-	)
-	if err != nil {
-		return nil, err
-	}
-	s.RegisterHandler(graphiqlHandler)
-
-	playgroundHandler := naos.NewGraphQLPlaygroundHandler([]string{"playground"}, graphqlHandler.PathString())
-	s.RegisterHandler(playgroundHandler)
-
-	return &s, nil
 }

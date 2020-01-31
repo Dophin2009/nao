@@ -1,13 +1,13 @@
 """
 A type that describes a Person.
 """
-type Person {
+type Person @goModel(model: "data.Person") {
   "An integer identifier for the Person."
   id: Int!
   "A list of names used to name the Person."
-  names: StringMap
+  names: [Title!]!
   "A list of information segments to describe the Person."
-  information: StringMap
+  information: [Title!]!
   """
   A list of MediaCharacter describing the Media the
   Person is involved in.
@@ -18,11 +18,11 @@ type Person {
 """
 An input to create or update a Person.
 """
-type PersonInput @goModel(model: "data.Person") {
+input PersonInput @goModel(model: "data.Person") {
   "An integer identifier for the Person."
   id: Int!
   "A list of names used to name the Person."
-  names: StringMap
+  names: [TitleInput!]!
   "A list of information segments to describe the Person."
-  information: StringMap
+  information: [TitleInput!]!
 }

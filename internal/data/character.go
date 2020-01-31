@@ -13,8 +13,8 @@ import (
 // Character represents a single character.
 type Character struct {
 	ID          int
-	Names       map[string]string
-	Information map[string]string
+	Names       []Title
+	Information []Title
 	Version     int
 	Model
 }

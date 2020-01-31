@@ -13,7 +13,7 @@ import (
 // licensor, etc.
 type Producer struct {
 	ID      int
-	Titles  map[string]string
+	Titles  []Title
 	Types   []string
 	Version int
 	Model

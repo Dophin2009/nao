@@ -11,8 +11,8 @@ import (
 // Genre represents a single instance of a genre.
 type Genre struct {
 	ID           int
-	Names        map[string]string
-	Descriptions map[string]string
+	Names        []Title
+	Descriptions []Title
 	Version      int
 }
 

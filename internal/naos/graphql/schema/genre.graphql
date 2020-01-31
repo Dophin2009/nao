@@ -5,12 +5,12 @@ type Genre {
   "An integer identifier for the Genre."
   id: Int!
   "A list of names used to name the Genre."
-  names: StringMap!
+  names: [Title!]!
   """
   A list of descriptions used to name the Genre,
   typically in different languages.
   """
-  descriptions: StringMap!
+  descriptions: [Title!]!
   """
   A list of Media that are in the Genre.
   """
@@ -24,10 +24,10 @@ input GenreInput @goModel(model: "data.Genre") {
   "An integer identifier for the Genre."
   id: Int
   "A list of names used to name the Genre."
-  names: StringMap!
+  names: [TitleInput!]!
   """
   A list of descriptions used to name the Genre,
   typically in different languages.
   """
-  descriptions: StringMap!
+  descriptions: [TitleInput!]!
 }

@@ -5,12 +5,12 @@ type Character {
   "An integer identifier for the Character."
   id: Int!
   "A list of names used to name the Character."
-  names: StringMap!
+  names: [Title!]!
   """
   A list of information segments, typically in different
   languages
   """
-  information: StringMap!
+  information: [Title!]!
   """
   A list of MediaCharacter describing the Media the
   Character is in.
@@ -25,10 +25,10 @@ input CharacterInput @goModel(model: "data.Character") {
   "An integer identifier for the Character."
   id: Int
   "A list of names used to name the Character."
-  names: StringMap!
+  names: [TitleInput!]!
   """
   A list of information segments, typically in different
   languages
   """
-  information: StringMap!
+  information: [TitleInput!]!
 }

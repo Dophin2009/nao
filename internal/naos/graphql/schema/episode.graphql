@@ -12,9 +12,9 @@ type Episode {
   """
   number: Int!
   "A list of titles used to name the Episode."
-  titles: StringMap!
+  titles: [Title!]!
   "A list of synopses to describe the Episode."
-  synopses: StringMap!
+  synopses: [Title!]!
   "The duration in minutes of the Episode."
   duration: Int
   """
@@ -43,9 +43,9 @@ input EpisodeInput @goModel(model: "data.Episode") {
   """
   number: Int!
   "A list of titles used to name the Episode."
-  titles: StringMap!
+  titles: [TitleInput!]!
   "A list of synopses to describe the Episode."
-  synopses: StringMap!
+  synopses: [TitleInput!]!
   "The duration in minutes of the Episode."
   duration: Int
   """

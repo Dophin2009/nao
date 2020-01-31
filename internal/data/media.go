@@ -15,16 +15,17 @@ import (
 // TODO: Revert Media.Titles, Media.Synopses, Media.Background
 // and other similar ones to list of own struct; multiple
 // entries for each language and possibly other properties such
-// as priority.
+// as priority
 // TODO: Move UnmarshalGQL and MarshalGQL of Quarter to graphql
-// package; they do not belong in this package.
+// package; they do not belong in this package
+// TODO: Fuzzy search of models
 
 // Media represents a single instance of a media
 type Media struct {
 	ID              int
-	Titles          map[string]string
-	Synopses        map[string]string
-	Background      map[string]string
+	Titles          []Title
+	Synopses        []Title
+	Background      []Title
 	StartDate       *time.Time
 	EndDate         *time.Time
 	SeasonPremiered Season

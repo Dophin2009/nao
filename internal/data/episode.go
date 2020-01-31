@@ -17,8 +17,8 @@ type Episode struct {
 	ID       int
 	MediaID  int
 	Number   int
-	Titles   map[string]string
-	Synopses map[string]string
+	Titles   []Title
+	Synopses []Title
 	Date     *time.Time
 	Duration *int
 	Filler   bool

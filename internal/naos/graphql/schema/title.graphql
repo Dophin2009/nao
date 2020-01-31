@@ -1,0 +1,47 @@
+"""
+A language-specific string used as a name or
+descriptor in other models.
+"""
+type Title @goModel(model: "data.Title") {
+  "The string data."
+  string: String!
+  "The language the string is in."
+  language: String!
+  "The priority of the Title within a set of Titles."
+  priority: TitlePriority!
+}
+
+"""
+A language-specific string used as a name or
+descriptor in other models.
+"""
+input TitleInput @goModel(model: "data.Title") {
+  "The string data."
+  string: String!
+  "The language the string is in."
+  language: String!
+  "The priority of the Title within a set of Titles."
+  priority: TitlePriority!
+}
+
+"""
+An enum that describes the priority of a Title
+within a set of Titles.
+"""
+enum TitlePriority @goModel(model: "data.TitlePriority") {
+  """
+  Primary means the Title is a primary one in a
+  set.
+  """
+  Primary
+  """
+  Secondary means the Title is a secondary one in a
+  set.
+  """
+  Secondary
+  """
+  Other means the Title is a tertiary or some other
+  lower priority one in a set.
+  """
+  Other
+}

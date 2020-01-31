@@ -13,8 +13,8 @@ import (
 type UserMediaList struct {
 	ID           int
 	UserID       int
-	Names        map[string]string
-	Descriptions map[string]string
+	Names        []Title
+	Descriptions []Title
 	Version      int
 	Model
 }

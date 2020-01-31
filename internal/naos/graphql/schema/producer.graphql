@@ -5,7 +5,7 @@ type Producer {
   "An integer identifier for the Producer."
   id: Int!
   "A list of titles used to name the Producer."
-  titles: StringMap!
+  titles: [Title!]!
   """
   A list of phrases describing the types of
   functions the Producer takes on.
@@ -25,7 +25,7 @@ input ProducerInput @goModel(model: "data.Producer") {
   "An integer identifier for the Producer."
   id: Int
   "A list of titles used to name the Producer."
-  titles: StringMap!
+  titles: [TitleInput!]!
   """
   A list of phrases describing the types of
   functions the Producer takes on.

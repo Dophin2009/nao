@@ -188,6 +188,29 @@ func (r *genreResolver) Media(ctx context.Context, obj *data.Genre, first int, p
 // mediaResolver is the field resolver for Media objects.
 type mediaResolver struct{ *Resolver }
 
+func (r *mediaResolver) Titles(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.Title, error) {
+	return sliceTitles(obj.Titles, first, prefix)
+}
+
+func (r *mediaResolver) Synopses(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.Title, error) {
+	return sliceTitles(obj.Synopses, first, prefix)
+}
+
+func (r *mediaResolver) Background(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.Title, error) {
+	return sliceTitles(obj.Titles, first, prefix)
+}
+
+func sliceTitles(objTitles []data.Title, first int, prefix *int) ([]*data.Title, error) {
+	skip, end := calculatePaginationBounds(first, prefix, len(objTitles))
+
+	titles := objTitles[skip:end]
+	tlist := make([]*data.Title, len(titles))
+	for i := range tlist {
+		tlist[i] = &titles[i]
+	}
+	return tlist, nil
+}
+
 // Episodes resolves the Episodes for Media objects.
 func (r *mediaResolver) Episodes(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.Episode, error) {
 	ds, err := getDataServicesFromCtx(ctx)
@@ -484,4 +507,19 @@ const (
 
 func errorGetDataServices(err error) error {
 	return fmt.Errorf("failed to get data services: %w", err)
+}
+
+func calculatePaginationBounds(first int, prefix *int, size int) (int, int) {
+	skip := 0
+	if prefix != nil {
+		skip = *prefix + 1
+	}
+
+	var end int
+	if first < 0 {
+		end = size
+	} else {
+		end = skip + first
+	}
+	return skip, end
 }

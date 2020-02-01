@@ -5,17 +5,17 @@ type Media @goModel(model: "data.Media") {
   "An integer identifier for the Media."
   id: Int!
   "A list of titles used to named the Media."
-  titles: [Title!]!
+  titles(first: Int!, prefix: Int): [Title!]! @goField(forceResolver: true)
   """
   A list of synopses describing the Media,
   typically in different languages.
   """
-  synopses: [Title!]!
+  synopses(first: Int!, prefix: Int): [Title!]! @goField(forceResolver: true)
   """
   A list of background information segments,
   typically in different languages.
   """
-  background: [Title!]!
+  background(first: Int!, prefix: Int): [Title!]! @goField(forceResolver: true)
   "The year and season the Media premiered in."
   seasonPremiered: Season!
   "The type of the Media."

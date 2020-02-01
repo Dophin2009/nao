@@ -26,10 +26,6 @@ type Media @goModel(model: "data.Media") {
   """
   source: String
   """
-  The list of Episodes in this Media.
-  """
-  episodes(first: Int!, prefix: Int): [Episode!]!
-  """
   The list of Episode watch orders in this Media.
   """
   episodeSets(first: Int!, prefix: Int): [EpisodeSet!]!

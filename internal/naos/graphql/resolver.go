@@ -3,6 +3,7 @@ package graphql
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"gitlab.com/Dophin2009/nao/internal/data"
 )
@@ -187,6 +188,7 @@ func (r *mediaResolver) Episodes(ctx context.Context, obj *data.Media, first int
 		}
 	}
 
+	sort.Ints(idList)
 	epList := make([]*data.Episode, len(idList))
 	for _, id := range idList {
 		ep, err := epSer.GetByID(id)

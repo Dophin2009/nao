@@ -134,10 +134,35 @@ func (r *characterResolver) Media(ctx context.Context, obj *data.Character, firs
 type episodeSetResolver struct{ *Resolver }
 
 func (r *episodeSetResolver) Media(ctx context.Context, obj *data.EpisodeSet) (*data.Media, error) {
-	panic("not implemented")
+	ds, err := getDataServicesFromCtx(ctx)
+	if err != nil {
+		return nil, errorGetDataServices(err)
+	}
+
+	ser := ds.MediaService
+	m, err := ser.GetByID(obj.MediaID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Media by id %d: %w", obj.MediaID, err)
+	}
+
+	return m, nil
 }
 func (r *episodeSetResolver) Episodes(ctx context.Context, obj *data.EpisodeSet) ([]*data.Episode, error) {
-	panic("not implemented")
+	ds, err := getDataServicesFromCtx(ctx)
+	if err != nil {
+		return nil, errorGetDataServices(err)
+	}
+
+	ser := ds.EpisodeService
+	list := make([]*data.Episode, len(obj.Episodes))
+	for i, id := range obj.Episodes {
+		ep, err := ser.GetByID(id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get Episode by id %d: %w", id, err)
+		}
+		list[i] = ep
+	}
+	return list, nil
 }
 
 // genreResolver is the field resolver for Genre objects.
@@ -190,12 +215,12 @@ func (r *mediaResolver) Episodes(ctx context.Context, obj *data.Media, first int
 
 	sort.Ints(idList)
 	epList := make([]*data.Episode, len(idList))
-	for _, id := range idList {
+	for i, id := range idList {
 		ep, err := epSer.GetByID(id)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get Episode by id %d: %w", id, err)
 		}
-		epList = append(epList, ep)
+		epList[i] = ep
 	}
 
 	return epList, nil

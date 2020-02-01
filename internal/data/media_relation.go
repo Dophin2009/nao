@@ -51,8 +51,8 @@ func (ser *MediaRelationService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of MediaRelation.
-func (ser *MediaRelationService) GetAll(first int, prefixID *int) ([]*MediaRelation, error) {
-	vlist, err := GetAll(ser, first, prefixID)
+func (ser *MediaRelationService) GetAll(first *int, skip *int) ([]*MediaRelation, error) {
+	vlist, err := GetAll(ser, first, skip)
 	if err != nil {
 		return nil, err
 	}
@@ -66,8 +66,8 @@ func (ser *MediaRelationService) GetAll(first int, prefixID *int) ([]*MediaRelat
 
 // GetFilter retrieves all persisted values of MediaRelation that
 // pass the filter.
-func (ser *MediaRelationService) GetFilter(first int, prefixID *int, keep func(mr *MediaRelation) bool) ([]*MediaRelation, error) {
-	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
+func (ser *MediaRelationService) GetFilter(first *int, skip *int, keep func(mr *MediaRelation) bool) ([]*MediaRelation, error) {
+	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		mr, err := ser.AssertType(m)
 		if err != nil {
 			return false
@@ -101,24 +101,24 @@ func (ser *MediaRelationService) GetByID(id int) (*MediaRelation, error) {
 
 // GetByOwner retrieves a list of instances of MediaRelation
 // with the given owning Media ID.
-func (ser *MediaRelationService) GetByOwner(mID int, first int, prefixID *int) ([]*MediaRelation, error) {
-	return ser.GetFilter(first, prefixID, func(mr *MediaRelation) bool {
+func (ser *MediaRelationService) GetByOwner(mID int, first *int, skip *int) ([]*MediaRelation, error) {
+	return ser.GetFilter(first, skip, func(mr *MediaRelation) bool {
 		return mr.OwnerID == mID
 	})
 }
 
 // GetByRelated retrieves a list of instances of MediaRelation
 // with the given related Media ID.
-func (ser *MediaRelationService) GetByRelated(mID int, first int, prefixID *int) ([]*MediaRelation, error) {
-	return ser.GetFilter(first, prefixID, func(mr *MediaRelation) bool {
+func (ser *MediaRelationService) GetByRelated(mID int, first *int, skip *int) ([]*MediaRelation, error) {
+	return ser.GetFilter(first, skip, func(mr *MediaRelation) bool {
 		return mr.RelatedID == mID
 	})
 }
 
 // GetByRelationship retrieves a list of instances of Media Relation
 // with the given relationship.
-func (ser *MediaRelationService) GetByRelationship(relationship string, first int, prefixID *int) ([]*MediaRelation, error) {
-	return ser.GetFilter(first, prefixID, func(mr *MediaRelation) bool {
+func (ser *MediaRelationService) GetByRelationship(relationship string, first *int, skip *int) ([]*MediaRelation, error) {
+	return ser.GetFilter(first, skip, func(mr *MediaRelation) bool {
 		return mr.Relationship == relationship
 	})
 }

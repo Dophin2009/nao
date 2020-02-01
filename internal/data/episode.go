@@ -72,8 +72,8 @@ func (ser *EpisodeService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of Episode.
-func (ser *EpisodeService) GetAll(first int, prefixID *int) ([]*Episode, error) {
-	vlist, err := GetAll(ser, first, prefixID)
+func (ser *EpisodeService) GetAll(first *int, skip *int) ([]*Episode, error) {
+	vlist, err := GetAll(ser, first, skip)
 	if err != nil {
 		return nil, err
 	}
@@ -87,8 +87,8 @@ func (ser *EpisodeService) GetAll(first int, prefixID *int) ([]*Episode, error) 
 
 // GetFilter retrieves all persisted values of Episode that
 // pass the filter.
-func (ser *EpisodeService) GetFilter(first int, prefixID *int, keep func(ep *Episode) bool) ([]*Episode, error) {
-	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
+func (ser *EpisodeService) GetFilter(first *int, skip *int, keep func(ep *Episode) bool) ([]*Episode, error) {
+	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		ep, err := ser.AssertType(m)
 		if err != nil {
 			return false
@@ -122,8 +122,8 @@ func (ser *EpisodeService) GetByID(id int) (*Episode, error) {
 
 // GetByMedia retrieves a list of instances of Episode
 // with the given Media ID.
-// func (ser *EpisodeService) GetByMedia(mID int, first int, prefixID *int) ([]*Episode, error) {
-// return ser.GetFilter(first, prefixID, func(ep *Episode) bool {
+// func (ser *EpisodeService) GetByMedia(mID int, first *int, skip *int) ([]*Episode, error) {
+// return ser.GetFilter(first, skip, func(ep *Episode) bool {
 // return ep.MediaID == mID
 // })
 // }
@@ -262,8 +262,8 @@ func (ser *EpisodeSetService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of EpisodeSet.
-func (ser *EpisodeSetService) GetAll(first int, prefixID *int) ([]*EpisodeSet, error) {
-	vlist, err := GetAll(ser, first, prefixID)
+func (ser *EpisodeSetService) GetAll(first *int, skip *int) ([]*EpisodeSet, error) {
+	vlist, err := GetAll(ser, first, skip)
 	if err != nil {
 		return nil, err
 	}
@@ -277,8 +277,8 @@ func (ser *EpisodeSetService) GetAll(first int, prefixID *int) ([]*EpisodeSet, e
 
 // GetFilter retrieves all persisted values of EpisodeSet that
 // pass the filter.
-func (ser *EpisodeSetService) GetFilter(first int, prefixID *int, keep func(*EpisodeSet) bool) ([]*EpisodeSet, error) {
-	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
+func (ser *EpisodeSetService) GetFilter(first *int, skip *int, keep func(*EpisodeSet) bool) ([]*EpisodeSet, error) {
+	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		set, err := ser.AssertType(m)
 		if err != nil {
 			return false
@@ -313,8 +313,8 @@ func (ser *EpisodeSetService) GetByID(id int) (*EpisodeSet, error) {
 
 // GetByMedia retrieves a list of instances of EpisodeSet
 // with the given Media ID.
-func (ser *EpisodeSetService) GetByMedia(mID int, first int, prefixID *int) ([]*EpisodeSet, error) {
-	return ser.GetFilter(first, prefixID, func(set *EpisodeSet) bool {
+func (ser *EpisodeSetService) GetByMedia(mID int, first *int, skip *int) ([]*EpisodeSet, error) {
+	return ser.GetFilter(first, skip, func(set *EpisodeSet) bool {
 		return set.MediaID == mID
 	})
 }

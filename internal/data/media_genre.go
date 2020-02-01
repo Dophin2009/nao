@@ -50,8 +50,8 @@ func (ser *MediaGenreService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of MediaGenre.
-func (ser *MediaGenreService) GetAll(first int, prefixID *int) ([]*MediaGenre, error) {
-	vlist, err := GetAll(ser, first, prefixID)
+func (ser *MediaGenreService) GetAll(first *int, skip *int) ([]*MediaGenre, error) {
+	vlist, err := GetAll(ser, first, skip)
 	if err != nil {
 		return nil, err
 	}
@@ -65,8 +65,8 @@ func (ser *MediaGenreService) GetAll(first int, prefixID *int) ([]*MediaGenre, e
 
 // GetFilter retrieves all persisted values of MediaGenre that
 // pass the filter.
-func (ser *MediaGenreService) GetFilter(first int, prefixID *int, keep func(mg *MediaGenre) bool) ([]*MediaGenre, error) {
-	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
+func (ser *MediaGenreService) GetFilter(first *int, skip *int, keep func(mg *MediaGenre) bool) ([]*MediaGenre, error) {
+	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		mg, err := ser.AssertType(m)
 		if err != nil {
 			return false
@@ -100,16 +100,16 @@ func (ser *MediaGenreService) GetByID(id int) (*MediaGenre, error) {
 
 // GetByMedia retrieves a list of instances of MediaGenre
 // with the given Media ID.
-func (ser *MediaGenreService) GetByMedia(mID int, first int, prefixID *int) ([]*MediaGenre, error) {
-	return ser.GetFilter(first, prefixID, func(mg *MediaGenre) bool {
+func (ser *MediaGenreService) GetByMedia(mID int, first *int, skip *int) ([]*MediaGenre, error) {
+	return ser.GetFilter(first, skip, func(mg *MediaGenre) bool {
 		return mg.MediaID == mID
 	})
 }
 
 // GetByGenre retrieves a list of instances of MediaGenre
 // with the given Genre ID.
-func (ser *MediaGenreService) GetByGenre(gID int, first int, prefixID *int) ([]*MediaGenre, error) {
-	return ser.GetFilter(first, prefixID, func(mg *MediaGenre) bool {
+func (ser *MediaGenreService) GetByGenre(gID int, first *int, skip *int) ([]*MediaGenre, error) {
+	return ser.GetFilter(first, skip, func(mg *MediaGenre) bool {
 		return mg.GenreID == gID
 	})
 }

@@ -1,6 +1,7 @@
 package data
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -254,41 +255,58 @@ func GetRawByID(id int, bucketName string, db *bolt.DB) ([]byte, error) {
 
 // GetAll retrieves all persisted instances of a Model type
 // with the given data layer service.
-// Collection begins on the element after the given prefix
-// and continues for `first` elements.
-// If prefixID is given as nil, collection begins with the
-// first persisted element.
-// The given service and its DB should not be nil.
-func GetAll(ser Service, first int, prefixID *int) ([]Model, error) {
-	return GetFilter(ser, first, prefixID, func(m Model) bool { return true })
+//
+// See GetFilter for details on `first` and `skip`.
+func GetAll(ser Service, first *int, skip *int) ([]Model, error) {
+	return GetFilter(ser, first, skip, func(m Model) bool { return true })
 }
 
 // GetFilter retrieves all persisted instances of a Model
 // type that pass the filter.
-// Collection begins on the element after the given prefix
-// and continues for `first` elements that pass the filter.
-// If prefixID is given as nil, collection begins with the
-// first persisted element.
+//
+// Collection begins on the first valid element after skipping
+// the `skip` valid elements and continues for `first` valid
+// elements that pass the filter.
+// If `skip` is given as nil, collection begins with the
+// first valid element.
+// If `first` is given as nil, collection continues until the
+// last persisted element is queried.
 // The given service and its DB should not be nil.
-// The filter function should also not be nil.
-func GetFilter(ser Service, first int, prefixID *int, keep func(m Model) bool) ([]Model, error) {
+// A nil filter function passes all.
+func GetFilter(ser Service, first *int, skip *int, keep func(m Model) bool) ([]Model, error) {
 	// Check service
 	if err := checkService(ser); err != nil {
 		return nil, err
 	}
 
-	// Filter function should not be nil.
 	if keep == nil {
-		return nil, fmt.Errorf("filter function: %w", errNil)
+		keep = func(m Model) bool {
+			return true
+		}
 	}
 
-	// Return empty slice if number of elements to get is 0
-	if first == 0 {
+	// The number of elements to skip
+	var start int
+	if skip == nil || *skip <= 0 {
+		start = 0
+	} else {
+		start = *skip
+	}
+
+	// When iterator reaches this number, stop
+	var end int
+	if first == nil || *first < 0 {
+		// Return all elements if `first` is nil
+		end = -1
+	} else if *first == 0 {
+		// Return empty slice if number of elements to get is 0
 		return []Model{}, nil
+	} else {
+		end = start + *first
 	}
 
 	// List to return
-	var list []Model
+	list := []Model{}
 
 	// Begin database transaction
 	err := ser.Database().View(func(tx *bolt.Tx) error {
@@ -301,62 +319,51 @@ func GetFilter(ser Service, first int, prefixID *int, keep func(m Model) bool) (
 		// Get cursor for bucket
 		c := b.Cursor()
 
-		// Initialize key and value to first element or
-		// right after prefix
+		// Find last key; will stop iteration when reached
+		var lk []byte
+		d := b.Cursor()
+		lk, _ = d.Last()
+
+		// Move cursor to starting element
 		var k, v []byte
-		if prefixID == nil {
-			// Begin on first element if prefix is not provided
-			k, v = c.First()
-			// If first key not found, database is empty;
-			// return empty list
+		c.First()
+		for i := 0; i < start; k, v = c.Next() {
 			if k == nil {
-				list = []Model{}
-				return nil
+				continue
 			}
-		} else {
-			// Begin on element right after prefix if prefixID is
-			// provided
-			k, v = c.Seek(itob(*prefixID))
-			// If key not found, return error
-			if k == nil {
-				return fmt.Errorf("prefix key: %w", errNotFound)
-			}
-			k, v = c.Next()
+			i++
 		}
 
-		if first < 0 {
-			// If negative `first`, get all elements starting
-			// from prefix
-			for ; k != nil; k, v = c.Next() {
-				// Unmarshal value and check filter
-				m, err := ser.Unmarshal(v)
-				if err != nil {
-					return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
-				}
-
-				if keep(m) {
-					list = append(list, m)
-				}
+		// Iterate until end is reached
+		lastReached := false
+		for i := start; i < end; k, v = c.Next() {
+			if lastReached {
+				break
 			}
-		} else {
-			// Positive `first` means to get that many elements;
-			// construct a slice of that size
-			list = make([]Model, first)
 
-			// Unmarshal and add all entities to slice
-			i := 0
-			for ; k != nil && i < first; k, v = c.Next() {
-				// Unmarshal value and check filter
-				m, err := ser.Unmarshal(v)
-				if err != nil {
-					return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
-				}
-
-				if keep(m) {
-					list[i] = m
-					i++
-				}
+			// If key reached last, exit
+			if bytes.Equal(k, lk) {
+				lastReached = true
 			}
+
+			// If no key found, continue to next
+			if k == nil {
+				continue
+			}
+
+			// Unmarshal element
+			m, err := ser.Unmarshal(v)
+			if err != nil {
+				return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
+			}
+
+			// If element does not pass filter, continue to next
+			if !keep(m) {
+				continue
+			}
+
+			list = append(list, m)
+			i++
 		}
 
 		return nil

@@ -153,8 +153,8 @@ func (ser *MediaService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of Media.
-func (ser *MediaService) GetAll(first int, prefixID *int) ([]*Media, error) {
-	vlist, err := GetAll(ser, first, prefixID)
+func (ser *MediaService) GetAll(first *int, skip *int) ([]*Media, error) {
+	vlist, err := GetAll(ser, first, skip)
 	if err != nil {
 		return nil, err
 	}
@@ -168,8 +168,8 @@ func (ser *MediaService) GetAll(first int, prefixID *int) ([]*Media, error) {
 
 // GetFilter retrieves all persisted values of Media that
 // pass the filter.
-func (ser *MediaService) GetFilter(first int, prefixID *int, keep func(md *Media) bool) ([]*Media, error) {
-	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
+func (ser *MediaService) GetFilter(first *int, skip *int, keep func(md *Media) bool) ([]*Media, error) {
+	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		md, err := ser.AssertType(m)
 		if err != nil {
 			return false

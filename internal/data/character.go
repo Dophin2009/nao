@@ -51,8 +51,8 @@ func (ser *CharacterService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of Character.
-func (ser *CharacterService) GetAll(first int, prefixID *int) ([]*Character, error) {
-	vlist, err := GetAll(ser, first, prefixID)
+func (ser *CharacterService) GetAll(first *int, skip *int) ([]*Character, error) {
+	vlist, err := GetAll(ser, first, skip)
 	if err != nil {
 		return nil, err
 	}
@@ -66,8 +66,8 @@ func (ser *CharacterService) GetAll(first int, prefixID *int) ([]*Character, err
 
 // GetFilter retrieves all persisted values of Character that
 // pass the filter.
-func (ser *CharacterService) GetFilter(first int, prefixID *int, keep func(c *Character) bool) ([]*Character, error) {
-	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
+func (ser *CharacterService) GetFilter(first *int, skip *int, keep func(c *Character) bool) ([]*Character, error) {
+	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		c, err := ser.AssertType(m)
 		if err != nil {
 			return false

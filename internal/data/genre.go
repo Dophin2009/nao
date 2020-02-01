@@ -48,8 +48,8 @@ func (ser *GenreService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of Genre.
-func (ser *GenreService) GetAll(first int, prefixID *int) ([]*Genre, error) {
-	vlist, err := GetAll(ser, first, prefixID)
+func (ser *GenreService) GetAll(first *int, skip *int) ([]*Genre, error) {
+	vlist, err := GetAll(ser, first, skip)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +63,8 @@ func (ser *GenreService) GetAll(first int, prefixID *int) ([]*Genre, error) {
 
 // GetFilter retrieves all persisted values of Genre that
 // pass the filter.
-func (ser *GenreService) GetFilter(first int, prefixID *int, keep func(g *Genre) bool) ([]*Genre, error) {
-	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
+func (ser *GenreService) GetFilter(first *int, skip *int, keep func(g *Genre) bool) ([]*Genre, error) {
+	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		g, err := ser.AssertType(m)
 		if err != nil {
 			return false

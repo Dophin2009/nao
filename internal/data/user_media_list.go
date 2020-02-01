@@ -51,8 +51,8 @@ func (ser *UserMediaListService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of UserMediaList.
-func (ser *UserMediaListService) GetAll(first int, prefixID *int) ([]*UserMediaList, error) {
-	vlist, err := GetAll(ser, first, prefixID)
+func (ser *UserMediaListService) GetAll(first *int, skip *int) ([]*UserMediaList, error) {
+	vlist, err := GetAll(ser, first, skip)
 	if err != nil {
 		return nil, err
 	}
@@ -66,8 +66,8 @@ func (ser *UserMediaListService) GetAll(first int, prefixID *int) ([]*UserMediaL
 
 // GetFilter retrieves all persisted values of UserMediaList that
 // pass the filter.
-func (ser *UserMediaListService) GetFilter(first int, prefixID *int, keep func(uml *UserMediaList) bool) ([]*UserMediaList, error) {
-	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
+func (ser *UserMediaListService) GetFilter(first *int, skip *int, keep func(uml *UserMediaList) bool) ([]*UserMediaList, error) {
+	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		uml, err := ser.AssertType(m)
 		if err != nil {
 			return false

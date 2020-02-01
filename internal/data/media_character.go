@@ -54,8 +54,8 @@ func (ser *MediaCharacterService) Delete(id int) error {
 }
 
 // GetAll retrieves all persisted values of MediaCharacter.
-func (ser *MediaCharacterService) GetAll(first int, prefixID *int) ([]*MediaCharacter, error) {
-	vlist, err := GetAll(ser, first, prefixID)
+func (ser *MediaCharacterService) GetAll(first *int, skip *int) ([]*MediaCharacter, error) {
+	vlist, err := GetAll(ser, first, skip)
 	if err != nil {
 		return nil, err
 	}
@@ -69,8 +69,8 @@ func (ser *MediaCharacterService) GetAll(first int, prefixID *int) ([]*MediaChar
 
 // GetFilter retrieves all persisted values of MediaCharacter that
 // pass the filter.
-func (ser *MediaCharacterService) GetFilter(first int, prefixID *int, keep func(mc *MediaCharacter) bool) ([]*MediaCharacter, error) {
-	vlist, err := GetFilter(ser, first, prefixID, func(m Model) bool {
+func (ser *MediaCharacterService) GetFilter(first *int, skip *int, keep func(mc *MediaCharacter) bool) ([]*MediaCharacter, error) {
+	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		mc, err := ser.AssertType(m)
 		if err != nil {
 			return false
@@ -104,24 +104,24 @@ func (ser *MediaCharacterService) GetByID(id int) (*MediaCharacter, error) {
 
 // GetByMedia retrieves a list of instances of
 // MediaCharacter with the given Media ID.
-func (ser *MediaCharacterService) GetByMedia(mID int, first int, prefixID *int) ([]*MediaCharacter, error) {
-	return ser.GetFilter(first, prefixID, func(mc *MediaCharacter) bool {
+func (ser *MediaCharacterService) GetByMedia(mID int, first *int, skip *int) ([]*MediaCharacter, error) {
+	return ser.GetFilter(first, skip, func(mc *MediaCharacter) bool {
 		return mc.MediaID == mID
 	})
 }
 
 // GetByCharacter retrieves a list of instances of
 // MediaCharacter with the given Character ID.
-func (ser *MediaCharacterService) GetByCharacter(cID int, first int, prefixID *int) ([]*MediaCharacter, error) {
-	return ser.GetFilter(first, prefixID, func(mc *MediaCharacter) bool {
+func (ser *MediaCharacterService) GetByCharacter(cID int, first *int, skip *int) ([]*MediaCharacter, error) {
+	return ser.GetFilter(first, skip, func(mc *MediaCharacter) bool {
 		return *mc.CharacterID == cID
 	})
 }
 
 // GetByPerson retrieves a list of instances of
 // MediaCharacter with the given Person ID.
-func (ser *MediaCharacterService) GetByPerson(pID int, first int, prefixID *int) ([]*MediaCharacter, error) {
-	return ser.GetFilter(first, prefixID, func(mc *MediaCharacter) bool {
+func (ser *MediaCharacterService) GetByPerson(pID int, first *int, skip *int) ([]*MediaCharacter, error) {
+	return ser.GetFilter(first, skip, func(mc *MediaCharacter) bool {
 		return *mc.CharacterID == pID
 	})
 }

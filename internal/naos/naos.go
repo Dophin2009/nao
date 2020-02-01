@@ -41,6 +41,7 @@ func NewApplication(c *Configuration) (*Application, error) {
 	ds := graphql.DataServices{
 		CharacterService:      &data.CharacterService{DB: db},
 		EpisodeService:        &data.EpisodeService{DB: db},
+		EpisodeSetService:     &data.EpisodeSetService{DB: db},
 		GenreService:          &data.GenreService{DB: db},
 		MediaService:          &data.MediaService{DB: db},
 		MediaCharacterService: &data.MediaCharacterService{DB: db},

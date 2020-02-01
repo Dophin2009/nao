@@ -30,6 +30,10 @@ type Media @goModel(model: "data.Media") {
   """
   episodes(first: Int!, prefix: Int): [Episode!]!
   """
+  The list of Episode watch orders in this Media.
+  """
+  episodeSets(first: Int!, prefix: Int): [EpisodeSet!]!
+  """
   A list of Producers involved in creation
   of the Media.
   """

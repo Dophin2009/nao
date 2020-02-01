@@ -27,9 +27,9 @@ func (r *Resolver) Character() CharacterResolver {
 	return &characterResolver{r}
 }
 
-// Episode returns a new EpisodeResolver.
-func (r *Resolver) Episode() EpisodeResolver {
-	return &episodeResolver{r}
+// EpisodeSet returns a new EpisodeSetResolver.
+func (r *Resolver) EpisodeSet() EpisodeSetResolver {
+	return &episodeSetResolver{r}
 }
 
 // Genre returns a new GenreResolver.
@@ -114,13 +114,6 @@ func (r *mutationResolver) CreateMedia(ctx context.Context, media data.Media) (*
 // characterResolver is the field resolver for Character objects.
 type characterResolver struct{ *Resolver }
 
-func (r *characterResolver) Names(ctx context.Context, obj *data.Character) ([]*data.Title, error) {
-	panic("not implemented")
-}
-func (r *characterResolver) Information(ctx context.Context, obj *data.Character) ([]*data.Title, error) {
-	panic("not implemented")
-}
-
 // Media resolves the MediaCharacter list for Character objects.
 func (r *characterResolver) Media(ctx context.Context, obj *data.Character, first int, prefix *int) ([]*data.MediaCharacter, error) {
 	ds, err := getDataServicesFromCtx(ctx)
@@ -137,30 +130,17 @@ func (r *characterResolver) Media(ctx context.Context, obj *data.Character, firs
 	return list, nil
 }
 
-// episodeResolver is the field resolver for Episode objects.
-type episodeResolver struct{ *Resolver }
+type episodeSetResolver struct{ *Resolver }
 
-func (r *episodeResolver) Titles(ctx context.Context, obj *data.Episode) ([]*data.Title, error) {
+func (r *episodeSetResolver) Media(ctx context.Context, obj *data.EpisodeSet) (*data.Media, error) {
 	panic("not implemented")
 }
-func (r *episodeResolver) Synopses(ctx context.Context, obj *data.Episode) ([]*data.Title, error) {
+func (r *episodeSetResolver) Episodes(ctx context.Context, obj *data.EpisodeSet) ([]*data.Episode, error) {
 	panic("not implemented")
-}
-
-// Media resolves the parent Media for Episode objects.
-func (r *episodeResolver) Media(ctx context.Context, obj *data.Episode) (*data.Media, error) {
-	return resolveMediaByID(ctx, obj.MediaID)
 }
 
 // genreResolver is the field resolver for Genre objects.
 type genreResolver struct{ *Resolver }
-
-func (r *genreResolver) Names(ctx context.Context, obj *data.Genre) ([]*data.Title, error) {
-	panic("not implemented")
-}
-func (r *genreResolver) Descriptions(ctx context.Context, obj *data.Genre) ([]*data.Title, error) {
-	panic("not implemented")
-}
 
 // Media resolves the Media in the relationship for
 // MediaGenre objects.
@@ -182,33 +162,6 @@ func (r *genreResolver) Media(ctx context.Context, obj *data.Genre, first int, p
 // mediaResolver is the field resolver for Media objects.
 type mediaResolver struct{ *Resolver }
 
-func (r *mediaResolver) Titles(ctx context.Context, obj *data.Media) ([]*data.Title, error) {
-	tlist := obj.Titles
-	list := make([]*data.Title, len(tlist))
-	for i, t := range tlist {
-		list[i] = &t
-	}
-	return list, nil
-}
-
-func (r *mediaResolver) Synopses(ctx context.Context, obj *data.Media) ([]*data.Title, error) {
-	tlist := obj.Synopses
-	list := make([]*data.Title, len(tlist))
-	for i, t := range tlist {
-		list[i] = &t
-	}
-	return list, nil
-}
-
-func (r *mediaResolver) Background(ctx context.Context, obj *data.Media) ([]*data.Title, error) {
-	tlist := obj.Background
-	list := make([]*data.Title, len(tlist))
-	for i, t := range tlist {
-		list[i] = &t
-	}
-	return list, nil
-}
-
 // Episodes resolves the Episodes for Media objects.
 func (r *mediaResolver) Episodes(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.Episode, error) {
 	ds, err := getDataServicesFromCtx(ctx)
@@ -216,12 +169,42 @@ func (r *mediaResolver) Episodes(ctx context.Context, obj *data.Media, first int
 		return nil, errorGetDataServices(err)
 	}
 
-	ser := ds.EpisodeService
-	list, err := ser.GetByMedia(obj.ID, first, prefix)
+	setList, err := r.resolveEpisodeSets(ds, obj, first, prefix)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get Episodes by Media id %d: %w", obj.ID, err)
+		return nil, fmt.Errorf("failed to get EpisodeSets by Media id %d: %w", obj.ID, err)
 	}
 
+	epSer := ds.EpisodeService
+	idList := []int{}
+	for _, set := range setList {
+		for _, epID := range set.Episodes {
+			idList = append(idList, epID)
+		}
+	}
+
+	epList := []*data.Episode{}
+	for _, id := range idList {
+		ep, err := epSer.GetByID(id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get Episode by id %d: %w", id, err)
+		}
+		epList = append(epList, ep)
+	}
+
+	return epList, nil
+}
+
+// EpisodeSets resolves the EpisodeSets for Media objects.
+func (r *mediaResolver) EpisodeSets(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.EpisodeSet, error) {
+	ds, err := getDataServicesFromCtx(ctx)
+	if err != nil {
+		return nil, errorGetDataServices(err)
+	}
+
+	list, err := r.resolveEpisodeSets(ds, obj, first, prefix)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get EpisodeSets by Media id %d: %w", obj.ID, err)
+	}
 	return list, nil
 }
 
@@ -271,6 +254,16 @@ func (r *mediaResolver) Genres(ctx context.Context, obj *data.Media, first int, 
 	list, err := ser.GetByMedia(obj.ID, first, prefix)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get MediaGenres by Media id %d: %w", obj.ID, err)
+	}
+
+	return list, nil
+}
+
+func (r *mediaResolver) resolveEpisodeSets(ds *DataServices, obj *data.Media, first int, prefix *int) ([]*data.EpisodeSet, error) {
+	ser := ds.EpisodeSetService
+	list, err := ser.GetByMedia(obj.ID, first, prefix)
+	if err != nil {
+		return nil, err
 	}
 
 	return list, nil
@@ -402,13 +395,6 @@ func (r *mediaRelationResolver) Related(ctx context.Context, obj *data.MediaRela
 // objects.
 type personResolver struct{ *Resolver }
 
-func (r *personResolver) Names(ctx context.Context, obj *data.Person) ([]*data.Title, error) {
-	panic("not implemented")
-}
-func (r *personResolver) Information(ctx context.Context, obj *data.Person) ([]*data.Title, error) {
-	panic("not implemented")
-}
-
 // Media resolves the MediaCharacter relationships for
 // Person objects.
 func (r *personResolver) Media(ctx context.Context, obj *data.Person, first int, prefix *int) ([]*data.MediaCharacter, error) {
@@ -429,10 +415,6 @@ func (r *personResolver) Media(ctx context.Context, obj *data.Person, first int,
 // producerResolver is the field resolver for Producer
 // objects.
 type producerResolver struct{ *Resolver }
-
-func (r *producerResolver) Titles(ctx context.Context, obj *data.Producer) ([]*data.Title, error) {
-	panic("not implemented")
-}
 
 func (r *producerResolver) Media(ctx context.Context, obj *data.Producer, first int, prefix *int) ([]*data.MediaProducer, error) {
 	ds, err := getDataServicesFromCtx(ctx)

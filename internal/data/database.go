@@ -11,9 +11,10 @@ import (
 func Buckets() []string {
 	return []string{
 		MediaBucket, ProducerBucket, GenreBucket, EpisodeBucket,
-		CharacterBucket, PersonBucket, UserBucket, MediaProducerBucket,
-		MediaRelationBucket, MediaGenreBucket, MediaCharacterBucket,
-		UserMediaBucket, UserMediaListBucket, JWTBucket,
+		EpisodeSetBucket, CharacterBucket, PersonBucket, UserBucket,
+		MediaProducerBucket, MediaRelationBucket, MediaGenreBucket,
+		MediaCharacterBucket, UserMediaBucket, UserMediaListBucket,
+		JWTBucket,
 	}
 }
 

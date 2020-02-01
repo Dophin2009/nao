@@ -4,13 +4,6 @@ A type that describes an Episode.
 type Episode {
   "An integer identifier for the Episode."
   id: Int!
-  "The Media the Episode belongs to."
-  media: Media!
-  """
-  The ordinal value of the Episode in relation to
-  all other episodes
-  """
-  number: Int!
   "A list of titles used to name the Episode."
   titles: [Title!]!
   "A list of synopses to describe the Episode."
@@ -35,13 +28,6 @@ An input to create or update an Episode.
 input EpisodeInput @goModel(model: "data.Episode") {
   "An integer identifier for the Episode."
   id: Int
-  "The Media the Episode belongs to."
-  mediaID: Int!
-  """
-  The ordinal value of the Episode in relation to
-  all other episodes
-  """
-  number: Int!
   "A list of titles used to name the Episode."
   titles: [TitleInput!]!
   "A list of synopses to describe the Episode."
@@ -58,4 +44,38 @@ input EpisodeInput @goModel(model: "data.Episode") {
   one or not.
   """
   recap: Boolean!
+}
+
+"""
+A type that describes an ordered set of Episodes.
+"""
+type EpisodeSet {
+  "An integer identifier for the EpisodeSet."
+  id: Int!
+  "The Media the EpisodeSet belongs to."
+  media: Media!
+  """
+  A list of descriptions regarding the watch order
+  for the EpisodeSet.
+  """
+  descriptions: [Title!]!
+  # "The list of episodes in the EpisodeSet."
+  # episodes: [Episode!]!
+}
+
+"""
+An input to create or update an EpisodeSet.
+"""
+input EpisodeSetInput @goModel(model: "data.EpisodeSet") {
+  "An integer identifier for the EpisodeSet."
+  id: Int
+  "The ID of the Media the EpisodeSet belongs to."
+  mediaID: Int!
+  """
+  A list of descriptions regarding the watch order
+  for the EpisodeSet.
+  """
+  descriptions: [TitleInput!]!
+  "The list of IDs of the episodes in the EpisodeSet."
+  episodes: [Int!]!
 }

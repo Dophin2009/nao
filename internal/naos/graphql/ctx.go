@@ -12,6 +12,7 @@ import (
 type DataServices struct {
 	CharacterService      *data.CharacterService
 	EpisodeService        *data.EpisodeService
+	EpisodeSetService     *data.EpisodeSetService
 	GenreService          *data.GenreService
 	MediaService          *data.MediaService
 	MediaCharacterService *data.MediaCharacterService

@@ -3,7 +3,6 @@ package graphql
 import (
 	"context"
 	"fmt"
-	"sort"
 
 	"gitlab.com/Dophin2009/nao/internal/data"
 )
@@ -209,44 +208,6 @@ func sliceTitles(objTitles []data.Title, first int, prefix *int) ([]*data.Title,
 		tlist[i] = &titles[i]
 	}
 	return tlist, nil
-}
-
-// Episodes resolves the Episodes for Media objects.
-func (r *mediaResolver) Episodes(ctx context.Context, obj *data.Media, first int, prefix *int) ([]*data.Episode, error) {
-	ds, err := getDataServicesFromCtx(ctx)
-	if err != nil {
-		return nil, errorGetDataServices(err)
-	}
-
-	setList, err := r.resolveEpisodeSets(ds, obj, first, prefix)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get EpisodeSets by Media id %d: %w", obj.ID, err)
-	}
-
-	epSer := ds.EpisodeService
-	idMap := make(map[int]struct{})
-	idList := []int{}
-	for _, set := range setList {
-		for _, epID := range set.Episodes {
-			_, ok := idMap[epID]
-			if !ok {
-				idMap[epID] = struct{}{}
-				idList = append(idList, epID)
-			}
-		}
-	}
-
-	sort.Ints(idList)
-	epList := make([]*data.Episode, len(idList))
-	for i, id := range idList {
-		ep, err := epSer.GetByID(id)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get Episode by id %d: %w", id, err)
-		}
-		epList[i] = ep
-	}
-
-	return epList, nil
 }
 
 // EpisodeSets resolves the EpisodeSets for Media objects.

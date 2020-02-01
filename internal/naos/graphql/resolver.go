@@ -175,14 +175,19 @@ func (r *mediaResolver) Episodes(ctx context.Context, obj *data.Media, first int
 	}
 
 	epSer := ds.EpisodeService
+	idMap := make(map[int]struct{})
 	idList := []int{}
 	for _, set := range setList {
 		for _, epID := range set.Episodes {
-			idList = append(idList, epID)
+			_, ok := idMap[epID]
+			if !ok {
+				idMap[epID] = struct{}{}
+				idList = append(idList, epID)
+			}
 		}
 	}
 
-	epList := []*data.Episode{}
+	epList := make([]*data.Episode, len(idList))
 	for _, id := range idList {
 		ep, err := epSer.GetByID(id)
 		if err != nil {
@@ -263,7 +268,7 @@ func (r *mediaResolver) resolveEpisodeSets(ds *DataServices, obj *data.Media, fi
 	ser := ds.EpisodeSetService
 	list, err := ser.GetByMedia(obj.ID, first, prefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get EpisodeSets by Media id %d: %w", obj.ID, err)
 	}
 
 	return list, nil

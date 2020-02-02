@@ -9,9 +9,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// UserMedia represents a relationship between a User
-// and a Media, containing information about the User's
-// opinion on the Media.
+// UserMedia represents a relationship between a User and a Media, containing
+// information about the User's opinion on the Media.
 type UserMedia struct {
 	ID               int
 	UserID           int
@@ -31,8 +30,7 @@ func (um *UserMedia) Iden() int {
 	return um.ID
 }
 
-// WatchedInstance contains information about a single
-// watch of some Media.
+// WatchedInstance contains information about a single watch of some Media.
 type WatchedInstance struct {
 	Episodes  int
 	Ongoing   bool
@@ -41,31 +39,29 @@ type WatchedInstance struct {
 	Comments  map[string]string
 }
 
-// WatchStatus is an enum that represents the
-// status of a Media's consumption by a User.
+// WatchStatus is an enum that represents the status of a Media's consumption
+// by a User.
 type WatchStatus int
 
 const (
-	// Completed means that the User has consumed
-	// the Media in its entirety at least once.
+	// Completed means that the User has consumed the Media in its entirety at
+	// least once.
 	Completed WatchStatus = iota
 
-	// Planning means that the User is planning
-	// to consume the Media sometime in the future.
+	// Planning means that the User is planning to consume the Media sometime in
+	// the future.
 	Planning
 
-	// Dropped means that the User has never
-	// consumed the Media in its entirety and
-	// abandoned it in the middle somewhere.
+	// Dropped means that the User has never consumed the Media in its entirety
+	// and abandoned it in the middle somewhere.
 	Dropped
 
-	// Hold means the User has begun consuming
-	// the Media, but has placed it on hold.
+	// Hold means the User has begun consuming the Media, but has placed it on
+	// hold.
 	Hold
 )
 
-// UnmarshalJSON defines custom JSON deserialization for
-// WatchStatus.
+// UnmarshalJSON defines custom JSON deserialization for WatchStatus.
 func (ws *WatchStatus) UnmarshalJSON(data []byte) (err error) {
 	var s string
 	err = json.Unmarshal(data, &s)
@@ -86,8 +82,7 @@ func (ws *WatchStatus) UnmarshalJSON(data []byte) (err error) {
 	return nil
 }
 
-// MarshalJSON defines custom JSON serialization for
-// WatchStatus.
+// MarshalJSON defines custom JSON serialization for WatchStatus.
 func (ws *WatchStatus) MarshalJSON() (v []byte, err error) {
 	value, ok := map[WatchStatus]string{
 		Completed: "Completed",
@@ -107,8 +102,7 @@ func (ws *WatchStatus) MarshalJSON() (v []byte, err error) {
 	return v, nil
 }
 
-// UserMediaBucket is the name of the database bucket
-// for UserMedia.
+// UserMediaBucket is the name of the database bucket for UserMedia.
 const UserMediaBucket = "UserMedia"
 
 // UserMediaService performs operations on UserMedia.
@@ -122,8 +116,7 @@ func (ser *UserMediaService) Create(um *UserMedia) error {
 	return Create(um, ser)
 }
 
-// Update rumlaces the value of the UserMedia with the
-// given ID.
+// Update rumlaces the value of the UserMedia with the given ID.
 func (ser *UserMediaService) Update(um *UserMedia) error {
 	return Update(um, ser)
 }
@@ -147,9 +140,10 @@ func (ser *UserMediaService) GetAll(first *int, skip *int) ([]*UserMedia, error)
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of UserMedia that
-// pass the filter.
-func (ser *UserMediaService) GetFilter(first *int, skip *int, keep func(um *UserMedia) bool) ([]*UserMedia, error) {
+// GetFilter retrieves all persisted values of UserMedia that pass the filter.
+func (ser *UserMediaService) GetFilter(
+	first *int, skip *int, keep func(um *UserMedia) bool,
+) ([]*UserMedia, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		um, err := ser.AssertType(m)
 		if err != nil {
@@ -182,17 +176,19 @@ func (ser *UserMediaService) GetByID(id int) (*UserMedia, error) {
 	return um, nil
 }
 
-// GetByUser retrieves the persisted UserMedia with the given
-// User ID.
-func (ser *UserMediaService) GetByUser(uID int, first *int, skip *int) ([]*UserMedia, error) {
+// GetByUser retrieves the persisted UserMedia with the given User ID.
+func (ser *UserMediaService) GetByUser(
+	uID int, first *int, skip *int,
+) ([]*UserMedia, error) {
 	return ser.GetFilter(first, skip, func(um *UserMedia) bool {
 		return um.UserID == uID
 	})
 }
 
-// GetByMedia retrieves the persisted UserMedia with the given
-// Media ID.
-func (ser *UserMediaService) GetByMedia(mID int, first *int, skip *int) ([]*UserMedia, error) {
+// GetByMedia retrieves the persisted UserMedia with the given Media ID.
+func (ser *UserMediaService) GetByMedia(
+	mID int, first *int, skip *int,
+) ([]*UserMedia, error) {
 	return ser.GetFilter(first, skip, func(um *UserMedia) bool {
 		return um.MediaID == mID
 	})
@@ -208,14 +204,13 @@ func (ser *UserMediaService) Bucket() string {
 	return UserMediaBucket
 }
 
-// Clean cleans the given UserMedia for storage
+// Clean cleans the given UserMedia for storage.
 func (ser *UserMediaService) Clean(m Model) error {
 	_, err := ser.AssertType(m)
 	return err
 }
 
-// Validate returns an error if the UserMedia is
-// not valid for the database.
+// Validate returns an error if the UserMedia is not valid for the database.
 func (ser *UserMediaService) Validate(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
@@ -273,8 +268,8 @@ func (ser *UserMediaService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing UserMedia in updates.
+// PersistOldProperties maintains certain properties of the existing UserMedia
+// in updates.
 func (ser *UserMediaService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
@@ -326,8 +321,8 @@ func (ser *UserMediaService) AssertType(m Model) (*UserMedia, error) {
 	return um, nil
 }
 
-// mapfromModel returns a list of UserMedia type
-// asserted from the given list of Model.
+// mapfromModel returns a list of UserMedia type asserted from the given list
+// of Model.
 func (ser *UserMediaService) mapFromModel(vlist []Model) ([]*UserMedia, error) {
 	list := make([]*UserMedia, len(vlist))
 	var err error

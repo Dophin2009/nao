@@ -11,8 +11,7 @@ import (
 
 // TODO: User rating/comments/etc. of Episodes
 
-// Episode represents a single episode or chapter
-// for some media.
+// Episode represents a single episode or chapter for some media.
 type Episode struct {
 	ID       int
 	Titles   []Title
@@ -45,8 +44,7 @@ func (set *EpisodeSet) Iden() int {
 	return set.ID
 }
 
-// EpisodeBucket is the name of the database bucket for
-// Episodes.
+// EpisodeBucket is the name of the database bucket for Episodes.
 const EpisodeBucket = "Episode"
 
 // EpisodeService performs operations on Episodes.
@@ -60,8 +58,7 @@ func (ser *EpisodeService) Create(ep *Episode) error {
 	return Create(ep, ser)
 }
 
-// Update replaces the value of the Episode with the
-// given ID.
+// Update replaces the value of the Episode with the given ID.
 func (ser *EpisodeService) Update(ep *Episode) error {
 	return Update(ep, ser)
 }
@@ -85,9 +82,10 @@ func (ser *EpisodeService) GetAll(first *int, skip *int) ([]*Episode, error) {
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of Episode that
-// pass the filter.
-func (ser *EpisodeService) GetFilter(first *int, skip *int, keep func(ep *Episode) bool) ([]*Episode, error) {
+// GetFilter retrieves all persisted values of Episode that pass the filter.
+func (ser *EpisodeService) GetFilter(
+	first *int, skip *int, keep func(ep *Episode) bool,
+) ([]*Episode, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		ep, err := ser.AssertType(m)
 		if err != nil {
@@ -120,14 +118,6 @@ func (ser *EpisodeService) GetByID(id int) (*Episode, error) {
 	return ep, nil
 }
 
-// GetByMedia retrieves a list of instances of Episode
-// with the given Media ID.
-// func (ser *EpisodeService) GetByMedia(mID int, first *int, skip *int) ([]*Episode, error) {
-// return ser.GetFilter(first, skip, func(ep *Episode) bool {
-// return ep.MediaID == mID
-// })
-// }
-
 // Database returns the database reference.
 func (ser *EpisodeService) Database() *bolt.DB {
 	return ser.DB
@@ -147,8 +137,7 @@ func (ser *EpisodeService) Clean(m Model) error {
 	return nil
 }
 
-// Validate returns an error if the Episode is
-// not valid for the database.
+// Validate returns an error if the Episode is not valid for the database.
 func (ser *EpisodeService) Validate(m Model) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
@@ -168,8 +157,8 @@ func (ser *EpisodeService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing Episode in updates.
+// PersistOldProperties maintains certain properties of the existing Episode in
+// updates.
 func (ser *EpisodeService) PersistOldProperties(n Model, o Model) error {
 	nep, err := ser.AssertType(n)
 	if err != nil {
@@ -221,8 +210,8 @@ func (ser *EpisodeService) AssertType(m Model) (*Episode, error) {
 	return ep, nil
 }
 
-// mapfromModel returns a list of Episode type
-// asserted from the given list of Model.
+// mapfromModel returns a list of Episode type asserted from the given list of
+// Model.
 func (ser *EpisodeService) mapFromModel(vlist []Model) ([]*Episode, error) {
 	list := make([]*Episode, len(vlist))
 	var err error
@@ -235,8 +224,7 @@ func (ser *EpisodeService) mapFromModel(vlist []Model) ([]*Episode, error) {
 	return list, nil
 }
 
-// EpisodeSetBucket is the name of the database bucket for
-// EpisodeSets.
+// EpisodeSetBucket is the name of the database bucket for EpisodeSets.
 const EpisodeSetBucket = "EpisodeSet"
 
 // EpisodeSetService performs operations on EpisodeSets.
@@ -250,8 +238,7 @@ func (ser *EpisodeSetService) Create(set *EpisodeSet) error {
 	return Create(set, ser)
 }
 
-// Update replaces the value of the EpisodeSet with the
-// given ID.
+// Update replaces the value of the EpisodeSet with the given ID.
 func (ser *EpisodeSetService) Update(set *EpisodeSet) error {
 	return Update(set, ser)
 }
@@ -275,9 +262,10 @@ func (ser *EpisodeSetService) GetAll(first *int, skip *int) ([]*EpisodeSet, erro
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of EpisodeSet that
-// pass the filter.
-func (ser *EpisodeSetService) GetFilter(first *int, skip *int, keep func(*EpisodeSet) bool) ([]*EpisodeSet, error) {
+// GetFilter retrieves all persisted values of EpisodeSet that pass the filter.
+func (ser *EpisodeSetService) GetFilter(
+	first *int, skip *int, keep func(*EpisodeSet) bool,
+) ([]*EpisodeSet, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		set, err := ser.AssertType(m)
 		if err != nil {
@@ -296,8 +284,7 @@ func (ser *EpisodeSetService) GetFilter(first *int, skip *int, keep func(*Episod
 	return list, nil
 }
 
-// GetByID retrieves the persisted EpisodeSet with the given
-// ID.
+// GetByID retrieves the persisted EpisodeSet with the given ID.
 func (ser *EpisodeSetService) GetByID(id int) (*EpisodeSet, error) {
 	m, err := GetByID(id, ser)
 	if err != nil {
@@ -311,9 +298,11 @@ func (ser *EpisodeSetService) GetByID(id int) (*EpisodeSet, error) {
 	return set, nil
 }
 
-// GetByMedia retrieves a list of instances of EpisodeSet
-// with the given Media ID.
-func (ser *EpisodeSetService) GetByMedia(mID int, first *int, skip *int) ([]*EpisodeSet, error) {
+// GetByMedia retrieves a list of instances of EpisodeSet with the given Media
+// ID.
+func (ser *EpisodeSetService) GetByMedia(
+	mID int, first *int, skip *int,
+) ([]*EpisodeSet, error) {
 	return ser.GetFilter(first, skip, func(set *EpisodeSet) bool {
 		return set.MediaID == mID
 	})
@@ -338,8 +327,7 @@ func (ser *EpisodeSetService) Clean(m Model) error {
 	return nil
 }
 
-// Validate returns an error if the Episodeset is
-// not valid for the database.
+// Validate returns an error if the Episodeset is not valid for the database.
 func (ser *EpisodeSetService) Validate(m Model) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
@@ -359,8 +347,8 @@ func (ser *EpisodeSetService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing EpisodeSet in updates.
+// PersistOldProperties maintains certain properties of the existing EpisodeSet
+// in updates.
 func (ser *EpisodeSetService) PersistOldProperties(n Model, o Model) error {
 	nset, err := ser.AssertType(n)
 	if err != nil {
@@ -412,8 +400,8 @@ func (ser *EpisodeSetService) AssertType(m Model) (*EpisodeSet, error) {
 	return set, nil
 }
 
-// mapfromModel returns a list of EpisodeSet type
-// asserted from the given list of Model.
+// mapfromModel returns a list of EpisodeSet type asserted from the given list
+// of Model.
 func (ser *EpisodeSetService) mapFromModel(vlist []Model) ([]*EpisodeSet, error) {
 	list := make([]*EpisodeSet, len(vlist))
 	var err error

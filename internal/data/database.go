@@ -18,8 +18,8 @@ func Buckets() []string {
 	}
 }
 
-// ConnectDatabase connects to the database file at the given path
-// and return a bolt.DB struct
+// ConnectDatabase connects to the database file at the given path and return a
+// bolt.DB struct
 func ConnectDatabase(dbPath string, mode os.FileMode, create bool) (*bolt.DB, error) {
 	// open database connection
 	db, err := bolt.Open(dbPath, mode, nil)
@@ -27,8 +27,8 @@ func ConnectDatabase(dbPath string, mode os.FileMode, create bool) (*bolt.DB, er
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
-	// if specified to create buckets, cycle through all strings in
-	// Buckets() and create buckets
+	// if specified to create buckets, cycle through all strings in Buckets() and
+	// create buckets
 	if create {
 		err = db.Update(func(tx *bolt.Tx) error {
 			for _, bucket := range Buckets() {
@@ -65,8 +65,7 @@ func ClearDatabase(db *bolt.DB) error {
 	return nil
 }
 
-// Bucket returns the database bucket with the
-// given name
+// Bucket returns the database bucket with the given name
 func Bucket(name string, tx *bolt.Tx) (*bolt.Bucket, error) {
 	bucket := tx.Bucket([]byte(name))
 	if bucket == nil {

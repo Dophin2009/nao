@@ -9,8 +9,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// Producer represents a single studio, producer,
-// licensor, etc.
+// Producer represents a single studio, producer, licensor, etc.
 type Producer struct {
 	ID      int
 	Titles  []Title
@@ -24,8 +23,7 @@ func (p *Producer) Iden() int {
 	return p.ID
 }
 
-// ProducerBucket is the name of the database bucket for
-// Producer.
+// ProducerBucket is the name of the database bucket for Producer.
 const ProducerBucket = "Producer"
 
 // ProducerService performs operations on Producer.
@@ -39,8 +37,7 @@ func (ser *ProducerService) Create(p *Producer) error {
 	return Create(p, ser)
 }
 
-// Update rplaces the value of the Producer with the
-// given ID.
+// Update rplaces the value of the Producer with the given ID.
 func (ser *ProducerService) Update(p *Producer) error {
 	return Update(p, ser)
 }
@@ -64,9 +61,10 @@ func (ser *ProducerService) GetAll(first *int, skip *int) ([]*Producer, error) {
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of Producer that
-// pass the filter.
-func (ser *ProducerService) GetFilter(first *int, skip *int, keep func(p *Producer) bool) ([]*Producer, error) {
+// GetFilter retrieves all persisted values of Producer that pass the filter.
+func (ser *ProducerService) GetFilter(
+	first *int, skip *int, keep func(p *Producer) bool,
+) ([]*Producer, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		p, err := ser.AssertType(m)
 		if err != nil {
@@ -122,8 +120,7 @@ func (ser *ProducerService) Clean(m Model) error {
 	return nil
 }
 
-// Validate returns an error if the Producer is
-// not valid for the database.
+// Validate returns an error if the Producer is not valid for the database.
 func (ser *ProducerService) Validate(m Model) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
@@ -143,8 +140,8 @@ func (ser *ProducerService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing Producer in updates
+// PersistOldProperties maintains certain properties of the existing Producer
+// in updates.
 func (ser *ProducerService) PersistOldProperties(n Model, o Model) error {
 	np, err := ser.AssertType(n)
 	if err != nil {
@@ -196,8 +193,8 @@ func (ser *ProducerService) AssertType(m Model) (*Producer, error) {
 	return p, nil
 }
 
-// mapfromModel returns a list of Producer type
-// asserted from the given list of Model.
+// mapfromModel returns a list of Producer type asserted from the given list of
+// Model.
 func (ser *ProducerService) mapFromModel(vlist []Model) ([]*Producer, error) {
 	list := make([]*Producer, len(vlist))
 	var err error

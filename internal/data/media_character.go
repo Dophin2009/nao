@@ -9,8 +9,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// MediaCharacter represents a relationship between single
-// instances of Media and Character.
+// MediaCharacter represents a relationship between single instances of Media
+// and Character.
 type MediaCharacter struct {
 	ID            int
 	MediaID       int
@@ -27,8 +27,7 @@ func (mc *MediaCharacter) Iden() int {
 	return mc.ID
 }
 
-// MediaCharacterBucket is the name of the database bucket for
-// MediaCharacter.
+// MediaCharacterBucket is the name of the database bucket for MediaCharacter.
 const MediaCharacterBucket = "MediaCharacter"
 
 // MediaCharacterService performs operations on MediaCharacter.
@@ -42,8 +41,7 @@ func (ser *MediaCharacterService) Create(mc *MediaCharacter) error {
 	return Create(mc, ser)
 }
 
-// Update rmclaces the value of the MediaCharacter with the
-// given ID.
+// Update rmclaces the value of the MediaCharacter with the given ID.
 func (ser *MediaCharacterService) Update(mc *MediaCharacter) error {
 	return Update(mc, ser)
 }
@@ -67,9 +65,11 @@ func (ser *MediaCharacterService) GetAll(first *int, skip *int) ([]*MediaCharact
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of MediaCharacter that
-// pass the filter.
-func (ser *MediaCharacterService) GetFilter(first *int, skip *int, keep func(mc *MediaCharacter) bool) ([]*MediaCharacter, error) {
+// GetFilter retrieves all persisted values of MediaCharacter that pass the
+// filter.
+func (ser *MediaCharacterService) GetFilter(
+	first *int, skip *int, keep func(mc *MediaCharacter) bool,
+) ([]*MediaCharacter, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		mc, err := ser.AssertType(m)
 		if err != nil {
@@ -102,24 +102,28 @@ func (ser *MediaCharacterService) GetByID(id int) (*MediaCharacter, error) {
 	return mc, nil
 }
 
-// GetByMedia retrieves a list of instances of
-// MediaCharacter with the given Media ID.
-func (ser *MediaCharacterService) GetByMedia(mID int, first *int, skip *int) ([]*MediaCharacter, error) {
+// GetByMedia retrieves a list of instances of MediaCharacter with the given
+// Media ID.
+func (ser *MediaCharacterService) GetByMedia(
+	mID int, first *int, skip *int,
+) ([]*MediaCharacter, error) {
 	return ser.GetFilter(first, skip, func(mc *MediaCharacter) bool {
 		return mc.MediaID == mID
 	})
 }
 
-// GetByCharacter retrieves a list of instances of
-// MediaCharacter with the given Character ID.
-func (ser *MediaCharacterService) GetByCharacter(cID int, first *int, skip *int) ([]*MediaCharacter, error) {
+// GetByCharacter retrieves a list of instances of MediaCharacter with the
+// given Character ID.
+func (ser *MediaCharacterService) GetByCharacter(
+	cID int, first *int, skip *int,
+) ([]*MediaCharacter, error) {
 	return ser.GetFilter(first, skip, func(mc *MediaCharacter) bool {
 		return *mc.CharacterID == cID
 	})
 }
 
-// GetByPerson retrieves a list of instances of
-// MediaCharacter with the given Person ID.
+// GetByPerson retrieves a list of instances of MediaCharacter with the given
+// Person ID.
 func (ser *MediaCharacterService) GetByPerson(pID int, first *int, skip *int) ([]*MediaCharacter, error) {
 	return ser.GetFilter(first, skip, func(mc *MediaCharacter) bool {
 		return *mc.CharacterID == pID
@@ -152,8 +156,8 @@ func (ser *MediaCharacterService) Clean(m Model) error {
 	return nil
 }
 
-// Validate returns an error if the MediaCharacter is
-// not valid for the database.
+// Validate returns an error if the MediaCharacter is not valid for the
+// database.
 func (ser *MediaCharacterService) Validate(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
@@ -175,7 +179,8 @@ func (ser *MediaCharacterService) Validate(m Model) error {
 		// Invalid if both Character and Person are not specified
 		if e.CharacterID == nil && e.PersonID == nil {
 			nsterr := fmt.Errorf("character ID and person ID: %w", errNil)
-			return fmt.Errorf("either character ID or person ID must be specified: %w", nsterr)
+			return fmt.Errorf(
+				"either character ID or person ID must be specified: %w", nsterr)
 		}
 
 		// Check if Character with ID specified in new MediaCharacter exists
@@ -184,7 +189,10 @@ func (ser *MediaCharacterService) Validate(m Model) error {
 			// CharacterRole must be present if CharacterID is specified
 			if e.CharacterRole == nil {
 				nsterr := fmt.Errorf("character role: %w", errNil)
-				return fmt.Errorf("character role must not be nil if character ID is specified: %w", nsterr)
+				return fmt.Errorf(
+					"character role must not be nil if character ID is specified: %w",
+					nsterr,
+				)
 			}
 
 			// Get Character bucket, exit if error
@@ -201,7 +209,10 @@ func (ser *MediaCharacterService) Validate(m Model) error {
 			// CharacterRole must not be specified if CharacterID is not
 			if e.CharacterRole != nil {
 				nsterr := fmt.Errorf("character ID: %w", errNil)
-				return fmt.Errorf("character role must be nil if character ID is not specified: %w", nsterr)
+				return fmt.Errorf(
+					"character role must be nil if character ID is not specified: %w",
+					nsterr,
+				)
 			}
 		}
 
@@ -211,7 +222,8 @@ func (ser *MediaCharacterService) Validate(m Model) error {
 			// PersonRole must be present if PersonID is specified
 			if e.PersonRole == nil {
 				nsterr := fmt.Errorf("person role: %w", errNil)
-				return fmt.Errorf("person role must not be nil if person ID is specified: %w", nsterr)
+				return fmt.Errorf(
+					"person role must not be nil if person ID is specified: %w", nsterr)
 			}
 			// Get Person bucket, exit if error
 			pb, err := Bucket(PersonBucket, tx)
@@ -226,7 +238,8 @@ func (ser *MediaCharacterService) Validate(m Model) error {
 			// PersonRole must not be specified if PersonID is not
 			if e.PersonRole != nil {
 				nsterr := fmt.Errorf("person ID: %w", errNil)
-				return fmt.Errorf("person role must be nil if person ID is not specified: %w", nsterr)
+				return fmt.Errorf(
+					"person role must be nil if person ID is not specified: %w", nsterr)
 			}
 		}
 
@@ -245,8 +258,8 @@ func (ser *MediaCharacterService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing MediaCharacter in updates.
+// PersistOldProperties maintains certain properties of the existing
+// MediaCharacter in updates.
 func (ser *MediaCharacterService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
@@ -298,8 +311,8 @@ func (ser *MediaCharacterService) AssertType(m Model) (*MediaCharacter, error) {
 	return mc, nil
 }
 
-// mapfromModel returns a list of MediaCharacter type
-// asserted from the given list of Model.
+// mapfromModel returns a list of MediaCharacter type asserted from the given
+// list of Model.
 func (ser *MediaCharacterService) mapFromModel(vlist []Model) ([]*MediaCharacter, error) {
 	list := make([]*MediaCharacter, len(vlist))
 	var err error

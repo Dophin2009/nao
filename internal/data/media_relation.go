@@ -9,8 +9,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// MediaRelation represents a relationship between single
-// instances of Media and Producer.
+// MediaRelation represents a relationship between single instances of Media
+// and Producer.
 type MediaRelation struct {
 	ID           int
 	OwnerID      int
@@ -24,8 +24,7 @@ func (mr *MediaRelation) Iden() int {
 	return mr.ID
 }
 
-// MediaRelationBucket is the name of the database bucket for
-// MediaRelation.
+// MediaRelationBucket is the name of the database bucket for MediaRelation.
 const MediaRelationBucket = "MediaRelation"
 
 // MediaRelationService performs operations on MediaRelation.
@@ -39,8 +38,7 @@ func (ser *MediaRelationService) Create(mr *MediaRelation) error {
 	return Create(mr, ser)
 }
 
-// Update rmrlaces the value of the MediaRelation with the
-// given ID.
+// Update rmrlaces the value of the MediaRelation with the given ID.
 func (ser *MediaRelationService) Update(mr *MediaRelation) error {
 	return Update(mr, ser)
 }
@@ -64,9 +62,11 @@ func (ser *MediaRelationService) GetAll(first *int, skip *int) ([]*MediaRelation
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of MediaRelation that
-// pass the filter.
-func (ser *MediaRelationService) GetFilter(first *int, skip *int, keep func(mr *MediaRelation) bool) ([]*MediaRelation, error) {
+// GetFilter retrieves all persisted values of MediaRelation that pass the
+// filter.
+func (ser *MediaRelationService) GetFilter(
+	first *int, skip *int, keep func(mr *MediaRelation) bool,
+) ([]*MediaRelation, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		mr, err := ser.AssertType(m)
 		if err != nil {
@@ -99,25 +99,31 @@ func (ser *MediaRelationService) GetByID(id int) (*MediaRelation, error) {
 	return mr, nil
 }
 
-// GetByOwner retrieves a list of instances of MediaRelation
-// with the given owning Media ID.
-func (ser *MediaRelationService) GetByOwner(mID int, first *int, skip *int) ([]*MediaRelation, error) {
+// GetByOwner retrieves a list of instances of MediaRelation with the given
+// owning Media ID.
+func (ser *MediaRelationService) GetByOwner(
+	mID int, first *int, skip *int,
+) ([]*MediaRelation, error) {
 	return ser.GetFilter(first, skip, func(mr *MediaRelation) bool {
 		return mr.OwnerID == mID
 	})
 }
 
-// GetByRelated retrieves a list of instances of MediaRelation
-// with the given related Media ID.
-func (ser *MediaRelationService) GetByRelated(mID int, first *int, skip *int) ([]*MediaRelation, error) {
+// GetByRelated retrieves a list of instances of MediaRelation with the given
+// related Media ID.
+func (ser *MediaRelationService) GetByRelated(
+	mID int, first *int, skip *int,
+) ([]*MediaRelation, error) {
 	return ser.GetFilter(first, skip, func(mr *MediaRelation) bool {
 		return mr.RelatedID == mID
 	})
 }
 
-// GetByRelationship retrieves a list of instances of Media Relation
-// with the given relationship.
-func (ser *MediaRelationService) GetByRelationship(relationship string, first *int, skip *int) ([]*MediaRelation, error) {
+// GetByRelationship retrieves a list of instances of Media Relation with the
+// given relationship.
+func (ser *MediaRelationService) GetByRelationship(
+	relationship string, first *int, skip *int,
+) ([]*MediaRelation, error) {
 	return ser.GetFilter(first, skip, func(mr *MediaRelation) bool {
 		return mr.Relationship == relationship
 	})
@@ -133,7 +139,7 @@ func (ser *MediaRelationService) Bucket() string {
 	return MediaRelationBucket
 }
 
-// Clean cleans the given MediaRelation for storage
+// Clean cleans the given MediaRelation for storage.
 func (ser *MediaRelationService) Clean(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
@@ -144,8 +150,8 @@ func (ser *MediaRelationService) Clean(m Model) error {
 	return nil
 }
 
-// Validate returns an error if the MediaRelation is
-// not valid for the database.
+// Validate returns an error if the MediaRelation is not valid for the
+// database.
 func (ser *MediaRelationService) Validate(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
@@ -186,8 +192,8 @@ func (ser *MediaRelationService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing MediaRelation in updates.
+// PersistOldProperties maintains certain properties of the existing
+// MediaRelation in updates.
 func (ser *MediaRelationService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
@@ -239,8 +245,8 @@ func (ser *MediaRelationService) AssertType(m Model) (*MediaRelation, error) {
 	return mr, nil
 }
 
-// mapfromModel returns a list of MediaRelation type
-// asserted from the given list of Model.
+// mapfromModel returns a list of MediaRelation type asserted from the given
+// list of Model.
 func (ser *MediaRelationService) mapFromModel(vlist []Model) ([]*MediaRelation, error) {
 	list := make([]*MediaRelation, len(vlist))
 	var err error

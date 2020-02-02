@@ -14,9 +14,10 @@ type JWTAuthenticator struct {
 	Service *data.JWTService
 }
 
-// Authenticate checks for the presence and validity of a
-// token cookie in the request.
-func (au *JWTAuthenticator) Authenticate(r *http.Request, _ httprouter.Params) (claims data.JWTClaims, err error) {
+// Authenticate checks for the presence and validity of a token cookie in the
+// request.
+func (au *JWTAuthenticator) Authenticate(
+	r *http.Request, _ httprouter.Params) (claims data.JWTClaims, err error) {
 	c, err := r.Cookie(tokenCookieName)
 	if err != nil {
 		return
@@ -34,15 +35,16 @@ func (au *JWTAuthenticator) Authenticate(r *http.Request, _ httprouter.Params) (
 	return
 }
 
-// UserPermissionAuthenticator is an authenticator that
-// checks whether the user has sufficient permissions.
+// UserPermissionAuthenticator is an authenticator that checks whether the user
+// has sufficient permissions.
 type UserPermissionAuthenticator struct {
 	Service *data.UserService
 }
 
-// Authenticate checks if the user with the given ID
-// has permissions that meet the requirements.
-func (au *UserPermissionAuthenticator) Authenticate(userID int, req *data.Permission) (*data.User, error) {
+// Authenticate checks if the user with the given ID has permissions that meet
+// the requirements.
+func (au *UserPermissionAuthenticator) Authenticate(
+	userID int, req *data.Permission) (*data.User, error) {
 	user, err := au.Service.GetByID(userID)
 	if err != nil {
 		return nil, err
@@ -54,8 +56,9 @@ func (au *UserPermissionAuthenticator) Authenticate(userID int, req *data.Permis
 	return user, nil
 }
 
-// RequirementsMet checks if the given permissions satisfy
-// the requiremed permissions.
-func (au *UserPermissionAuthenticator) RequirementsMet(perm *data.Permission, req *data.Permission) bool {
+// RequirementsMet checks if the given permissions satisfy the required
+// permissions.
+func (au *UserPermissionAuthenticator) RequirementsMet(
+	perm *data.Permission, req *data.Permission) bool {
 	return !((req.ReadMedia && !perm.ReadMedia) || (req.WriteMedia && !perm.WriteMedia))
 }

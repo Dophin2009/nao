@@ -8,8 +8,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// MediaGenre represents a relationship between single
-// instances of Media and Genre.
+// MediaGenre represents a relationship between single instances of Media and
+// Genre.
 type MediaGenre struct {
 	ID      int
 	MediaID int
@@ -23,8 +23,7 @@ func (mc *MediaGenre) Iden() int {
 	return mc.ID
 }
 
-// MediaGenreBucket is the name of the database bucket for
-// MediaGenre.
+// MediaGenreBucket is the name of the database bucket for MediaGenre.
 const MediaGenreBucket = "MediaGenre"
 
 // MediaGenreService performs operations on MediaGenre.
@@ -38,8 +37,7 @@ func (ser *MediaGenreService) Create(mg *MediaGenre) error {
 	return Create(mg, ser)
 }
 
-// Update rmglaces the value of the MediaGenre with the
-// given ID.
+// Update rmglaces the value of the MediaGenre with the given ID.
 func (ser *MediaGenreService) Update(mg *MediaGenre) error {
 	return Update(mg, ser)
 }
@@ -63,9 +61,10 @@ func (ser *MediaGenreService) GetAll(first *int, skip *int) ([]*MediaGenre, erro
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of MediaGenre that
-// pass the filter.
-func (ser *MediaGenreService) GetFilter(first *int, skip *int, keep func(mg *MediaGenre) bool) ([]*MediaGenre, error) {
+// GetFilter retrieves all persisted values of MediaGenre that pass the filter.
+func (ser *MediaGenreService) GetFilter(
+	first *int, skip *int, keep func(mg *MediaGenre) bool,
+) ([]*MediaGenre, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		mg, err := ser.AssertType(m)
 		if err != nil {
@@ -98,17 +97,21 @@ func (ser *MediaGenreService) GetByID(id int) (*MediaGenre, error) {
 	return mg, nil
 }
 
-// GetByMedia retrieves a list of instances of MediaGenre
-// with the given Media ID.
-func (ser *MediaGenreService) GetByMedia(mID int, first *int, skip *int) ([]*MediaGenre, error) {
+// GetByMedia retrieves a list of instances of MediaGenre with the given Media
+// ID.
+func (ser *MediaGenreService) GetByMedia(
+	mID int, first *int, skip *int,
+) ([]*MediaGenre, error) {
 	return ser.GetFilter(first, skip, func(mg *MediaGenre) bool {
 		return mg.MediaID == mID
 	})
 }
 
-// GetByGenre retrieves a list of instances of MediaGenre
-// with the given Genre ID.
-func (ser *MediaGenreService) GetByGenre(gID int, first *int, skip *int) ([]*MediaGenre, error) {
+// GetByGenre retrieves a list of instances of MediaGenre with the given Genre
+// ID.
+func (ser *MediaGenreService) GetByGenre(
+	gID int, first *int, skip *int,
+) ([]*MediaGenre, error) {
 	return ser.GetFilter(first, skip, func(mg *MediaGenre) bool {
 		return mg.GenreID == gID
 	})
@@ -120,8 +123,7 @@ func (ser *MediaGenreService) Clean(m Model) error {
 	return err
 }
 
-// Validate returns an error if the MediaGenre is
-// not valid for the database.
+// Validate returns an error if the MediaGenre is not valid for the database.
 func (ser *MediaGenreService) Validate(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
@@ -166,8 +168,8 @@ func (ser *MediaGenreService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing MediaGenre in updates.
+// PersistOldProperties maintains certain properties of the existing MediaGenre
+// in updates.
 func (ser *MediaGenreService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
@@ -219,8 +221,8 @@ func (ser *MediaGenreService) AssertType(m Model) (*MediaGenre, error) {
 	return mg, nil
 }
 
-// mapfromModel returns a list of MediaGenre type
-// asserted from the given list of Model.
+// mapfromModel returns a list of MediaGenre type asserted from the given list
+// of Model.
 func (ser *MediaGenreService) mapFromModel(vlist []Model) ([]*MediaGenre, error) {
 	list := make([]*MediaGenre, len(vlist))
 	var err error

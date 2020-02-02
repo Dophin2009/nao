@@ -24,8 +24,7 @@ func (c *Character) Iden() int {
 	return c.ID
 }
 
-// CharacterBucket is the name of the database bucket
-// for Character.
+// CharacterBucket is the name of the database bucket for Character.
 const CharacterBucket = "Character"
 
 // CharacterService performs operations on Characters.
@@ -39,8 +38,7 @@ func (ser *CharacterService) Create(c *Character) error {
 	return Create(c, ser)
 }
 
-// Update replaces the value of the Character with the
-// given ID.
+// Update replaces the value of the Character with the given ID.
 func (ser *CharacterService) Update(c *Character) error {
 	return Update(c, ser)
 }
@@ -64,9 +62,11 @@ func (ser *CharacterService) GetAll(first *int, skip *int) ([]*Character, error)
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of Character that
-// pass the filter.
-func (ser *CharacterService) GetFilter(first *int, skip *int, keep func(c *Character) bool) ([]*Character, error) {
+// GetFilter retrieves all persisted values of Character that pass the filter.
+func (ser *CharacterService) GetFilter(
+	first *int, skip *int,
+	keep func(c *Character) bool,
+) ([]*Character, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		c, err := ser.AssertType(m)
 		if err != nil {
@@ -118,8 +118,7 @@ func (ser *CharacterService) Clean(m Model) error {
 	return nil
 }
 
-// Validate returns an error if the Character is
-// not valid for the database.
+// Validate returns an error if the Character is not valid for the database.
 func (ser *CharacterService) Validate(m Model) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
@@ -139,8 +138,8 @@ func (ser *CharacterService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing Character in updates.
+// PersistOldProperties maintains certain properties of the existing Character
+// in updates.
 func (ser *CharacterService) PersistOldProperties(n Model, o Model) error {
 	nc, err := ser.AssertType(n)
 	if err != nil {
@@ -192,8 +191,8 @@ func (ser *CharacterService) AssertType(m Model) (*Character, error) {
 	return c, nil
 }
 
-// mapFromModel returns a list of Character type asserted
-// from the given list of Model.
+// mapFromModel returns a list of Character type asserted from the given list
+// of Model.
 func (ser *CharacterService) mapFromModel(vlist []Model) ([]*Character, error) {
 	list := make([]*Character, len(vlist))
 	var err error

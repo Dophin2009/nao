@@ -9,8 +9,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// MediaProducer represents a relationship between single
-// instances of Media and Producer
+// MediaProducer represents a relationship between single instances of Media
+// and Producer.
 type MediaProducer struct {
 	ID         int
 	MediaID    int
@@ -25,8 +25,7 @@ func (mc *MediaProducer) Iden() int {
 	return mc.ID
 }
 
-// MediaProducerBucket is the name of the database bucket for
-// MediaProducer.
+// MediaProducerBucket is the name of the database bucket for MediaProducer.
 const MediaProducerBucket = "MediaProducer"
 
 // MediaProducerService performs operations on MediaProducer.
@@ -65,9 +64,11 @@ func (ser *MediaProducerService) GetAll(first *int, skip *int) ([]*MediaProducer
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of MediaProducer that
-// pass the filter.
-func (ser *MediaProducerService) GetFilter(first *int, skip *int, keep func(mp *MediaProducer) bool) ([]*MediaProducer, error) {
+// GetFilter retrieves all persisted values of MediaProducer that pass the
+// filter.
+func (ser *MediaProducerService) GetFilter(
+	first *int, skip *int, keep func(mp *MediaProducer) bool,
+) ([]*MediaProducer, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		mp, err := ser.AssertType(m)
 		if err != nil {
@@ -100,17 +101,21 @@ func (ser *MediaProducerService) GetByID(id int) (*MediaProducer, error) {
 	return mp, nil
 }
 
-// GetByMedia retrieves a list of instances of MediaProducer
-// with the given Media ID.
-func (ser *MediaProducerService) GetByMedia(mID int, first *int, skip *int) ([]*MediaProducer, error) {
+// GetByMedia retrieves a list of instances of MediaProducer with the given
+// Media ID.
+func (ser *MediaProducerService) GetByMedia(
+	mID int, first *int, skip *int,
+) ([]*MediaProducer, error) {
 	return ser.GetFilter(first, skip, func(mp *MediaProducer) bool {
 		return mp.MediaID == mID
 	})
 }
 
-// GetByProducer retrieves a list of instances of MediaProducer
-// with the given Producer ID.
-func (ser *MediaProducerService) GetByProducer(pID int, first *int, skip *int) ([]*MediaProducer, error) {
+// GetByProducer retrieves a list of instances of MediaProducer with the given
+// Producer ID.
+func (ser *MediaProducerService) GetByProducer(
+	pID int, first *int, skip *int,
+) ([]*MediaProducer, error) {
 	return ser.GetFilter(first, skip, func(mp *MediaProducer) bool {
 		return mp.ProducerID == pID
 	})
@@ -136,8 +141,8 @@ func (ser *MediaProducerService) Clean(m Model) error {
 	return nil
 }
 
-// Validate returns an error if the MediaProducer is
-// not valid for the database.
+// Validate returns an error if the MediaProducer is not valid for the
+// database.
 func (ser *MediaProducerService) Validate(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
@@ -182,8 +187,8 @@ func (ser *MediaProducerService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing MediaProducer in updates.
+// PersistOldProperties maintains certain properties of the existing
+// MediaProducer in updates.
 func (ser *MediaProducerService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
@@ -235,8 +240,8 @@ func (ser *MediaProducerService) AssertType(m Model) (*MediaProducer, error) {
 	return mp, nil
 }
 
-// mapfromModel returns a list of MediaProducer type
-// asserted from the given list of Model.
+// mapfromModel returns a list of MediaProducer type asserted from the given
+// list of Model.
 func (ser *MediaProducerService) mapFromModel(vlist []Model) ([]*MediaProducer, error) {
 	list := make([]*MediaProducer, len(vlist))
 	var err error

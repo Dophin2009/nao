@@ -8,8 +8,7 @@ import (
 	"gitlab.com/Dophin2009/nao/internal/config"
 )
 
-// Configuration contains config properties read from
-// config files.
+// Configuration contains config properties read from config files.
 type Configuration struct {
 	Hostname string `mapstructure:"hostname"`
 	Port     string `mapstructure:"port"`
@@ -19,23 +18,22 @@ type Configuration struct {
 	} `mapstructure:"db"`
 }
 
-// ReadConfigs returns a Configuration object
-// with configuration properties read from standard
-// directories.
+// ReadConfigs returns a Configuration object with configuration properties
+// read from standard directories.
 func ReadConfigs() (*Configuration, error) {
 	filename := "naos"
 
 	var conf Configuration
 	err := config.ReadConfigs(filename, ConfigDirs(), &conf)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config files %q: %w", filename+".*", err)
+		return nil,
+			fmt.Errorf("failed to read config files %q: %w", filename+".*", err)
 	}
 
 	return &conf, nil
 }
 
-// ConfigDirs returns a list of configuration
-// directories.
+// ConfigDirs returns a list of configuration directories.
 func ConfigDirs() []string {
 	subdir := "nao"
 	dirs := append(xdg.ConfigDirs, xdg.ConfigHome)

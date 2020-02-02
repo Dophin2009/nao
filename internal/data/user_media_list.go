@@ -8,8 +8,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// UserMediaList represents a User-created list
-// of UserMedia
+// UserMediaList represents a User-created list of UserMedia.
 type UserMediaList struct {
 	ID           int
 	UserID       int
@@ -24,8 +23,7 @@ func (uml *UserMediaList) Iden() int {
 	return uml.ID
 }
 
-// UserMediaListBucket is the name of the database bucket for
-// UserMediaList.
+// UserMediaListBucket is the name of the database bucket for UserMediaList.
 const UserMediaListBucket = "UserMediaList"
 
 // UserMediaListService performs operations on UserMediaList.
@@ -39,8 +37,7 @@ func (ser *UserMediaListService) Create(uml *UserMediaList) error {
 	return Create(uml, ser)
 }
 
-// Update rumllaces the value of the UserMediaList with the
-// given ID.
+// Update rumllaces the value of the UserMediaList with the given ID.
 func (ser *UserMediaListService) Update(uml *UserMediaList) error {
 	return Update(uml, ser)
 }
@@ -64,9 +61,11 @@ func (ser *UserMediaListService) GetAll(first *int, skip *int) ([]*UserMediaList
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of UserMediaList that
-// pass the filter.
-func (ser *UserMediaListService) GetFilter(first *int, skip *int, keep func(uml *UserMediaList) bool) ([]*UserMediaList, error) {
+// GetFilter retrieves all persisted values of UserMediaList that pass the
+// filter.
+func (ser *UserMediaListService) GetFilter(
+	first *int, skip *int, keep func(uml *UserMediaList) bool,
+) ([]*UserMediaList, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		uml, err := ser.AssertType(m)
 		if err != nil {
@@ -109,7 +108,7 @@ func (ser *UserMediaListService) Bucket() string {
 	return UserMediaListBucket
 }
 
-// Clean cleans the given UserMediaList for storage
+// Clean cleans the given UserMediaList for storage.
 func (ser *UserMediaListService) Clean(m Model) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
@@ -118,8 +117,8 @@ func (ser *UserMediaListService) Clean(m Model) error {
 	return nil
 }
 
-// Validate returns an error if the UserMediaList is
-// not valid for the database.
+// Validate returns an error if the UserMediaList is not valid for the
+// database.
 func (ser *UserMediaListService) Validate(m Model) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
@@ -153,8 +152,8 @@ func (ser *UserMediaListService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing UserMediaList in updates.
+// PersistOldProperties maintains certain properties of the existing
+// UserMediaList in updates.
 func (ser *UserMediaListService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
@@ -206,8 +205,8 @@ func (ser *UserMediaListService) AssertType(m Model) (*UserMediaList, error) {
 	return uml, nil
 }
 
-// mapfromModel returns a list of UserMediaList type
-// asserted from the given list of Model.
+// mapfromModel returns a list of UserMediaList type asserted from the given
+// list of Model.
 func (ser *UserMediaListService) mapFromModel(vlist []Model) ([]*UserMediaList, error) {
 	list := make([]*UserMediaList, len(vlist))
 	var err error

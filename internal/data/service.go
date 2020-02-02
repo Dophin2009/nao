@@ -16,9 +16,8 @@ type Model interface {
 	Iden() int
 }
 
-// Service provides various functions to operate on Models.
-// All implementations should use type assertions to guarantee
-// prevention of runtime errors.
+// Service provides various functions to operate on Models. All implementations
+// should use type assertions to guarantee prevention of runtime errors.
 type Service interface {
 	Database() *bolt.DB
 	Bucket() string
@@ -116,8 +115,7 @@ func Create(m Model, ser Service) error {
 	})
 }
 
-// Update replaces the value of the model with the given
-// ID.
+// Update replaces the value of the model with the given ID.
 func Update(m Model, ser Service) error {
 	// Check service
 	if err := checkService(ser); err != nil {
@@ -200,8 +198,8 @@ func Delete(id int, ser Service) error {
 	})
 }
 
-// GetByID retrieves the persisted Model with the given ID.
-// The given service and its DB should not be nil.
+// GetByID retrieves the persisted Model with the given ID. The given service
+// and its DB should not be nil.
 func GetByID(id int, ser Service) (Model, error) {
 	// Check service
 	if err := checkService(ser); err != nil {
@@ -221,9 +219,9 @@ func GetByID(id int, ser Service) (Model, error) {
 	return m, nil
 }
 
-// GetRawByID is a generic function that queries the given bucket
-// in the given database for an entity of the given ID.
-// The given DB pointer should not be nil.
+// GetRawByID is a generic function that queries the given bucket in the given
+// database for an entity of the given ID. The given DB pointer should not be
+// nil.
 func GetRawByID(id int, bucketName string, db *bolt.DB) ([]byte, error) {
 	if db == nil {
 		return nil, fmt.Errorf("DB: %w", errNil)
@@ -254,9 +252,14 @@ func GetRawByID(id int, bucketName string, db *bolt.DB) ([]byte, error) {
 	return v, nil
 }
 
-// GetMultiple retrieves the persisted instances of a Model
-// type with the given IDs.
-func GetMultiple(ser Service, ids []int, first *int, skip *int, keep func(m Model) bool) ([]Model, error) {
+// GetMultiple retrieves the persisted instances of a Model type with the given
+// IDs.
+//
+// See GetFilter for details on `first` and `skip`.
+func GetMultiple(
+	ser Service, ids []int, first *int, skip *int,
+	keep func(m Model) bool,
+) ([]Model, error) {
 	// Check service
 	if err := checkService(ser); err != nil {
 		return nil, err
@@ -295,27 +298,27 @@ func GetMultiple(ser Service, ids []int, first *int, skip *int, keep func(m Mode
 	return list, nil
 }
 
-// GetAll retrieves all persisted instances of a Model type
-// with the given data layer service.
+// GetAll retrieves all persisted instances of a Model type with the given data
+// layer service.
 //
 // See GetFilter for details on `first` and `skip`.
 func GetAll(ser Service, first *int, skip *int) ([]Model, error) {
 	return GetFilter(ser, first, skip, func(m Model) bool { return true })
 }
 
-// GetFilter retrieves all persisted instances of a Model
-// type that pass the filter.
+// GetFilter retrieves all persisted instances of a Model type that pass the
+// filter.
 //
-// Collection begins on the first valid element after skipping
-// the `skip` valid elements and continues for `first` valid
-// elements that pass the filter.
-// If `skip` is given as nil, collection begins with the
-// first valid element.
-// If `first` is given as nil, collection continues until the
-// last persisted element is queried.
-// The given service and its DB should not be nil.
-// A nil filter function passes all.
-func GetFilter(ser Service, first *int, skip *int, keep func(m Model) bool) ([]Model, error) {
+// Collection begins on the first valid element after skipping the `skip` valid
+// elements and continues for `first` valid elements that pass the filter. If
+// `skip` is given as nil, collection begins with the first valid element. If
+// `first` is given as nil, collection continues until the last persisted
+// element is queried. The given service and its DB should not be nil. A nil
+// filter function passes all.
+func GetFilter(
+	ser Service, first *int, skip *int,
+	keep func(m Model) bool,
+) ([]Model, error) {
 	// Check service
 	if err := checkService(ser); err != nil {
 		return nil, err
@@ -422,8 +425,7 @@ func calculatePaginationBounds(first *int, skip *int) (int, int) {
 	return start, end
 }
 
-// get returns the raw value stored at the given key in the
-// given bucket.
+// get returns the raw value stored at the given key in the given bucket.
 func get(id int, bucket *bolt.Bucket) ([]byte, error) {
 	if bucket == nil {
 		return nil, fmt.Errorf("bucket: %w", errNil)
@@ -436,8 +438,7 @@ func get(id int, bucket *bolt.Bucket) ([]byte, error) {
 	return v, nil
 }
 
-// checkService returns an error if the given service or its
-// DB are nil.
+// checkService returns an error if the given service or its DB are nil.
 func checkService(ser Service) error {
 	if ser == nil {
 		return fmt.Errorf("service: %w", errNil)

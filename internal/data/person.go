@@ -24,8 +24,7 @@ func (p *Person) Iden() int {
 	return p.ID
 }
 
-// PersonBucket is the name of the database bucket for
-// Person.
+// PersonBucket is the name of the database bucket for Person.
 const PersonBucket = "Person"
 
 // PersonService performs operations on Persons.
@@ -39,8 +38,7 @@ func (ser *PersonService) Create(p *Person) error {
 	return Create(p, ser)
 }
 
-// Update rplaces the value of the Person with the
-// given ID.
+// Update rplaces the value of the Person with the given ID.
 func (ser *PersonService) Update(p *Person) error {
 	return Update(p, ser)
 }
@@ -64,9 +62,10 @@ func (ser *PersonService) GetAll(first *int, skip *int) ([]*Person, error) {
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of Person that
-// pass the filter.
-func (ser *PersonService) GetFilter(first *int, skip *int, keep func(p *Person) bool) ([]*Person, error) {
+// GetFilter retrieves all persisted values of Person that pass the filter.
+func (ser *PersonService) GetFilter(
+	first *int, skip *int, keep func(p *Person) bool,
+) ([]*Person, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		p, err := ser.AssertType(m)
 		if err != nil {
@@ -109,7 +108,7 @@ func (ser *PersonService) Bucket() string {
 	return PersonBucket
 }
 
-// Clean cleans the given Person for storage
+// Clean cleans the given Person for storage.
 func (ser *PersonService) Clean(m Model) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
@@ -118,8 +117,7 @@ func (ser *PersonService) Clean(m Model) error {
 	return nil
 }
 
-// Validate returns an error if the Person is
-// not valid for the database.
+// Validate returns an error if the Person is not valid for the database.
 func (ser *PersonService) Validate(m Model) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
@@ -139,8 +137,8 @@ func (ser *PersonService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing Person in updates.
+// PersistOldProperties maintains certain properties of the existing Person in
+// updates.
 func (ser *PersonService) PersistOldProperties(n Model, o Model) error {
 	np, err := ser.AssertType(n)
 	if err != nil {
@@ -192,8 +190,8 @@ func (ser *PersonService) AssertType(m Model) (*Person, error) {
 	return p, nil
 }
 
-// mapfromModel returns a list of Person type
-// asserted from the given list of Model.
+// mapfromModel returns a list of Person type asserted from the given list of
+// Model.
 func (ser *PersonService) mapFromModel(vlist []Model) ([]*Person, error) {
 	list := make([]*Person, len(vlist))
 	var err error

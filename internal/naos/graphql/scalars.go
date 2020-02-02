@@ -15,7 +15,7 @@ func MarshalStringMap(m map[string]string) graphql.Marshaler {
 	})
 }
 
-// UnmarshalStringMap returns the value of
+// UnmarshalStringMap returns the value of map[string]string from interface{}.
 func UnmarshalStringMap(v interface{}) (map[string]string, error) {
 	mi, ok := v.(map[string]interface{})
 	if !ok {

@@ -16,8 +16,7 @@ import (
 	"gitlab.com/Dophin2009/nao/internal/web"
 )
 
-// NewGraphQLHandler returns a POST endpoint handler for
-// the GraphQL API.
+// NewGraphQLHandler returns a POST endpoint handler for the GraphQL API.
 func NewGraphQLHandler(path []string, ds *graphql.DataServices) web.Handler {
 	cfg := graphql.Config{
 		Resolvers: &graphql.Resolver{},
@@ -35,8 +34,8 @@ func NewGraphQLHandler(path []string, ds *graphql.DataServices) web.Handler {
 	}
 }
 
-// NewGraphiQLHandler returns a new GET endpoint handler
-// for rendering a GraphiQL page for the given GraphQL API.
+// NewGraphiQLHandler returns a new GET endpoint handler for rendering a
+// GraphiQL page for the given GraphQL API.
 func NewGraphiQLHandler(path []string, graphqlPath string) (web.Handler, error) {
 	graphiqlHandler, err := graphiql.NewGraphiqlHandler(graphqlPath)
 	if err != nil {
@@ -51,9 +50,8 @@ func NewGraphiQLHandler(path []string, graphqlPath string) (web.Handler, error) 
 	}, nil
 }
 
-// NewGraphQLPlaygroundHandler returns a new GET endpoint
-// handler for rendering a GraphQL Playgorund page for the given
-// GraphQL API endpoint.
+// NewGraphQLPlaygroundHandler returns a new GET endpoint handler for rendering
+// a GraphQL Playgorund page for the given GraphQL API endpoint.
 func NewGraphQLPlaygroundHandler(path []string, graphqlPath string) web.Handler {
 	playgroundHandler := playground.Handler("Nao", graphqlPath)
 
@@ -66,22 +64,22 @@ func NewGraphQLPlaygroundHandler(path []string, graphqlPath string) web.Handler 
 	}
 }
 
-// LoginCredentials is passed in response body with
-// the user's username and password to authenticate
+// LoginCredentials is passed in response body with the user's username and
+// password to authenticate.
 type LoginCredentials struct {
 	Username string
 	Password string
 }
 
-// tokenCookieName is the name of the cookie the
-// JWT token will be stored in in the login response
-// and all subsequent requests
+// tokenCookieName is the name of the cookie the JWT token will be stored in in
+// the login response and all subsequent requests.
 const tokenCookieName = "jwt_token"
 
-// LoginHandler returns a POST endpoint handler to
-// authenticate the user and return a JWT access
-// token upon successful authentication
-func LoginHandler(userService *data.UserService, jwtService *data.JWTService) web.Handler {
+// LoginHandler returns a POST endpoint handler to authenticate the user and
+// return a JWT access token upon successful authentication.
+func LoginHandler(
+	userService *data.UserService, jwtService *data.JWTService,
+) web.Handler {
 	return web.Handler{
 		Method: http.MethodPost,
 		Path:   []string{"login"},

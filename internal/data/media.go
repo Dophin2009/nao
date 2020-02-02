@@ -12,12 +12,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// TODO: Revert Media.Titles, Media.Synopses, Media.Background
-// and other similar ones to list of own struct; multiple
-// entries for each language and possibly other properties such
-// as priority
-// TODO: Move UnmarshalGQL and MarshalGQL of Quarter to graphql
-// package; they do not belong in this package
+// TODO: Move UnmarshalGQL and MarshalGQL of Quarter to graphql package; they
+// do not belong in this package
 // TODO: Fuzzy search of models
 
 // Media represents a single instance of a media
@@ -40,40 +36,34 @@ func (m *Media) Iden() int {
 	return m.ID
 }
 
-// Season contains information about the quarter
-// and year
+// Season contains information about the quarter and year.
 type Season struct {
 	Quarter *Quarter
 	Year    *int
 }
 
-// Quarter represents the quarter of the year
-// by integer
+// Quarter represents the quarter of the year by integer.
 type Quarter int
 
 const (
-	// Winter is the first quarter of the year,
-	// encapsulating the months January, February,
-	// and March
+	// Winter is the first quarter of the year, encapsulating the months January,
+	// February, and March.
 	Winter Quarter = iota + 1
 
-	// Spring is the second quarter of the year,
-	// encapsulating the months April, May, and June
+	// Spring is the second quarter of the year, encapsulating the months April,
+	// May, and June.
 	Spring
 
-	// Summer is the third quarter of the year,
-	// encapsulating the months July, August, and
-	// September
+	// Summer is the third quarter of the year, encapsulating the months July,
+	// August, and September.
 	Summer
 
-	// Fall is the fouth quarter of the year,
-	// encapsulating the months October,
-	// November, and December
+	// Fall is the fouth quarter of the year, encapsulating the months October,
+	// November, and December.
 	Fall
 )
 
-// IsValid checks if the Quarter has a value that is a
-// valid one.
+// IsValid checks if the Quarter has a value that is a valid one.
 func (q Quarter) IsValid() bool {
 	switch q {
 	case Winter, Spring, Summer, Fall:
@@ -97,8 +87,7 @@ func (q Quarter) String() string {
 	return fmt.Sprintf("%d", int(q))
 }
 
-// UnmarshalGQL casts the type of the given value to
-// a Quarter.
+// UnmarshalGQL casts the type of the given value to a Quarter.
 func (q *Quarter) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
@@ -120,14 +109,12 @@ func (q *Quarter) UnmarshalGQL(v interface{}) error {
 	return nil
 }
 
-// MarshalGQL serializes the Quarter into a GraphQL
-// readable form.
+// MarshalGQL serializes the Quarter into a GraphQL readable form.
 func (q Quarter) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(q.String()))
 }
 
-// MediaBucket is the name of the database bucket for
-// Media.
+// MediaBucket is the name of the database bucket for Media.
 const MediaBucket = "Media"
 
 // MediaService performs operations on Media.
@@ -141,8 +128,7 @@ func (ser *MediaService) Create(md *Media) error {
 	return Create(md, ser)
 }
 
-// Update replaces the value of the Media with the
-// given ID.
+// Update replaces the value of the Media with the given ID.
 func (ser *MediaService) Update(md *Media) error {
 	return Update(md, ser)
 }
@@ -166,9 +152,10 @@ func (ser *MediaService) GetAll(first *int, skip *int) ([]*Media, error) {
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of Media that
-// pass the filter.
-func (ser *MediaService) GetFilter(first *int, skip *int, keep func(md *Media) bool) ([]*Media, error) {
+// GetFilter retrieves all persisted values of Media that pass the filter.
+func (ser *MediaService) GetFilter(
+	first *int, skip *int, keep func(md *Media) bool,
+) ([]*Media, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		md, err := ser.AssertType(m)
 		if err != nil {
@@ -251,8 +238,8 @@ func (ser *MediaService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing Media in updates.
+// PersistOldProperties maintains certain properties of the existing Media in
+// updates.
 func (ser *MediaService) PersistOldProperties(n Model, o Model) error {
 	nm, err := ser.AssertType(n)
 	if err != nil {
@@ -304,8 +291,8 @@ func (ser *MediaService) AssertType(m Model) (*Media, error) {
 	return md, nil
 }
 
-// mapFromModel returns a list of Media type asserted
-// from the given list of Model.
+// mapFromModel returns a list of Media type asserted from the given list of
+// Model.
 func (ser *MediaService) mapFromModel(vlist []Model) ([]*Media, error) {
 	list := make([]*Media, len(vlist))
 	var err error

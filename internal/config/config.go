@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-// ReadConfigs reads config files in the given directories
-// with the given filename (without extension). The overall
-// config is unmarshalled into the given pointer.
+// ReadConfigs reads config files in the given directories with the given
+// filename (without extension). The overall config is unmarshalled into the
+// given pointer.
 func ReadConfigs(filename string, dirs []string, structure interface{}) error {
 	if structure == nil {
 		return fmt.Errorf("structure: %w", errors.New("is nil"))

@@ -10,8 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// TODO: Delete all things related to User when deleting
-// User
+// TODO: Delete all things related to User when deleting User
 
 // User represents a single user.
 type User struct {
@@ -19,8 +18,8 @@ type User struct {
 	Username string
 	Email    string
 	Password []byte
-	// Permissions states the permissions the user has
-	// regarding shared/global data
+	// Permissions states the permissions the user has regarding shared/global
+	// data.
 	Permissions Permission
 	Version     int
 	Model
@@ -31,8 +30,7 @@ func (u *User) Iden() int {
 	return u.ID
 }
 
-// Permission contains a number of permissions for
-// reading/writing data.
+// Permission contains a number of permissions for reading/writing data.
 type Permission struct {
 	// ReadMedia is the ability to query all Media.
 	ReadMedia bool
@@ -45,8 +43,7 @@ type Permission struct {
 	WriteUsers bool
 }
 
-// UserBucket is the name of the database bucket for
-// User.
+// UserBucket is the name of the database bucket for User.
 const UserBucket = "User"
 
 // UserService performs operations on User.
@@ -60,8 +57,7 @@ func (ser *UserService) Create(u *User) error {
 	return Create(u, ser)
 }
 
-// Update rulaces the value of the User with the
-// given ID.
+// Update rulaces the value of the User with the given ID.
 func (ser *UserService) Update(u *User) error {
 	return Update(u, ser)
 }
@@ -85,9 +81,10 @@ func (ser *UserService) GetAll(first *int, skip *int) ([]*User, error) {
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of User that
-// pass the filter.
-func (ser *UserService) GetFilter(first *int, skip *int, keep func(u *User) bool) ([]*User, error) {
+// GetFilter retrieves all persisted values of User that pass the filter.
+func (ser *UserService) GetFilter(
+	first *int, skip *int, keep func(u *User) bool,
+) ([]*User, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		u, err := ser.AssertType(m)
 		if err != nil {
@@ -120,8 +117,7 @@ func (ser *UserService) GetByID(id int) (*User, error) {
 	return u, nil
 }
 
-// GetByUsername retrieves a single instance of User
-// with the given username.
+// GetByUsername retrieves a single instance of User with the given username.
 func (ser *UserService) GetByUsername(username string) (*User, error) {
 	var e User
 	err := ser.DB.View(func(tx *bolt.Tx) error {
@@ -159,10 +155,9 @@ func (ser *UserService) GetByUsername(username string) (*User, error) {
 	return &e, nil
 }
 
-// AuthenticateWithPassword checks if the password for
-// the User given by the username matches the provided
-// password; returns nil if correct password, error if
-// otherwise.
+// AuthenticateWithPassword checks if the password for the User given by the
+// username matches the provided password; returns nil if correct password,
+// error if otherwise.
 func (ser *UserService) AuthenticateWithPassword(username string, password string) error {
 	u, err := ser.GetByUsername(username)
 	if err != nil {
@@ -177,8 +172,8 @@ func (ser *UserService) AuthenticateWithPassword(username string, password strin
 	return nil
 }
 
-// ChangePassword replaces the password of the User specified
-// by the given ID with a new one.
+// ChangePassword replaces the password of the User specified by the given ID
+// with a new one.
 func (ser *UserService) ChangePassword(userID int, password string) error {
 	u, err := ser.GetByID(userID)
 	if err != nil {
@@ -235,8 +230,7 @@ func (ser *UserService) Clean(m Model) error {
 	return nil
 }
 
-// Validate checks if the given User is valid
-// for the database.
+// Validate checks if the given User is valid for the database.
 func (ser *UserService) Validate(m Model) error {
 	u, err := ser.AssertType(m)
 	if err != nil {
@@ -295,8 +289,8 @@ func (ser *UserService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing User in updates.
+// PersistOldProperties maintains certain properties of the existing User in
+// updates.
 func (ser *UserService) PersistOldProperties(n Model, o Model) error {
 	nu, err := ser.AssertType(n)
 	if err != nil {
@@ -306,8 +300,7 @@ func (ser *UserService) PersistOldProperties(n Model, o Model) error {
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
-	// Password may not be changed through update;
-	// must use ChangePassword
+	// Password may not be changed through update; must use ChangePassword
 	nu.Password = ou.Password
 	nu.Version = ou.Version + 1
 	return nil
@@ -351,8 +344,8 @@ func (ser *UserService) AssertType(m Model) (*User, error) {
 	return u, nil
 }
 
-// mapfromModel returns a list of User type
-// asserted from the given list of Model.
+// mapfromModel returns a list of User type asserted from the given list of
+// Model.
 func (ser *UserService) mapFromModel(vlist []Model) ([]*User, error) {
 	list := make([]*User, len(vlist))
 	var err error

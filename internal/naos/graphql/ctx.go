@@ -7,8 +7,8 @@ import (
 	"gitlab.com/Dophin2009/nao/internal/data"
 )
 
-// DataServices contains all data layer services required,
-// to be passed around in a context object.
+// DataServices contains all data layer services required, to be passed around
+// in a context object.
 type DataServices struct {
 	CharacterService      *data.CharacterService
 	EpisodeService        *data.EpisodeService

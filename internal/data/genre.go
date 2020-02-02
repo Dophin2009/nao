@@ -21,8 +21,7 @@ func (g *Genre) Iden() int {
 	return g.ID
 }
 
-// GenreBucket is the name of the database bucket for
-// Genre.
+// GenreBucket is the name of the database bucket for Genre.
 const GenreBucket = "Genre"
 
 // GenreService performs operations on genre.
@@ -36,8 +35,7 @@ func (ser *GenreService) Create(g *Genre) error {
 	return Create(g, ser)
 }
 
-// Update rglaces the value of the Genre with the
-// given ID.
+// Update rglaces the value of the Genre with the given ID.
 func (ser *GenreService) Update(g *Genre) error {
 	return Update(g, ser)
 }
@@ -61,9 +59,10 @@ func (ser *GenreService) GetAll(first *int, skip *int) ([]*Genre, error) {
 	return list, nil
 }
 
-// GetFilter retrieves all persisted values of Genre that
-// pass the filter.
-func (ser *GenreService) GetFilter(first *int, skip *int, keep func(g *Genre) bool) ([]*Genre, error) {
+// GetFilter retrieves all persisted values of Genre that pass the filter.
+func (ser *GenreService) GetFilter(
+	first *int, skip *int, keep func(g *Genre) bool,
+) ([]*Genre, error) {
 	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
 		g, err := ser.AssertType(m)
 		if err != nil {
@@ -115,8 +114,7 @@ func (ser *GenreService) Clean(m Model) error {
 	return nil
 }
 
-// Validate returns an error if the Genre is
-// not valid for the database.
+// Validate returns an error if the Genre is not valid for the database.
 func (ser *GenreService) Validate(m Model) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
@@ -136,8 +134,8 @@ func (ser *GenreService) Initialize(m Model, id int) error {
 	return nil
 }
 
-// PersistOldProperties maintains certain properties
-// of the existing Genre in updates.
+// PersistOldProperties maintains certain properties of the existing Genre in
+// updates.
 func (ser *GenreService) PersistOldProperties(n Model, o Model) error {
 	ng, err := ser.AssertType(n)
 	if err != nil {
@@ -189,8 +187,8 @@ func (ser *GenreService) AssertType(m Model) (*Genre, error) {
 	return g, nil
 }
 
-// mapfromModel returns a list of Genre type
-// asserted from the given list of Model.
+// mapfromModel returns a list of Genre type asserted from the given list of
+// Model.
 func (ser *GenreService) mapFromModel(vlist []Model) ([]*Genre, error) {
 	list := make([]*Genre, len(vlist))
 	var err error

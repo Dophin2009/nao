@@ -254,6 +254,47 @@ func GetRawByID(id int, bucketName string, db *bolt.DB) ([]byte, error) {
 	return v, nil
 }
 
+// GetMultiple retrieves the persisted instances of a Model
+// type with the given IDs.
+func GetMultiple(ser Service, ids []int, first *int, skip *int, keep func(m Model) bool) ([]Model, error) {
+	// Check service
+	if err := checkService(ser); err != nil {
+		return nil, err
+	}
+
+	if keep == nil {
+		keep = func(m Model) bool {
+			return true
+		}
+	}
+
+	start, end := calculatePaginationBounds(first, skip)
+
+	// List to return
+	list := []Model{}
+
+	i := start
+	for _, id := range ids {
+		if i >= end {
+			break
+		}
+
+		m, err := GetByID(id, ser)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get Model by id %d: %w", id, err)
+		}
+
+		if !keep(m) {
+			continue
+		}
+
+		list = append(list, m)
+		i++
+	}
+
+	return list, nil
+}
+
 // GetAll retrieves all persisted instances of a Model type
 // with the given data layer service.
 //
@@ -286,25 +327,7 @@ func GetFilter(ser Service, first *int, skip *int, keep func(m Model) bool) ([]M
 		}
 	}
 
-	// The number of elements to skip
-	var start int
-	if skip == nil || *skip <= 0 {
-		start = 0
-	} else {
-		start = *skip
-	}
-
-	// When iterator reaches this number, stop
-	var end int
-	if first == nil || *first < 0 {
-		// Return all elements if `first` is nil
-		end = -1
-	} else if *first == 0 {
-		// Return empty slice if number of elements to get is 0
-		return []Model{}, nil
-	} else {
-		end = start + *first
-	}
+	start, end := calculatePaginationBounds(first, skip)
 
 	// List to return
 	list := []Model{}
@@ -374,6 +397,29 @@ func GetFilter(ser Service, first *int, skip *int, keep func(m Model) bool) ([]M
 	}
 
 	return list, nil
+}
+
+func calculatePaginationBounds(first *int, skip *int) (int, int) {
+	// The number of elements to skip
+	var start int
+	if skip == nil || *skip <= 0 {
+		start = 0
+	} else {
+		start = *skip
+	}
+
+	// When iterator reaches this number, stop
+	var end int
+	if first == nil || *first < 0 {
+		// Return all elements if `first` is nil
+		end = -1
+	} else if *first == 0 {
+		end = start
+	} else {
+		end = start + *first
+	}
+
+	return start, end
 }
 
 // get returns the raw value stored at the given key in the

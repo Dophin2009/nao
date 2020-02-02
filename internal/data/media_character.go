@@ -88,6 +88,29 @@ func (ser *MediaCharacterService) GetFilter(
 	return list, nil
 }
 
+// GetMultiple retrieves the persisted MediaCharacter values specified by the
+// given IDs that pass the filter.
+func (ser *MediaCharacterService) GetMultiple(
+	ids []int, first *int, skip *int, keep func(mc *MediaCharacter) bool,
+) ([]*MediaCharacter, error) {
+	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
+		mc, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return keep(mc)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to MediaCharacters: %w", err)
+	}
+	return list, nil
+}
+
 // GetByID retrieves the persisted MediaCharacter with the given ID.
 func (ser *MediaCharacterService) GetByID(id int) (*MediaCharacter, error) {
 	m, err := GetByID(id, ser)

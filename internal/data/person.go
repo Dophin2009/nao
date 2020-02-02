@@ -84,6 +84,29 @@ func (ser *PersonService) GetFilter(
 	return list, nil
 }
 
+// GetMultiple retrieves the persisted Person values specified by the given IDs
+// that pass the filter.
+func (ser *PersonService) GetMultiple(
+	ids []int, first *int, skip *int, keep func(p *Person) bool,
+) ([]*Person, error) {
+	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
+		p, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return keep(p)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Persons: %w", err)
+	}
+	return list, nil
+}
+
 // GetByID retrieves the persisted Person with the given ID.
 func (ser *PersonService) GetByID(id int) (*Person, error) {
 	m, err := GetByID(id, ser)

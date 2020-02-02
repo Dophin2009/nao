@@ -174,6 +174,29 @@ func (ser *MediaService) GetFilter(
 	return list, nil
 }
 
+// GetMultiple retrieves the persisted Media values specified by the given
+// IDs that pass the filter.
+func (ser *MediaService) GetMultiple(
+	ids []int, first *int, skip *int, keep func(md *Media) bool,
+) ([]*Media, error) {
+	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
+		md, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return keep(md)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Media: %w", err)
+	}
+	return list, nil
+}
+
 // GetByID retrieves the persisted Media with the given ID.
 func (ser *MediaService) GetByID(id int) (*Media, error) {
 	m, err := GetByID(id, ser)

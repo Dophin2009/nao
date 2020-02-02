@@ -85,6 +85,29 @@ func (ser *MediaRelationService) GetFilter(
 	return list, nil
 }
 
+// GetMultiple retrieves the persisted MediaRelation values specified by the
+// given IDs that pass the filter.
+func (ser *MediaRelationService) GetMultiple(
+	ids []int, first *int, skip *int, keep func(mr *MediaRelation) bool,
+) ([]*MediaRelation, error) {
+	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
+		mr, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return keep(mr)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to MediaRelations: %w", err)
+	}
+	return list, nil
+}
+
 // GetByID retrieves the persisted MediaRelation with the given ID.
 func (ser *MediaRelationService) GetByID(id int) (*MediaRelation, error) {
 	m, err := GetByID(id, ser)

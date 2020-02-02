@@ -97,6 +97,29 @@ func (ser *MediaGenreService) GetByID(id int) (*MediaGenre, error) {
 	return mg, nil
 }
 
+// GetMultiple retrieves the persisted MediaGenre values specified by the given
+// IDs that pass the filter.
+func (ser *MediaGenreService) GetMultiple(
+	ids []int, first *int, skip *int, keep func(mg *MediaGenre) bool,
+) ([]*MediaGenre, error) {
+	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
+		mg, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return keep(mg)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to MediaGenres: %w", err)
+	}
+	return list, nil
+}
+
 // GetByMedia retrieves a list of instances of MediaGenre with the given Media
 // ID.
 func (ser *MediaGenreService) GetByMedia(

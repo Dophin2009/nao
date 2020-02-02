@@ -81,6 +81,29 @@ func (ser *GenreService) GetFilter(
 	return list, nil
 }
 
+// GetMultiple retrieves the persisted Genre values specified by the given
+// IDs that pass the filter.
+func (ser *GenreService) GetMultiple(
+	ids []int, first *int, skip *int, keep func(c *Genre) bool,
+) ([]*Genre, error) {
+	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
+		g, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return keep(g)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to Genres: %w", err)
+	}
+	return list, nil
+}
+
 // GetByID retrieves the persisted Genre with the given ID.
 func (ser *GenreService) GetByID(id int) (*Genre, error) {
 	m, err := GetByID(id, ser)

@@ -84,6 +84,29 @@ func (ser *UserMediaListService) GetFilter(
 	return list, nil
 }
 
+// GetMultiple retrieves the persisted UserMediaList values specified by the
+// given IDs that pass the filter.
+func (ser *UserMediaListService) GetMultiple(
+	ids []int, first *int, skip *int, keep func(uml *UserMediaList) bool,
+) ([]*UserMediaList, error) {
+	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
+		uml, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return keep(uml)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := ser.mapFromModel(vlist)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map Models to UserMediaLists: %w", err)
+	}
+	return list, nil
+}
+
 // GetByID retrieves the persisted UserMediaList with the given ID.
 func (ser *UserMediaListService) GetByID(id int) (*UserMediaList, error) {
 	m, err := GetByID(id, ser)

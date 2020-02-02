@@ -129,7 +129,8 @@ func (r *characterResolver) Media(
 	ser := ds.MediaCharacterService
 	list, err := ser.GetByCharacter(obj.ID, first, skip)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get MediaCharacters by Character id %d: %w", obj.ID, err)
+		return nil,
+			fmt.Errorf("failed to get MediaCharacters by Character id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
@@ -234,7 +235,8 @@ func (r *mediaResolver) EpisodeSets(
 	ser := ds.EpisodeSetService
 	list, err := ser.GetByMedia(obj.ID, first, skip)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get EpisodeSets by Media id %d: %w", obj.ID, err)
+		return nil,
+			fmt.Errorf("failed to get EpisodeSets by Media id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
@@ -252,8 +254,8 @@ func (r *mediaResolver) Producers(
 	ser := ds.MediaProducerService
 	list, err := ser.GetByMedia(obj.ID, first, skip)
 	if err != nil {
-		return nil,
-			fmt.Errorf("failed to get MediaProducers by Media id %d: %w", obj.ID, err)
+		return nil, fmt.Errorf(
+			"failed to get MediaProducers by Media id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
@@ -271,8 +273,8 @@ func (r *mediaResolver) Characters(
 	ser := ds.MediaCharacterService
 	list, err := ser.GetByMedia(obj.ID, first, skip)
 	if err != nil {
-		return nil,
-			fmt.Errorf("failed to get MediaCharacters by Media id %d: %w", obj.ID, err)
+		return nil, fmt.Errorf(
+			"failed to get MediaCharacters by Media id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
@@ -297,19 +299,21 @@ func (r *mediaResolver) Genres(
 	return list, nil
 }
 
-// mediaCharacterResolver is the field resolver for
-// MediaCharacter objects.
+// mediaCharacterResolver is the field resolver for MediaCharacter objects.
 type mediaCharacterResolver struct{ *Resolver }
 
-// Media resolves the Media in the relationship for
-// MediaCharacter objects.
-func (r *mediaCharacterResolver) Media(ctx context.Context, obj *data.MediaCharacter) (*data.Media, error) {
+// Media resolves the Media in the relationship for MediaCharacter objects.
+func (r *mediaCharacterResolver) Media(
+	ctx context.Context, obj *data.MediaCharacter,
+) (*data.Media, error) {
 	return resolveMediaByID(ctx, obj.MediaID)
 }
 
-// Character resolves the Character in the relationship for
-// MediaCharacter objects.
-func (r *mediaCharacterResolver) Character(ctx context.Context, obj *data.MediaCharacter) (*data.Character, error) {
+// Character resolves the Character in the relationship for MediaCharacter
+// objects.
+func (r *mediaCharacterResolver) Character(
+	ctx context.Context, obj *data.MediaCharacter,
+) (*data.Character, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
@@ -322,15 +326,17 @@ func (r *mediaCharacterResolver) Character(ctx context.Context, obj *data.MediaC
 
 	c, err := ser.GetByID(*obj.CharacterID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get Character by id %d: %w", *obj.CharacterID, err)
+		return nil, fmt.Errorf(
+			"failed to get Character by id %d: %w", *obj.CharacterID, err)
 	}
 
 	return c, nil
 }
 
-// Person resolves the Person in the relationship for
-// MediaCharacter objects
-func (r *mediaCharacterResolver) Person(ctx context.Context, obj *data.MediaCharacter) (*data.Person, error) {
+// Person resolves the Person in the relationship for MediaCharacter objects.
+func (r *mediaCharacterResolver) Person(
+	ctx context.Context, obj *data.MediaCharacter,
+) (*data.Person, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
@@ -343,25 +349,27 @@ func (r *mediaCharacterResolver) Person(ctx context.Context, obj *data.MediaChar
 
 	p, err := ser.GetByID(*obj.PersonID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get Person by id %d: %w", *obj.PersonID, err)
+		return nil, fmt.Errorf(
+			"failed to get Person by id %d: %w", *obj.PersonID, err)
 	}
 
 	return p, nil
 }
 
-// mediaGenreResolver is the field resolver for MediaGenre
-// objects.
+// mediaGenreResolver is the field resolver for MediaGenre objects.
 type mediaGenreResolver struct{ *Resolver }
 
-// Media resolves the Media in the relationship for MediaGenre
-// objects.
-func (r *mediaGenreResolver) Media(ctx context.Context, obj *data.MediaGenre) (*data.Media, error) {
+// Media resolves the Media in the relationship for MediaGenre objects.
+func (r *mediaGenreResolver) Media(
+	ctx context.Context, obj *data.MediaGenre,
+) (*data.Media, error) {
 	return resolveMediaByID(ctx, obj.MediaID)
 }
 
-// Genre resolves the Genre in the relationship for MediaGenre
-// objects.
-func (r *mediaGenreResolver) Genre(ctx context.Context, obj *data.MediaGenre) (*data.Genre, error) {
+// Genre resolves the Genre in the relationship for MediaGenre objects.
+func (r *mediaGenreResolver) Genre(
+	ctx context.Context, obj *data.MediaGenre,
+) (*data.Genre, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
@@ -370,25 +378,28 @@ func (r *mediaGenreResolver) Genre(ctx context.Context, obj *data.MediaGenre) (*
 	ser := ds.GenreService
 	g, err := ser.GetByID(obj.GenreID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get Genre by id %d: %w", obj.GenreID, err)
+		return nil,
+			fmt.Errorf("failed to get Genre by id %d: %w", obj.GenreID, err)
 	}
 
 	return g, nil
 }
 
-// mediaProducerResolver is the field resolver for MediaProducer
-// objects.
+// mediaProducerResolver is the field resolver for MediaProducer objects.
 type mediaProducerResolver struct{ *Resolver }
 
-// Media resolves the Media in the relationship for
-// MediaProducer objects.
-func (r *mediaProducerResolver) Media(ctx context.Context, obj *data.MediaProducer) (*data.Media, error) {
+// Media resolves the Media in the relationship for MediaProducer objects.
+func (r *mediaProducerResolver) Media(
+	ctx context.Context, obj *data.MediaProducer,
+) (*data.Media, error) {
 	return resolveMediaByID(ctx, obj.MediaID)
 }
 
-// Producer resolves the Producer in the relationship for
-// MediaProducer objects.
-func (r *mediaProducerResolver) Producer(ctx context.Context, obj *data.MediaProducer) (*data.Producer, error) {
+// Producer resolves the Producer in the relationship for MediaProducer
+// objects.
+func (r *mediaProducerResolver) Producer(
+	ctx context.Context, obj *data.MediaProducer,
+) (*data.Producer, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
@@ -397,35 +408,40 @@ func (r *mediaProducerResolver) Producer(ctx context.Context, obj *data.MediaPro
 	ser := ds.ProducerService
 	p, err := ser.GetByID(obj.ProducerID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get Producer by id %d: %w", obj.ProducerID, err)
+		return nil,
+			fmt.Errorf("failed to get Producer by id %d: %w", obj.ProducerID, err)
 	}
 
 	return p, nil
 }
 
-// mediaRelationResolver is the field resolver for
-// MediaRelation objects.
+// mediaRelationResolver is the field resolver for MediaRelation objects.
 type mediaRelationResolver struct{ *Resolver }
 
-// Owner resolves the owning Media in the relationship for
-// MediaRelation objects.
-func (r *mediaRelationResolver) Owner(ctx context.Context, obj *data.MediaRelation) (*data.Media, error) {
+// Owner resolves the owning Media in the relationship for MediaRelation
+// objects.
+func (r *mediaRelationResolver) Owner(
+	ctx context.Context, obj *data.MediaRelation,
+) (*data.Media, error) {
 	return resolveMediaByID(ctx, obj.OwnerID)
 }
 
-// Related resolves the owned Media in the relationship for
-// MediaRelation objects.
-func (r *mediaRelationResolver) Related(ctx context.Context, obj *data.MediaRelation) (*data.Media, error) {
+// Related resolves the owned Media in the relationship for MediaRelation
+// objects.
+func (r *mediaRelationResolver) Related(
+	ctx context.Context, obj *data.MediaRelation,
+) (*data.Media, error) {
 	return resolveMediaByID(ctx, obj.RelatedID)
 }
 
-// personResolver is the field resolver for Person
-// objects.
+// personResolver is the field resolver for Person objects.
 type personResolver struct{ *Resolver }
 
 // Media resolves the MediaCharacter relationships for
 // Person objects.
-func (r *personResolver) Media(ctx context.Context, obj *data.Person, first *int, skip *int) ([]*data.MediaCharacter, error) {
+func (r *personResolver) Media(
+	ctx context.Context, obj *data.Person, first *int, skip *int,
+) ([]*data.MediaCharacter, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
@@ -434,17 +450,20 @@ func (r *personResolver) Media(ctx context.Context, obj *data.Person, first *int
 	ser := ds.MediaCharacterService
 	list, err := ser.GetByPerson(obj.ID, first, skip)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get MediaCharacters by Person id %d: %w", obj.ID, err)
+		return nil, fmt.Errorf(
+			"failed to get MediaCharacters by Person id %d: %w", obj.ID, err)
 	}
 
 	return list, nil
 }
 
-// producerResolver is the field resolver for Producer
-// objects.
+// producerResolver is the field resolver for Producer objects.
 type producerResolver struct{ *Resolver }
 
-func (r *producerResolver) Media(ctx context.Context, obj *data.Producer, first *int, skip *int) ([]*data.MediaProducer, error) {
+// Media resolves the Media list for Producer objects.
+func (r *producerResolver) Media(
+	ctx context.Context, obj *data.Producer, first *int, skip *int,
+) ([]*data.MediaProducer, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
@@ -453,7 +472,8 @@ func (r *producerResolver) Media(ctx context.Context, obj *data.Producer, first 
 	ser := ds.MediaProducerService
 	list, err := ser.GetByProducer(obj.ID, first, skip)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get MediaProducers by Producer id %d: %w", obj.ID, err)
+		return nil, fmt.Errorf(
+			"failed to get MediaProducers by Producer id %d: %w", obj.ID, err)
 	}
 
 	return list, nil

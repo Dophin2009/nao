@@ -5,9 +5,9 @@ type Episode {
   "An integer identifier for the Episode."
   id: Int!
   "A list of titles used to name the Episode."
-  titles: [Title!]!
+  titles(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
   "A list of synopses to describe the Episode."
-  synopses: [Title!]!
+  synopses(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
   "The duration in minutes of the Episode."
   duration: Int
   """
@@ -58,7 +58,7 @@ type EpisodeSet {
   A list of descriptions regarding the watch order
   for the EpisodeSet.
   """
-  descriptions: [Title!]!
+  descriptions(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
   # "The list of episodes in the EpisodeSet."
   # episodes: [Episode!]!
 }

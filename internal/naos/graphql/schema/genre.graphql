@@ -5,12 +5,12 @@ type Genre {
   "An integer identifier for the Genre."
   id: Int!
   "A list of names used to name the Genre."
-  names: [Title!]!
+  names(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
   """
   A list of descriptions used to name the Genre,
   typically in different languages.
   """
-  descriptions: [Title!]!
+  descriptions(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
   """
   A list of Media that are in the Genre.
   """

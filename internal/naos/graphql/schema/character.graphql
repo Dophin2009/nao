@@ -5,12 +5,12 @@ type Character {
   "An integer identifier for the Character."
   id: Int!
   "A list of names used to name the Character."
-  names: [Title!]!
+  names(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
   """
   A list of information segments, typically in different
   languages
   """
-  information: [Title!]!
+  information(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
   """
   A list of MediaCharacter describing the Media the
   Character is in.

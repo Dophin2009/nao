@@ -27,6 +27,11 @@ func (r *Resolver) Character() CharacterResolver {
 	return &characterResolver{r}
 }
 
+// Episode returns a new EpisodeResolver.
+func (r *Resolver) Episode() EpisodeResolver {
+	return &episodeResolver{r}
+}
+
 // EpisodeSet returns a new EpisodeSetResolver.
 func (r *Resolver) EpisodeSet() EpisodeSetResolver {
 	return &episodeSetResolver{r}
@@ -117,6 +122,20 @@ func (r *mutationResolver) CreateMedia(
 // characterResolver is the field resolver for Character objects.
 type characterResolver struct{ *Resolver }
 
+// Names resolves the list of names for Character objects.
+func (r *characterResolver) Names(
+	ctx context.Context, obj *data.Character, first *int, skip *int,
+) ([]*data.Title, error) {
+	return sliceTitles(obj.Names, first, skip)
+}
+
+// Information resolves the list of information for Character objects.
+func (r *characterResolver) Information(
+	ctx context.Context, obj *data.Character, first *int, skip *int,
+) ([]*data.Title, error) {
+	return sliceTitles(obj.Information, first, skip)
+}
+
 // Media resolves the MediaCharacter list for Character objects.
 func (r *characterResolver) Media(
 	ctx context.Context, obj *data.Character, first *int, skip *int,
@@ -136,8 +155,32 @@ func (r *characterResolver) Media(
 	return list, nil
 }
 
+// episodeResolver is the field resolver for Episode objects.
+type episodeResolver struct{ *Resolver }
+
+// Titles resolves the list of titles for Episode objects.
+func (r *episodeResolver) Titles(
+	ctx context.Context, obj *data.Episode, first *int, skip *int,
+) ([]*data.Title, error) {
+	return sliceTitles(obj.Titles, first, skip)
+}
+
+// Synopses resolves the list of synopses for Episode objects.
+func (r *episodeResolver) Synopses(
+	ctx context.Context, obj *data.Episode, first *int, skip *int,
+) ([]*data.Title, error) {
+	return sliceTitles(obj.Synopses, first, skip)
+}
+
 // episodeSetResolver is the field resolver for EpisodeSet objects.
 type episodeSetResolver struct{ *Resolver }
+
+// Descriptions resolves the list of descriptions for EpisodeSet objects.
+func (r *episodeSetResolver) Descriptions(
+	ctx context.Context, obj *data.EpisodeSet, first *int, skip *int,
+) ([]*data.Title, error) {
+	return sliceTitles(obj.Descriptions, first, skip)
+}
 
 // Media resolves the Media the EpisodeSet object belongs to.
 func (r *episodeSetResolver) Media(
@@ -179,6 +222,20 @@ func (r *episodeSetResolver) Episodes(
 
 // genreResolver is the field resolver for Genre objects.
 type genreResolver struct{ *Resolver }
+
+// Names resolves the list of names for Genre objects.
+func (r *genreResolver) Names(
+	ctx context.Context, obj *data.Genre, first *int, skip *int,
+) ([]*data.Title, error) {
+	return sliceTitles(obj.Names, first, skip)
+}
+
+// Descriptions resolves the list of descriptions for Genre objects.
+func (r *genreResolver) Descriptions(
+	ctx context.Context, obj *data.Genre, first *int, skip *int,
+) ([]*data.Title, error) {
+	return sliceTitles(obj.Descriptions, first, skip)
+}
 
 // Media resolves the Media in the relationship for MediaGenre objects.
 func (r *genreResolver) Media(
@@ -437,6 +494,20 @@ func (r *mediaRelationResolver) Related(
 // personResolver is the field resolver for Person objects.
 type personResolver struct{ *Resolver }
 
+// Names resolves the list of names for Person objects.
+func (r *personResolver) Names(
+	ctx context.Context, obj *data.Person, first *int, skip *int,
+) ([]*data.Title, error) {
+	return sliceTitles(obj.Names, first, skip)
+}
+
+// Information resolves the list of information segments for Person objects.
+func (r *personResolver) Information(
+	ctx context.Context, obj *data.Person, first *int, skip *int,
+) ([]*data.Title, error) {
+	return sliceTitles(obj.Information, first, skip)
+}
+
 // Media resolves the MediaCharacter relationships for
 // Person objects.
 func (r *personResolver) Media(
@@ -459,6 +530,13 @@ func (r *personResolver) Media(
 
 // producerResolver is the field resolver for Producer objects.
 type producerResolver struct{ *Resolver }
+
+// Titles resolves the list of titles for Producer objects.
+func (r *producerResolver) Titles(
+	ctx context.Context, obj *data.Producer, first *int, skip *int,
+) ([]*data.Title, error) {
+	return sliceTitles(obj.Titles, first, skip)
+}
 
 // Media resolves the Media list for Producer objects.
 func (r *producerResolver) Media(
@@ -507,18 +585,16 @@ func sliceTitles(
 	return tlist, nil
 }
 
-const (
-	errmsgGetDataServices = "failed to get data services"
-)
-
-func errorGetDataServices(err error) error {
-	return fmt.Errorf("failed to get data services: %w", err)
-}
-
 func calculatePaginationBounds(first *int, skip *int, size int) (int, int) {
-	start := 0
-	if skip != nil {
-		start = *skip + 1
+	var start int
+	if skip == nil || *skip <= 0 {
+		start = 0
+	} else {
+		start = *skip
+	}
+
+	if start >= size {
+		start = size
 	}
 
 	var end int
@@ -527,5 +603,18 @@ func calculatePaginationBounds(first *int, skip *int, size int) (int, int) {
 	} else {
 		end = start + *first
 	}
+
+	if end > size {
+		end = size
+	}
+
 	return start, end
+}
+
+const (
+	errmsgGetDataServices = "failed to get data services"
+)
+
+func errorGetDataServices(err error) error {
+	return fmt.Errorf("failed to get data services: %w", err)
 }

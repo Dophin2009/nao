@@ -12,7 +12,7 @@ type Person @goModel(model: "data.Person") {
   A list of MediaCharacter describing the Media the
   Person is involved in.
   """
-  media(first: Int!, prefix: Int): [MediaCharacter!]!
+  media(first: Int, skip: Int): [MediaCharacter!]!
 }
 
 """

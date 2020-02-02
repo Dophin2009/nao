@@ -15,7 +15,7 @@ type Character {
   A list of MediaCharacter describing the Media the
   Character is in.
   """
-  media(first: Int!, prefix: Int): [MediaCharacter!]!
+  media(first: Int, skip: Int): [MediaCharacter!]!
 }
 
 """

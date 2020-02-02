@@ -15,7 +15,7 @@ type Producer {
   A list of MediaProducer describing the Media
   created by the Producer.
   """
-  media(first: Int!, prefix: Int): [MediaProducer!]!
+  media(first: Int, skip: Int): [MediaProducer!]!
 }
 
 """

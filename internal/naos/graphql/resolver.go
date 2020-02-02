@@ -202,21 +202,19 @@ func (r *episodeSetResolver) Media(
 
 // Episodes resolves the Episode list for EpisodeSet objects.
 func (r *episodeSetResolver) Episodes(
-	ctx context.Context, obj *data.EpisodeSet) ([]*data.Episode, error) {
+	ctx context.Context, obj *data.EpisodeSet, first *int, skip *int,
+) ([]*data.Episode, error) {
 	ds, err := getDataServicesFromCtx(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
 
 	ser := ds.EpisodeService
-	list := make([]*data.Episode, len(obj.Episodes))
-	for i, id := range obj.Episodes {
-		ep, err := ser.GetByID(id)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get Episode by id %d: %w", id, err)
-		}
-		list[i] = ep
+	list, err := ser.GetMultiple(obj.Episodes, first, skip, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Epiosodes by ids: %w", err)
 	}
+
 	return list, nil
 }
 

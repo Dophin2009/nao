@@ -59,8 +59,8 @@ type EpisodeSet {
   for the EpisodeSet.
   """
   descriptions(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
-  # "The list of episodes in the EpisodeSet."
-  # episodes: [Episode!]!
+  "The list of episodes in the EpisodeSet."
+  episodes(first: Int, skip: Int): [Episode!]!
 }
 
 """

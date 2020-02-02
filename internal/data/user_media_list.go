@@ -14,6 +14,7 @@ type UserMediaList struct {
 	UserID       int
 	Names        []Title
 	Descriptions []Title
+	UserMedia    []int
 	Version      int
 	Model
 }
@@ -158,6 +159,19 @@ func (ser *UserMediaListService) Validate(m Model) error {
 		_, err = get(e.UserID, ub)
 		if err != nil {
 			return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
+		}
+
+		// Check if UserMedia with IDs specified in UserMediaList exist
+		// Get UserMedia bucket, exit if error
+		umb, err := Bucket(UserMediaBucket, tx)
+		if err != nil {
+			return fmt.Errorf("%s: %w", errmsgBucketOpen, err)
+		}
+		for _, umID := range e.UserMedia {
+			_, err = get(umID, umb)
+			if err != nil {
+				return fmt.Errorf("failed to get UserMedia with ID %d: %w", umID, err)
+			}
 		}
 
 		return nil

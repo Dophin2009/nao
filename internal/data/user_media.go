@@ -20,8 +20,7 @@ type UserMedia struct {
 	Score            *int
 	Recommended      *int
 	WatchedInstances []WatchedInstance
-	Comments         map[string]string
-	UserMediaListIDs []int
+	Comments         []Title
 	Version          int
 }
 
@@ -263,46 +262,33 @@ func (ser *UserMediaService) Validate(m Model) error {
 			return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
 		}
 
-		// Check if UserMediaLists with IDs specified in UserMedia exists
-		// Get User bucket, exit if error
-		umlb, err := Bucket(UserMediaListBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, UserMediaListBucket, err)
-		}
-		for _, listID := range e.UserMediaListIDs {
-			_, err = get(listID, umlb)
-			if err != nil {
-				return fmt.Errorf("failed to get UserMediaList with ID %d: %w", listID, err)
-			}
-		}
-
 		return nil
 	})
 }
 
 // Initialize sets initial values for some properties.
 func (ser *UserMediaService) Initialize(m Model, id int) error {
-	md, err := ser.AssertType(m)
+	um, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
-	md.ID = id
-	md.Version = 0
+	um.ID = id
+	um.Version = 0
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing UserMedia
 // in updates.
 func (ser *UserMediaService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.AssertType(n)
+	num, err := ser.AssertType(n)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
-	om, err := ser.AssertType(o)
+	oum, err := ser.AssertType(o)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
-	nm.Version = om.Version + 1
+	num.Version = oum.Version + 1
 	return nil
 }
 

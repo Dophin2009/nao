@@ -203,8 +203,9 @@ func Delete(id int, ser Service) error {
 // GetByID retrieves the persisted Model with the given ID.
 // The given service and its DB should not be nil.
 func GetByID(id int, ser Service) (Model, error) {
-	if ser == nil {
-		return nil, fmt.Errorf("service: %w", errNil)
+	// Check service
+	if err := checkService(ser); err != nil {
+		return nil, err
 	}
 
 	v, err := GetRawByID(id, ser.Bucket(), ser.Database())

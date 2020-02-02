@@ -12,7 +12,7 @@ import (
 	json "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
 	"gitlab.com/Dophin2009/nao/internal/data"
-	"gitlab.com/Dophin2009/nao/internal/naos/graphql"
+	"gitlab.com/Dophin2009/nao/internal/graphql"
 	"gitlab.com/Dophin2009/nao/internal/web"
 )
 

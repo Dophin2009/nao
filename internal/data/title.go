@@ -77,51 +77,13 @@ func (p TitlePriority) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(p.String()))
 }
 
-// TitleSetMatchLanguage returns all the Titles with the given language in the
-// set.
-func TitleSetMatchLanguage(set []Title, lang string) []Title {
-	var ss []Title
+// TitleSetFilter returns all the Titles in the set that match the filter.
+func TitleSetFilter(set []Title, keep func(t *Title) bool) []Title {
+	filtered := []Title{}
 	for _, t := range set {
-		if t.Language == lang {
-			ss = append(ss, t)
+		if keep(&t) {
+			filtered = append(filtered, t)
 		}
 	}
-
-	if len(ss) == 0 {
-		return []Title{}
-	}
-
-	return ss
-}
-
-// TitleSetMatchPrimary returns all the Titles with primary priority in the
-// set.
-func TitleSetMatchPrimary(set []Title) []Title {
-	return titleSetPriorityFilter(set, TitlePriorityPrimary)
-}
-
-// TitleSetMatchSecondary returns all the Titles with secondary priority in the
-// set.
-func TitleSetMatchSecondary(set []Title) []Title {
-	return titleSetPriorityFilter(set, TitlePrioritySecondary)
-}
-
-// TitleSetMatchOther returns all the Titles with other priority in the set.
-func TitleSetMatchOther(set []Title) []Title {
-	return titleSetPriorityFilter(set, TitlePriorityOther)
-}
-
-func titleSetPriorityFilter(set []Title, p TitlePriority) []Title {
-	var ss []Title
-	for _, t := range set {
-		if t.Priority == p {
-			ss = append(ss, t)
-		}
-	}
-
-	if len(ss) == 0 {
-		return []Title{}
-	}
-
-	return ss
+	return filtered
 }

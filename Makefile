@@ -21,14 +21,14 @@ clean:
 	rm -rf $(TARGET_DIR)/
 	find . -type f -name '*.gen.go' -delete
 
-# Fix this
-build: clean generate
-	@for module in $(MODULES) ; do \
-		$(GOBUILD) -o $(TARGET_DIR)/$$module -v $(REPO_NAME)/cmd/$$module ; \
-	done
+build: generate test
+	$(foreach module,$(MODULES),$(GOBUILD) -o $(TARGET_DIR)/$(module) -v $(REPO_NAME)/cmd/$(module))
 
 generate: clean
 	$(GORUN) scripts/gqlgen.go -v
+
+test:
+	$(GOTEST) ./...
 
 check: nakedret nargs
 

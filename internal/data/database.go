@@ -10,11 +10,10 @@ import (
 // Buckets provides an array of all the buckets in the database
 func Buckets() []string {
 	return []string{
-		MediaBucket, ProducerBucket, GenreBucket, EpisodeBucket,
-		EpisodeSetBucket, CharacterBucket, PersonBucket, UserBucket,
-		MediaProducerBucket, MediaRelationBucket, MediaGenreBucket,
-		MediaCharacterBucket, UserMediaBucket, UserMediaListBucket,
-		JWTBucket,
+		MediaBucket, ProducerBucket, GenreBucket, EpisodeBucket, EpisodeSetBucket,
+		CharacterBucket, PersonBucket, UserBucket, MediaProducerBucket,
+		MediaRelationBucket, MediaGenreBucket, MediaCharacterBucket,
+		UserCharacterBucket, UserMediaBucket, UserMediaListBucket, JWTBucket,
 	}
 }
 

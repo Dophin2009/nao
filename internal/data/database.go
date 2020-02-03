@@ -1,11 +1,61 @@
 package data
 
 import (
+	"encoding/binary"
 	"fmt"
-	"os"
-
-	bolt "go.etcd.io/bbolt"
+	"time"
 )
+
+// TODO: Implement sorting
+
+// Model encompasses all data models.
+type Model interface {
+	Metadata() *ModelMetadata
+}
+
+// ModelMetadata contains information about
+type ModelMetadata struct {
+	ID        int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Version   int
+}
+
+// Service provides various functions to operate on Models. All implementations
+// should use type assertions to guarantee prevention of runtime errors.
+type Service interface {
+	Bucket() string
+
+	Clean(m Model, tx Tx) error
+	Validate(m Model, tx Tx) error
+
+	Initialize(m Model, tx Tx) error
+	PersistOldProperties(n Model, o Model, tx Tx) error
+
+	Marshal(m Model, tx Tx) ([]byte, error)
+	Unmarshal(buf []byte, tx Tx) (Model, error)
+}
+
+// Database defines generic CRUD operations for opaque Model objects for a
+// database.
+type Database interface {
+	Transaction(writeable bool, logic func(Tx) error)
+
+	Create(m Model, ser Service, tx Tx) (int, error)
+	Update(m Model, ser Service, tx Tx) error
+	Delete(id int, ser Service, tx Tx) error
+	GetByID(id int, ser Service, tx Tx) (Model, error)
+	GetRawByID(id int, ser Service, tx Tx) ([]byte, error)
+	GetMultiple(ids []int, first *int, skip *int, ser Service, tx Tx,
+		keep func(Model) bool) ([]Model, error)
+	GetAll(first *int, skip *int, ser Service, tx Tx) ([]Model, error)
+	GetFilter(first *int, skip *int, ser Service, tx Tx, keep func(Model) bool)
+}
+
+// Tx defines a wrapper for database transactions objects.
+type Tx interface {
+	Unwrap() interface{}
+}
 
 // Buckets provides an array of all the buckets in the database
 func Buckets() []string {
@@ -18,58 +68,16 @@ func Buckets() []string {
 	}
 }
 
-// ConnectDatabase connects to the database file at the given path and return a
-// bolt.DB struct
-func ConnectDatabase(dbPath string, mode os.FileMode, create bool) (*bolt.DB, error) {
-	// open database connection
-	db, err := bolt.Open(dbPath, mode, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
+// checkService returns an error if the given service or its DB are nil.
+func checkService(ser Service) error {
+	if ser == nil {
+		return fmt.Errorf("service: %w", errNil)
 	}
-
-	// if specified to create buckets, cycle through all strings in Buckets() and
-	// create buckets
-	if create {
-		err = db.Update(func(tx *bolt.Tx) error {
-			for _, bucket := range Buckets() {
-				_, err = tx.CreateBucketIfNotExists([]byte(bucket))
-				if err != nil {
-					return fmt.Errorf("failed to create bucket: %w", err)
-				}
-			}
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return db, nil
-}
-
-// ClearDatabase removes all buckets in the given database
-func ClearDatabase(db *bolt.DB) error {
-	err := db.Update(func(tx *bolt.Tx) error {
-		for _, bucket := range Buckets() {
-			err := tx.DeleteBucket([]byte(bucket))
-			if err != nil {
-				return fmt.Errorf("failed to delete bucket: %w", err)
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-// Bucket returns the database bucket with the given name
-func Bucket(name string, tx *bolt.Tx) (*bolt.Bucket, error) {
-	bucket := tx.Bucket([]byte(name))
-	if bucket == nil {
-		return nil, fmt.Errorf("bucket: %w", errNotFound)
-	}
-	return bucket, nil
+func itob(v int) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
 }

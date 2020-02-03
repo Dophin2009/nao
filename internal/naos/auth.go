@@ -1,7 +1,6 @@
 package naos
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -33,32 +32,4 @@ func (au *JWTAuthenticator) Authenticate(
 	}
 
 	return
-}
-
-// UserPermissionAuthenticator is an authenticator that checks whether the user
-// has sufficient permissions.
-type UserPermissionAuthenticator struct {
-	Service *data.UserService
-}
-
-// Authenticate checks if the user with the given ID has permissions that meet
-// the requirements.
-func (au *UserPermissionAuthenticator) Authenticate(
-	userID int, req *data.Permission) (*data.User, error) {
-	user, err := au.Service.GetByID(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	if !au.RequirementsMet(&user.Permissions, req) {
-		return nil, errors.New("insufficient permissions")
-	}
-	return user, nil
-}
-
-// RequirementsMet checks if the given permissions satisfy the required
-// permissions.
-func (au *UserPermissionAuthenticator) RequirementsMet(
-	perm *data.Permission, req *data.Permission) bool {
-	return !((req.ReadMedia && !perm.ReadMedia) || (req.WriteMedia && !perm.WriteMedia))
 }

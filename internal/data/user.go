@@ -15,12 +15,10 @@ import (
 
 // User represents a single user.
 type User struct {
-	Username string
-	Email    string
-	Password []byte
-	// Permissions states the permissions the user has regarding shared/global
-	// data.
-	Permissions Permission
+	Username    string
+	Email       string
+	Password    []byte
+	Permissions UserPermission
 	Meta        ModelMetadata
 }
 
@@ -29,16 +27,12 @@ func (u *User) Metadata() *ModelMetadata {
 	return &u.Meta
 }
 
-// Permission contains a number of permissions for reading/writing data.
-type Permission struct {
-	// ReadMedia is the ability to query all Media.
-	ReadMedia bool
-	// ReadUsers is the ability to query all Users
-	// and their data.
-	ReadUsers bool
-	// WriteMedia is the ability modify all Media.
+// UserPermission contains a number of permissions for users for
+// reading/writing data.
+type UserPermission struct {
+	// WriteMedia is the ability modify global Media.
 	WriteMedia bool
-	// WriteUsers is the ability to modify all Users.
+	// WriteUsers is the ability to modify other Users.
 	WriteUsers bool
 }
 
@@ -189,6 +183,28 @@ func (ser *UserService) GetByUsername(username string) (*User, error) {
 	}
 
 	return e, nil
+}
+
+// Authorize checks if the user with the given ID has permissions that meet
+// the requirements.
+func (ser *UserService) Authorize(userID int, req *UserPermission) (*User, error) {
+	user, err := ser.GetByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !ser.RequirementsMet(&user.Permissions, req) {
+		return nil, errors.New("insufficient permissions")
+	}
+	return user, nil
+}
+
+// RequirementsMet checks if the given permissions satisfy the required
+// permissions.
+func (ser *UserService) RequirementsMet(
+	perm *UserPermission, req *UserPermission) bool {
+	return !(req.WriteMedia && !perm.WriteMedia) &&
+		!(req.WriteUsers && !perm.WriteUsers)
 }
 
 // AuthenticateWithPassword checks if the password for the User given by the

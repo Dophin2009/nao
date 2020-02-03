@@ -1,6 +1,7 @@
 package data
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strings"
@@ -266,9 +267,23 @@ func (ser *UserService) Validate(m Model) error {
 			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 		}
 
+		// Find last key; will stop iteration when reached
+		var lk []byte
+		d := b.Cursor()
+		lk, _ = d.Last()
+
 		// Check for duplicate username
 		c := b.Cursor()
-		for id, v := c.First(); id != nil; id, v = c.Next() {
+		lastReached := false
+		for k, v := c.First(); !lastReached; k, v = c.Next() {
+			if bytes.Equal(k, lk) {
+				lastReached = true
+			}
+
+			if k == nil {
+				continue
+			}
+
 			m, err := ser.Unmarshal(v)
 			if err != nil {
 				return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)

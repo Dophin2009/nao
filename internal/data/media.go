@@ -252,7 +252,7 @@ func (ser *MediaService) PersistOldProperties(n Model, o Model, _ Tx) error {
 }
 
 // Marshal transforms the given Media into JSON.
-func (ser *MediaService) Marshal(m Model, _ Tx) ([]byte, error) {
+func (ser *MediaService) Marshal(m Model) ([]byte, error) {
 	md, err := ser.AssertType(m)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -267,7 +267,7 @@ func (ser *MediaService) Marshal(m Model, _ Tx) ([]byte, error) {
 }
 
 // Unmarshal parses the given JSON into Media.
-func (ser *MediaService) Unmarshal(buf []byte, _ Tx) (Model, error) {
+func (ser *MediaService) Unmarshal(buf []byte) (Model, error) {
 	var md Media
 	err := json.Unmarshal(buf, &md)
 	if err != nil {

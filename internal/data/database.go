@@ -28,12 +28,11 @@ type Service interface {
 
 	Clean(m Model, tx Tx) error
 	Validate(m Model, tx Tx) error
-
 	Initialize(m Model, tx Tx) error
 	PersistOldProperties(n Model, o Model, tx Tx) error
 
-	Marshal(m Model, tx Tx) ([]byte, error)
-	Unmarshal(buf []byte, tx Tx) (Model, error)
+	Marshal(m Model) ([]byte, error)
+	Unmarshal(buf []byte) (Model, error)
 }
 
 // Database defines generic CRUD operations for opaque Model objects for a

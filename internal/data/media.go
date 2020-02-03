@@ -44,27 +44,27 @@ type Season struct {
 type Quarter int
 
 const (
-	// Winter is the first quarter of the year, encapsulating the months January,
+	// QuarterWinter is the first quarter of the year, encapsulating the months January,
 	// February, and March.
-	Winter Quarter = iota + 1
+	QuarterWinter Quarter = iota + 1
 
-	// Spring is the second quarter of the year, encapsulating the months April,
+	// QuarterSpring is the second quarter of the year, encapsulating the months April,
 	// May, and June.
-	Spring
+	QuarterSpring
 
-	// Summer is the third quarter of the year, encapsulating the months July,
+	// QuarterSummer is the third quarter of the year, encapsulating the months July,
 	// August, and September.
-	Summer
+	QuarterSummer
 
-	// Fall is the fouth quarter of the year, encapsulating the months October,
+	// QuarterFall is the fouth quarter of the year, encapsulating the months October,
 	// November, and December.
-	Fall
+	QuarterFall
 )
 
 // IsValid checks if the Quarter has a value that is a valid one.
 func (q Quarter) IsValid() bool {
 	switch q {
-	case Winter, Spring, Summer, Fall:
+	case QuarterWinter, QuarterSpring, QuarterSummer, QuarterFall:
 		return true
 	}
 	return false
@@ -73,13 +73,13 @@ func (q Quarter) IsValid() bool {
 // String returns the written name of the Quarter.
 func (q Quarter) String() string {
 	switch q {
-	case Winter:
+	case QuarterWinter:
 		return "Winter"
-	case Spring:
+	case QuarterSpring:
 		return "Spring"
-	case Summer:
+	case QuarterSummer:
 		return "Summer"
-	case Fall:
+	case QuarterFall:
 		return "Fall"
 	}
 	return fmt.Sprintf("%d", int(q))
@@ -94,13 +94,13 @@ func (q *Quarter) UnmarshalGQL(v interface{}) error {
 
 	switch str {
 	case "Winter":
-		*q = Winter
+		*q = QuarterWinter
 	case "Spring":
-		*q = Spring
+		*q = QuarterSpring
 	case "Summer":
-		*q = Summer
+		*q = QuarterSummer
 	case "Fall":
-		*q = Fall
+		*q = QuarterFall
 	default:
 		return fmt.Errorf("%s: %w", str, errInvalid)
 	}

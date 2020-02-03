@@ -42,21 +42,21 @@ type WatchedInstance struct {
 type WatchStatus int
 
 const (
-	// Completed means that the User has consumed the Media in its entirety at
+	// WatchStatusCompleted means that the User has consumed the Media in its entirety at
 	// least once.
-	Completed WatchStatus = iota
+	WatchStatusCompleted WatchStatus = iota
 
-	// Planning means that the User is planning to consume the Media sometime in
+	// WatchStatusPlanning means that the User is planning to consume the Media sometime in
 	// the future.
-	Planning
+	WatchStatusPlanning
 
-	// Dropped means that the User has never consumed the Media in its entirety
+	// WatchStatusDropped means that the User has never consumed the Media in its entirety
 	// and abandoned it in the middle somewhere.
-	Dropped
+	WatchStatusDropped
 
-	// Hold means the User has begun consuming the Media, but has placed it on
+	// WatchStatusHold means the User has begun consuming the Media, but has placed it on
 	// hold.
-	Hold
+	WatchStatusHold
 )
 
 // UnmarshalJSON defines custom JSON deserialization for WatchStatus.
@@ -68,10 +68,10 @@ func (ws *WatchStatus) UnmarshalJSON(data []byte) (err error) {
 	}
 
 	value, ok := map[string]WatchStatus{
-		"Completed": Completed,
-		"Planning":  Planning,
-		"Dropped":   Dropped,
-		"Hold":      Hold,
+		"Completed": WatchStatusCompleted,
+		"Planning":  WatchStatusPlanning,
+		"Dropped":   WatchStatusDropped,
+		"Hold":      WatchStatusHold,
 	}[s]
 	if !ok {
 		return fmt.Errorf("watch status value %q: %w", s, errInvalid)
@@ -83,10 +83,10 @@ func (ws *WatchStatus) UnmarshalJSON(data []byte) (err error) {
 // MarshalJSON defines custom JSON serialization for WatchStatus.
 func (ws *WatchStatus) MarshalJSON() (v []byte, err error) {
 	value, ok := map[WatchStatus]string{
-		Completed: "Completed",
-		Planning:  "Planning",
-		Dropped:   "Dropped",
-		Hold:      "Hold",
+		WatchStatusCompleted: "Completed",
+		WatchStatusPlanning:  "Planning",
+		WatchStatusDropped:   "Dropped",
+		WatchStatusHold:      "Hold",
 	}[*ws]
 	if !ok {
 		return nil, fmt.Errorf("watch status value %d: %w", *ws, err)

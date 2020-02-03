@@ -17,7 +17,13 @@ type BoltDatabase struct {
 
 // BoltTx implements Transaction for boltDB.
 type BoltTx struct {
+	DB *BoltDatabase
 	Tx *bolt.Tx
+}
+
+// Database returns the database of the transaction.
+func (btx *BoltTx) Database() Database {
+	return btx.DB
 }
 
 // Unwrap returns the boltDB transaction object.
@@ -91,14 +97,19 @@ func (db *BoltDatabase) Bucket(name string, tx Tx) (*bolt.Bucket, error) {
 
 // Transaction is a wrapper method that begins a transaction and passes it to
 // the given function.
-func (db *BoltDatabase) Transaction(writeable bool, logic func(*bolt.Tx) error) error {
-	tx, err := db.Bolt.Begin(writeable)
+func (db *BoltDatabase) Transaction(writable bool, logic func(Tx) error) error {
+	tx, err := db.Bolt.Begin(writable)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
+
+	btx := &BoltTx{
+		DB: db,
+		Tx: tx,
+	}
 	defer tx.Rollback()
 
-	err = logic(tx)
+	err = logic(btx)
 	if err != nil {
 		return err
 	}
@@ -559,6 +570,29 @@ func (db *BoltDatabase) unwrapTx(tx Tx) (*bolt.Tx, error) {
 	return inner, nil
 }
 
+func (db *BoltDatabase) calculatePaginationBounds(first *int, skip *int) (int, int) {
+	// The number of elements to skip
+	var start int
+	if skip == nil || *skip <= 0 {
+		start = 0
+	} else {
+		start = *skip
+	}
+
+	// When iterator reaches this number, stop
+	var end int
+	if first == nil || *first < 0 {
+		// Return all elements if `first` is nil
+		end = -1
+	} else if *first == 0 {
+		end = start
+	} else {
+		end = start + *first
+	}
+
+	return start, end
+}
+
 var (
 	// errNil is an error returned when some pointer is nil.
 	errNil = errors.New("is nil")
@@ -589,26 +623,3 @@ const (
 	errmsgJSONMarshal   = "failed to marshal to JSON"
 	errmsgJSONUnmarshal = "failed to unmarshal from JSON"
 )
-
-func (db *BoltDatabase) calculatePaginationBounds(first *int, skip *int) (int, int) {
-	// The number of elements to skip
-	var start int
-	if skip == nil || *skip <= 0 {
-		start = 0
-	} else {
-		start = *skip
-	}
-
-	// When iterator reaches this number, stop
-	var end int
-	if first == nil || *first < 0 {
-		// Return all elements if `first` is nil
-		end = -1
-	} else if *first == 0 {
-		end = start
-	} else {
-		end = start + *first
-	}
-
-	return start, end
-}

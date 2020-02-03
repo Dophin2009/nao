@@ -39,7 +39,7 @@ type Service interface {
 // Database defines generic CRUD operations for opaque Model objects for a
 // database.
 type Database interface {
-	Transaction(writeable bool, logic func(Tx) error)
+	Transaction(writable bool, logic func(Tx) error) error
 
 	Create(m Model, ser Service, tx Tx) (int, error)
 	Update(m Model, ser Service, tx Tx) error
@@ -49,11 +49,13 @@ type Database interface {
 	GetMultiple(ids []int, first *int, skip *int, ser Service, tx Tx,
 		keep func(Model) bool) ([]Model, error)
 	GetAll(first *int, skip *int, ser Service, tx Tx) ([]Model, error)
-	GetFilter(first *int, skip *int, ser Service, tx Tx, keep func(Model) bool)
+	GetFilter(first *int, skip *int, ser Service, tx Tx,
+		keep func(Model) bool) ([]Model, error)
 }
 
 // Tx defines a wrapper for database transactions objects.
 type Tx interface {
+	Database() Database
 	Unwrap() interface{}
 }
 

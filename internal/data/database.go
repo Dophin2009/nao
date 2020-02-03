@@ -13,7 +13,7 @@ func Buckets() []string {
 		MediaBucket, ProducerBucket, GenreBucket, EpisodeBucket, EpisodeSetBucket,
 		CharacterBucket, PersonBucket, UserBucket, MediaProducerBucket,
 		MediaRelationBucket, MediaGenreBucket, MediaCharacterBucket,
-		UserCharacterBucket, UserMediaBucket, UserMediaListBucket, JWTBucket,
+		UserCharacterBucket, UserEpisodeBucket, UserMediaBucket, UserMediaListBucket, JWTBucket,
 	}
 }
 

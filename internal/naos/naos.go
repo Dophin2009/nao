@@ -2,10 +2,10 @@ package naos
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
+	log "github.com/sirupsen/logrus"
 	"gitlab.com/Dophin2009/nao/internal/data"
 	"gitlab.com/Dophin2009/nao/internal/graphql"
 	"gitlab.com/Dophin2009/nao/internal/web"
@@ -26,7 +26,10 @@ func (a *Application) HTTPServer() http.Server {
 // NewApplication returns a new naos Application.
 func NewApplication(c *Configuration) (*Application, error) {
 	// Open database connection
-	log.Println("Establishing database connection")
+	log.WithFields(log.Fields{
+		"path":     c.DB.Path,
+		"filemode": c.DB.Filemode,
+	}).Info("Establishing database connection")
 	db, err := data.ConnectDatabase(
 		c.DB.Path, os.FileMode(c.DB.Filemode), true,
 	)

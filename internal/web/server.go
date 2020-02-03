@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	json "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
+	log "github.com/sirupsen/logrus"
 )
 
 // HTTPReciever is a type alias for functions that handle HTTP requests.
@@ -96,7 +96,10 @@ func (s *Server) HTTPServer() http.Server {
 
 // RegisterHandler registers the given handler with the server.
 func (s *Server) RegisterHandler(h Handler) {
-	log.Printf("Registering handler: %s %s", h.Method, h.PathString())
+	log.WithFields(log.Fields{
+		"method": h.Method,
+		"path":   h.PathString(),
+	}).Info("Registering handler")
 	s.Router.Handle(h.Method, h.PathString(), h.HandlerFunc())
 }
 

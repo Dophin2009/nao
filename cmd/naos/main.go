@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"gitlab.com/Dophin2009/nao/internal/data"
 	"gitlab.com/Dophin2009/nao/internal/naos"
 )
@@ -17,7 +17,10 @@ func main() {
 	// Exit with status code 0 at the end
 	defer os.Exit(0)
 
-	println("-------------------: NAO SERVER :-------------------")
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+
 	// Read configuration files
 	conf, err := naos.ReadConfigs()
 	if err != nil {
@@ -37,7 +40,9 @@ func main() {
 	// Launch server in goroutine
 	shttp := s.HTTPServer()
 	go func() {
-		log.Println("Launching server on", shttp.Addr)
+		log.WithFields(log.Fields{
+			"address": shttp.Addr,
+		}).Info("Launching server")
 		err := shttp.ListenAndServe()
 		if err != nil {
 			log.Fatal(err)

@@ -10,6 +10,7 @@ require (
 	github.com/json-iterator/go v1.1.8
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/rs/cors v1.7.0
+	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/viper v1.4.0
 	github.com/vektah/gqlparser v1.2.0
 	go.etcd.io/bbolt v1.3.3

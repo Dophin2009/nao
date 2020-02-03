@@ -3,7 +3,7 @@ A type that describes a relationship between a
 Media and a Producer.
 """
 type MediaProducer {
-  "The metadata for the Character."
+  "The metadata for the MediaProducer."
   meta: Metadata!
   """
   The role the Producer plays in the production
@@ -21,7 +21,7 @@ An input to create or update a relationship between a
 Media and a Producer.
 """
 input MediaProducerInput @goModel(model: "data.MediaProducer") {
-  "The metadata for the Character."
+  "The metadata for the MediaProducer."
   meta: MetadataInput!
   """
   The role the Producer plays in the production

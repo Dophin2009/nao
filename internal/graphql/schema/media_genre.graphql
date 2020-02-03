@@ -3,7 +3,7 @@ A type to describe a relationship between a Media
 and a Genre.
 """
 type MediaGenre {
-  "The metadata for the Character."
+  "The metadata for the MediaGenre."
   meta: Metadata!
   "The Media in the relationship."
   media: Media!
@@ -16,7 +16,7 @@ An input to create or update a relationship between
 a Media and a Genre.
 """
 input MediaGenreInput @goModel(model: "data.MediaGenre") {
-  "The metadata for the Character."
+  "The metadata for the MediaGenre."
   meta: MetadataInput!
   """
   The ID for the Media in the relationship. The Media

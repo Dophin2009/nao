@@ -2,7 +2,7 @@
 A type that describes an Episode.
 """
 type Episode {
-  "The metadata for the Character."
+  "The metadata for the Episode."
   meta: Metadata!
   "A list of titles used to name the Episode."
   titles(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
@@ -26,7 +26,7 @@ type Episode {
 An input to create or update an Episode.
 """
 input EpisodeInput @goModel(model: "data.Episode") {
-  "The metadata for the Character."
+  "The metadata for the Episode."
   meta: MetadataInput!
   "A list of titles used to name the Episode."
   titles: [TitleInput!]!
@@ -50,7 +50,7 @@ input EpisodeInput @goModel(model: "data.Episode") {
 A type that describes an ordered set of Episodes.
 """
 type EpisodeSet {
-  "The metadata for the Character."
+  "The metadata for the Episode."
   meta: Metadata!
   "The Media the EpisodeSet belongs to."
   media: Media!
@@ -67,7 +67,7 @@ type EpisodeSet {
 An input to create or update an EpisodeSet.
 """
 input EpisodeSetInput @goModel(model: "data.EpisodeSet") {
-  "The metadata for the Character."
+  "The metadata for the Episode."
   meta: MetadataInput!
   "The ID of the Media the EpisodeSet belongs to."
   mediaID: Int!

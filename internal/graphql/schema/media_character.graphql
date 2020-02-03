@@ -3,7 +3,7 @@ A type to describe a relationship between a Media and
 a Character or a Person.
 """
 type MediaCharacter {
-  "The metadata for the Character."
+  "The metadata for the MediaCharacter."
   meta: Metadata!
   "The Media in the relationship."
   media: Media!
@@ -22,7 +22,7 @@ An input to create or update a relationship between a
 Media and a Character or a Person.
 """
 input MediaCharacterInput @goModel(model: "data.MediaCharacter") {
-  "The metadata for the Character."
+  "The metadata for the MediaCharacter."
   meta: MetadataInput!
   """
   The ID of the Media in the relationship. The Media

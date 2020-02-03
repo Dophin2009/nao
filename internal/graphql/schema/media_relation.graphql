@@ -2,7 +2,7 @@
 A type that describes a relationship between two Media.
 """
 type MediaRelation {
-  "The metadata for the Character."
+  "The metadata for the MediaRelation."
   meta: Metadata!
   "The owning Media of the relationship."
   owner: Media!
@@ -17,7 +17,7 @@ A type to create or update a relationship between two
 Media.
 """
 input MediaRelationInput @goModel(model: "data.MediaRelation") {
-  "The metadata for the Character."
+  "The metadata for the MediaRelation."
   meta: MetadataInput!
   """
   The ID of the owning Media of the relationship. The

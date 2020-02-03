@@ -2,7 +2,7 @@
 A type that describes a Producer.
 """
 type Producer {
-  "The metadata for the Character."
+  "The metadata for the Producer."
   meta: Metadata!
   "A list of titles used to name the Producer."
   titles(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
@@ -22,7 +22,7 @@ type Producer {
 An input to create or update an existing Producer.
 """
 input ProducerInput @goModel(model: "data.Producer") {
-  "The metadata for the Character."
+  "The metadata for the Producer."
   meta: MetadataInput!
   "A list of titles used to name the Producer."
   titles: [TitleInput!]!

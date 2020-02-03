@@ -202,7 +202,7 @@ func (ser *UserService) ChangePassword(userID int, password string) error {
 		return fmt.Errorf("failed to get User by ID %d: %w", userID, err)
 	}
 
-	pass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	pass, err := ser.HashPassword([]byte(password))
 	if err != nil {
 		return fmt.Errorf("failed to generate password hash: %w", err)
 	}
@@ -228,6 +228,16 @@ func (ser *UserService) ChangePassword(userID int, password string) error {
 
 		return nil
 	})
+}
+
+// HashPassword hashes the given password and returns the result.
+func (ser *UserService) HashPassword(pass []byte) ([]byte, error) {
+	res, err := bcrypt.GenerateFromPassword(pass, bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate password hash: %w", err)
+	}
+
+	return res, nil
 }
 
 // Database returns the database reference.
@@ -314,7 +324,7 @@ func (ser *UserService) Initialize(m Model) error {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
-	pass, err := bcrypt.GenerateFromPassword(u.Password, bcrypt.DefaultCost)
+	pass, err := ser.HashPassword(u.Password)
 	if err != nil {
 		return fmt.Errorf("failed to generate password hash: %w", err)
 	}

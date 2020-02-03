@@ -1,7 +1,6 @@
 package data
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"strings"
@@ -143,41 +142,31 @@ func (ser *UserService) GetByUsername(username string) (*User, error) {
 			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 		}
 
-		// Find last key; will stop iteration when reached
-		var lk []byte
-		d := b.Cursor()
-		lk, _ = d.Last()
-
-		// Iterate through values until username matches
-		c := b.Cursor()
-		lastReached := false
-		for k, v := c.First(); !lastReached; k, v = c.Next() {
-			if bytes.Equal(k, lk) {
-				lastReached = true
-			}
-
-			if k == nil {
-				continue
-			}
-
+		err = iterateKeys(b, func(v []byte) (bool, error) {
 			m, err := ser.Unmarshal(v)
 			if err != nil {
-				return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
+				return true, fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
 			}
 
 			u, err := ser.AssertType(m)
 			if err != nil {
-				return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+				return true, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 			}
 
 			if u.Username == username {
 				*e = *u
-				return nil
+				return true, nil
 			}
+
+			return false, nil
+		})
+		if err != nil {
+			return fmt.Errorf("failed to iterate through keys: %w", err)
 		}
 
 		return nil
 	})
+
 	if err != nil {
 		return nil, err
 	}

@@ -421,6 +421,50 @@ func GetFilter(
 	return list, nil
 }
 
+// iterateKeys iterates through the keys of the given database bucket and
+// passes the value at each key to some function.
+//
+// The loop exits only if do returns a true exit flag. If an error is returned
+// but exit is false, the error will be ignored. If an error is returned and
+// exit is true, the error will be returned.
+func iterateKeys(b *bolt.Bucket, do func(v []byte) (exit bool, err error)) error {
+	var lk []byte
+	d := b.Cursor()
+	lk, _ = d.Last()
+
+	c := b.Cursor()
+	lastReached := false
+	for k, v := c.First(); !lastReached; k, v = c.Next() {
+		if bytes.Equal(k, lk) {
+			lastReached = true
+		}
+
+		if k == nil {
+			continue
+		}
+
+		exit, err := do(v)
+		if !exit {
+			return fmt.Errorf("failed to perform operations on value: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// get returns the raw value stored at the given key in the given bucket.
+func get(id int, bucket *bolt.Bucket) ([]byte, error) {
+	if bucket == nil {
+		return nil, fmt.Errorf("bucket: %w", errNil)
+	}
+
+	v := bucket.Get(itob(id))
+	if v == nil {
+		return nil, fmt.Errorf("model with id %d: %w", id, errNotFound)
+	}
+	return v, nil
+}
+
 func calculatePaginationBounds(first *int, skip *int) (int, int) {
 	// The number of elements to skip
 	var start int
@@ -442,19 +486,6 @@ func calculatePaginationBounds(first *int, skip *int) (int, int) {
 	}
 
 	return start, end
-}
-
-// get returns the raw value stored at the given key in the given bucket.
-func get(id int, bucket *bolt.Bucket) ([]byte, error) {
-	if bucket == nil {
-		return nil, fmt.Errorf("bucket: %w", errNil)
-	}
-
-	v := bucket.Get(itob(id))
-	if v == nil {
-		return nil, fmt.Errorf("model with id %d: %w", id, errNotFound)
-	}
-	return v, nil
 }
 
 // checkService returns an error if the given service or its DB are nil.

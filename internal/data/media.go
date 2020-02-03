@@ -9,7 +9,6 @@ import (
 	"time"
 
 	json "github.com/json-iterator/go"
-	bolt "go.etcd.io/bbolt"
 )
 
 // TODO: Move UnmarshalGQL and MarshalGQL of Quarter to graphql package; they
@@ -116,28 +115,26 @@ func (q Quarter) MarshalGQL(w io.Writer) {
 const MediaBucket = "Media"
 
 // MediaService performs operations on Media.
-type MediaService struct {
-	DB *bolt.DB
-}
+type MediaService struct{}
 
 // Create persists the given Media.
-func (ser *MediaService) Create(md *Media) error {
-	return Create(md, ser)
+func (ser *MediaService) Create(md *Media, tx Tx) (int, error) {
+	return tx.Database().Create(md, ser, tx)
 }
 
 // Update replaces the value of the Media with the given ID.
-func (ser *MediaService) Update(md *Media) error {
-	return Update(md, ser)
+func (ser *MediaService) Update(md *Media, tx Tx) error {
+	return tx.Database().Update(md, ser, tx)
 }
 
 // Delete deletes the Media with the given ID.
-func (ser *MediaService) Delete(id int) error {
-	return Delete(id, ser)
+func (ser *MediaService) Delete(id int, tx Tx) error {
+	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of Media.
-func (ser *MediaService) GetAll(first *int, skip *int) ([]*Media, error) {
-	vlist, err := GetAll(ser, first, skip)
+func (ser *MediaService) GetAll(first *int, skip *int, tx Tx) ([]*Media, error) {
+	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -151,9 +148,9 @@ func (ser *MediaService) GetAll(first *int, skip *int) ([]*Media, error) {
 
 // GetFilter retrieves all persisted values of Media that pass the filter.
 func (ser *MediaService) GetFilter(
-	first *int, skip *int, keep func(md *Media) bool,
+	first *int, skip *int, tx Tx, keep func(md *Media) bool,
 ) ([]*Media, error) {
-	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
+	vlist, err := tx.Database().GetFilter(first, skip, ser, tx, func(m Model) bool {
 		md, err := ser.AssertType(m)
 		if err != nil {
 			return false
@@ -174,15 +171,16 @@ func (ser *MediaService) GetFilter(
 // GetMultiple retrieves the persisted Media values specified by the given
 // IDs that pass the filter.
 func (ser *MediaService) GetMultiple(
-	ids []int, first *int, skip *int, keep func(md *Media) bool,
+	ids []int, first *int, skip *int, tx Tx, keep func(md *Media) bool,
 ) ([]*Media, error) {
-	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
-		md, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(md)
-	})
+	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+		func(m Model) bool {
+			md, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(md)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -195,8 +193,8 @@ func (ser *MediaService) GetMultiple(
 }
 
 // GetByID retrieves the persisted Media with the given ID.
-func (ser *MediaService) GetByID(id int) (*Media, error) {
-	m, err := GetByID(id, ser)
+func (ser *MediaService) GetByID(id int, tx Tx) (*Media, error) {
+	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -208,18 +206,13 @@ func (ser *MediaService) GetByID(id int) (*Media, error) {
 	return md, nil
 }
 
-// Database returns the database reference.
-func (ser *MediaService) Database() *bolt.DB {
-	return ser.DB
-}
-
 // Bucket returns the name of the bucket for Media.
 func (ser *MediaService) Bucket() string {
 	return MediaBucket
 }
 
 // Clean cleans the given Media for storage
-func (ser *MediaService) Clean(m Model) error {
+func (ser *MediaService) Clean(m Model, _ Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -239,7 +232,7 @@ func (ser *MediaService) Clean(m Model) error {
 }
 
 // Validate checks if the given Media is valid.
-func (ser *MediaService) Validate(m Model) error {
+func (ser *MediaService) Validate(m Model, _ Tx) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -248,18 +241,18 @@ func (ser *MediaService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *MediaService) Initialize(m Model) error {
+func (ser *MediaService) Initialize(m Model, _ Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing Media in
 // updates.
-func (ser *MediaService) PersistOldProperties(n Model, o Model) error {
+func (ser *MediaService) PersistOldProperties(n Model, o Model, _ Tx) error {
 	return nil
 }
 
 // Marshal transforms the given Media into JSON.
-func (ser *MediaService) Marshal(m Model) ([]byte, error) {
+func (ser *MediaService) Marshal(m Model, _ Tx) ([]byte, error) {
 	md, err := ser.AssertType(m)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -274,7 +267,7 @@ func (ser *MediaService) Marshal(m Model) ([]byte, error) {
 }
 
 // Unmarshal parses the given JSON into Media.
-func (ser *MediaService) Unmarshal(buf []byte) (Model, error) {
+func (ser *MediaService) Unmarshal(buf []byte, _ Tx) (Model, error) {
 	var md Media
 	err := json.Unmarshal(buf, &md)
 	if err != nil {

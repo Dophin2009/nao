@@ -498,7 +498,7 @@ func (db *BoltDatabase) GetFilter(first *int, skip *int, ser Service, tx Tx,
 // but exit is false, the error will be ignored. If an error is returned and
 // exit is true, the error will be returned.
 func (db *BoltDatabase) iterateKeys(bucketName string, tx Tx,
-	do func(v []byte, tx Tx) (exit bool, err error)) error {
+	do func(k, v []byte, tx Tx) (exit bool, err error)) error {
 	// Unwrap transaction
 	_, err := db.unwrapTx(tx)
 	if err != nil {
@@ -513,7 +513,7 @@ func (db *BoltDatabase) iterateKeys(bucketName string, tx Tx,
 
 	c := b.Cursor()
 	for k, v := c.First(); k != nil; k, v = c.Next() {
-		exit, err := do(v, tx)
+		exit, err := do(k, v, tx)
 		if !exit {
 			return fmt.Errorf("iteration of values aborted: %w", err)
 		}

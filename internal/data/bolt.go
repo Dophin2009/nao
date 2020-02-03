@@ -1,7 +1,6 @@
 package data
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -458,11 +457,6 @@ func (db *BoltDatabase) GetFilter(first *int, skip *int, ser Service, tx Tx,
 	// Calculate start and end numbers
 	start, end := db.calculatePaginationBounds(first, skip)
 
-	// Find last key; will stop iteration when reached
-	var lk []byte
-	d := b.Cursor()
-	lk, _ = d.Last()
-
 	// Get cursor for bucket
 	c := b.Cursor()
 
@@ -478,12 +472,7 @@ func (db *BoltDatabase) GetFilter(first *int, skip *int, ser Service, tx Tx,
 
 	// Iterate until end is reached
 	list := []Model{}
-	for i := start; i < end; k, v = c.Next() {
-		// If no key found, continue to next
-		if k == nil {
-			continue
-		}
-
+	for i := start; i < end && k != nil; k, v = c.Next() {
 		// Unmarshal element
 		m, err := ser.Unmarshal(v, tx)
 		if err != nil {
@@ -496,12 +485,6 @@ func (db *BoltDatabase) GetFilter(first *int, skip *int, ser Service, tx Tx,
 		}
 
 		list = append(list, m)
-
-		// If key reached last, exit
-		if bytes.Equal(k, lk) {
-			break
-		}
-
 		i++
 	}
 
@@ -522,23 +505,11 @@ func (db *BoltDatabase) iterateKeys(bucketName string, tx Tx,
 		return fmt.Errorf("%s %q: %w", errmsgBucketOpen, bucketName, err)
 	}
 
-	var lk []byte
-	d := b.Cursor()
-	lk, _ = d.Last()
-
 	c := b.Cursor()
-	for k, v := c.First(); ; k, v = c.Next() {
-		if k == nil {
-			continue
-		}
-
+	for k, v := c.First(); k != nil; k, v = c.Next() {
 		exit, err := do(v, tx)
 		if !exit {
 			return fmt.Errorf("failed to perform operations on value: %w", err)
-		}
-
-		if bytes.Equal(k, lk) {
-			break
 		}
 
 	}

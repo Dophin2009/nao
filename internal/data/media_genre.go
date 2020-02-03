@@ -11,16 +11,14 @@ import (
 // MediaGenre represents a relationship between single instances of Media and
 // Genre.
 type MediaGenre struct {
-	ID      int
 	MediaID int
 	GenreID int
-	Version int
-	Model
+	Meta    ModelMetadata
 }
 
-// Iden returns the ID.
-func (mc *MediaGenre) Iden() int {
-	return mc.ID
+// Metadata returns Meta.
+func (mg *MediaGenre) Metadata() *ModelMetadata {
+	return &mg.Meta
 }
 
 // MediaGenreBucket is the name of the database bucket for MediaGenre.
@@ -181,28 +179,13 @@ func (ser *MediaGenreService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *MediaGenreService) Initialize(m Model, id int) error {
-	mg, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	mg.ID = id
-	mg.Version = 0
+func (ser *MediaGenreService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing MediaGenre
 // in updates.
 func (ser *MediaGenreService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	om, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	nm.Version = om.Version + 1
 	return nil
 }
 

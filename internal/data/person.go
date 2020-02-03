@@ -12,16 +12,14 @@ import (
 
 // Person represents a single person
 type Person struct {
-	ID          int
 	Names       []Title
 	Information []Title
-	Version     int
-	Model
+	Meta        ModelMetadata
 }
 
-// Iden returns the ID.
-func (p *Person) Iden() int {
-	return p.ID
+// Metadata returns Meta.
+func (p *Person) Metadata() *ModelMetadata {
+	return &p.Meta
 }
 
 // PersonBucket is the name of the database bucket for Person.
@@ -150,28 +148,13 @@ func (ser *PersonService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *PersonService) Initialize(m Model, id int) error {
-	p, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	p.ID = id
-	p.Version = 0
+func (ser *PersonService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing Person in
 // updates.
 func (ser *PersonService) PersistOldProperties(n Model, o Model) error {
-	np, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	op, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	np.Version = op.Version + 1
 	return nil
 }
 

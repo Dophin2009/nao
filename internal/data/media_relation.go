@@ -12,16 +12,15 @@ import (
 // MediaRelation represents a relationship between single instances of Media
 // and Producer.
 type MediaRelation struct {
-	ID           int
 	OwnerID      int
 	RelatedID    int
 	Relationship string
-	Version      int
+	Meta         ModelMetadata
 }
 
-// Iden returns the ID.
-func (mr *MediaRelation) Iden() int {
-	return mr.ID
+// Metadata returns Meta.
+func (mr *MediaRelation) Metadata() *ModelMetadata {
+	return &mr.Meta
 }
 
 // MediaRelationBucket is the name of the database bucket for MediaRelation.
@@ -205,28 +204,13 @@ func (ser *MediaRelationService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *MediaRelationService) Initialize(m Model, id int) error {
-	mr, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	mr.ID = id
-	mr.Version = 0
+func (ser *MediaRelationService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // MediaRelation in updates.
 func (ser *MediaRelationService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	om, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	nm.Version = om.Version + 1
 	return nil
 }
 

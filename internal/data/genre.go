@@ -10,15 +10,14 @@ import (
 
 // Genre represents a single instance of a genre.
 type Genre struct {
-	ID           int
 	Names        []Title
 	Descriptions []Title
-	Version      int
+	Meta         ModelMetadata
 }
 
-// Iden returns the ID.
-func (g *Genre) Iden() int {
-	return g.ID
+// Metadata returns Meta.
+func (g *Genre) Metadata() *ModelMetadata {
+	return &g.Meta
 }
 
 // GenreBucket is the name of the database bucket for Genre.
@@ -147,28 +146,13 @@ func (ser *GenreService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *GenreService) Initialize(m Model, id int) error {
-	g, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	g.ID = id
-	g.Version = 0
+func (ser *GenreService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing Genre in
 // updates.
 func (ser *GenreService) PersistOldProperties(n Model, o Model) error {
-	ng, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	og, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	ng.Version = og.Version + 1
 	return nil
 }
 

@@ -18,7 +18,6 @@ import (
 
 // Media represents a single instance of a media
 type Media struct {
-	ID              int
 	Titles          []Title
 	Synopses        []Title
 	Background      []Title
@@ -27,13 +26,12 @@ type Media struct {
 	SeasonPremiered Season
 	Type            *string
 	Source          *string
-	Version         int
-	Model
+	Meta            ModelMetadata
 }
 
-// Iden returns the ID.
-func (m *Media) Iden() int {
-	return m.ID
+// Metadata returns Meta.
+func (m *Media) Metadata() *ModelMetadata {
+	return &m.Meta
 }
 
 // Season contains information about the quarter and year.
@@ -251,28 +249,13 @@ func (ser *MediaService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *MediaService) Initialize(m Model, id int) error {
-	md, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	md.ID = id
-	md.Version = 0
+func (ser *MediaService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing Media in
 // updates.
 func (ser *MediaService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	om, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	nm.Version = om.Version + 1
 	return nil
 }
 

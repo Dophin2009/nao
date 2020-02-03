@@ -15,6 +15,20 @@ type Mutation {
 }
 
 """
+A type that describes a model's metadata.
+"""
+type Metadata @goModel(model: "data.ModelMetadata") {
+  id: Int!
+}
+
+"""
+An input for metadata of input types.
+"""
+input MetadataInput @goModel(model: "data.ModelMetadata") {
+  id: Int!
+}
+
+"""
 Map where both key and value are strings.
 """
 scalar StringMap

@@ -2,8 +2,8 @@
 A type that describes a Person.
 """
 type Person @goModel(model: "data.Person") {
-  "An integer identifier for the Person."
-  id: Int!
+  "The metadata for the Character."
+  meta: Metadata!
   "A list of names used to name the Person."
   names(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
   "A list of information segments to describe the Person."
@@ -19,8 +19,8 @@ type Person @goModel(model: "data.Person") {
 An input to create or update a Person.
 """
 input PersonInput @goModel(model: "data.Person") {
-  "An integer identifier for the Person."
-  id: Int!
+  "The metadata for the Character."
+  meta: MetadataInput!
   "A list of names used to name the Person."
   names: [TitleInput!]!
   "A list of information segments to describe the Person."

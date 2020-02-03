@@ -3,8 +3,8 @@ A type that describes a relationship between a
 Media and a Producer.
 """
 type MediaProducer {
-  "An integer identifier for the relationship."
-  id: Int!
+  "The metadata for the Character."
+  meta: Metadata!
   """
   The role the Producer plays in the production
   of the Media.
@@ -21,8 +21,8 @@ An input to create or update a relationship between a
 Media and a Producer.
 """
 input MediaProducerInput @goModel(model: "data.MediaProducer") {
-  "An integer identifier for the relationship."
-  id: Int
+  "The metadata for the Character."
+  meta: MetadataInput!
   """
   The role the Producer plays in the production
   of the Media.

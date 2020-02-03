@@ -12,7 +12,6 @@ import (
 // UserMedia represents a relationship between a User and a Media, containing
 // information about the User's opinion on the Media.
 type UserMedia struct {
-	ID               int
 	UserID           int
 	MediaID          int
 	Status           *WatchStatus
@@ -21,12 +20,12 @@ type UserMedia struct {
 	Recommended      *int
 	WatchedInstances []WatchedInstance
 	Comments         []Title
-	Version          int
+	Meta             ModelMetadata
 }
 
-// Iden returns the ID.
-func (um *UserMedia) Iden() int {
-	return um.ID
+// Metadata returns Meta
+func (um *UserMedia) Metadata() *ModelMetadata {
+	return &um.Meta
 }
 
 // WatchedInstance contains information about a single watch of some Media.
@@ -267,28 +266,13 @@ func (ser *UserMediaService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *UserMediaService) Initialize(m Model, id int) error {
-	um, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	um.ID = id
-	um.Version = 0
+func (ser *UserMediaService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing UserMedia
 // in updates.
 func (ser *UserMediaService) PersistOldProperties(n Model, o Model) error {
-	num, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	oum, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	num.Version = oum.Version + 1
 	return nil
 }
 

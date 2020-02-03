@@ -12,19 +12,17 @@ import (
 // MediaCharacter represents a relationship between single instances of Media
 // and Character.
 type MediaCharacter struct {
-	ID            int
 	MediaID       int
 	CharacterID   *int
 	CharacterRole *string
 	PersonID      *int
 	PersonRole    *string
-	Version       int
-	Model
+	Meta          ModelMetadata
 }
 
-// Iden returns the ID.
-func (mc *MediaCharacter) Iden() int {
-	return mc.ID
+// Metadata returns Meta.
+func (mc *MediaCharacter) Metadata() *ModelMetadata {
+	return &mc.Meta
 }
 
 // MediaCharacterBucket is the name of the database bucket for MediaCharacter.
@@ -271,28 +269,13 @@ func (ser *MediaCharacterService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *MediaCharacterService) Initialize(m Model, id int) error {
-	mc, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	mc.ID = id
-	mc.Version = 0
+func (ser *MediaCharacterService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // MediaCharacter in updates.
 func (ser *MediaCharacterService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	om, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	nm.Version = om.Version + 1
 	return nil
 }
 

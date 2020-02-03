@@ -2,8 +2,8 @@
 A type that describes a Genre.
 """
 type Genre {
-  "An integer identifier for the Genre."
-  id: Int!
+  "The metadata for the Character."
+  meta: Metadata!
   "A list of names used to name the Genre."
   names(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
   """
@@ -21,8 +21,8 @@ type Genre {
 An input to create or update a Genre.
 """
 input GenreInput @goModel(model: "data.Genre") {
-  "An integer identifier for the Genre."
-  id: Int
+  "The metadata for the Character."
+  meta: MetadataInput!
   "A list of names used to name the Genre."
   names: [TitleInput!]!
   """

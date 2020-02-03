@@ -3,8 +3,8 @@ A type to describe a relationship between a Media and
 a Character or a Person.
 """
 type MediaCharacter {
-  "An integer identifier for the relationship."
-  id: Int!
+  "The metadata for the Character."
+  meta: Metadata!
   "The Media in the relationship."
   media: Media!
   "The Character in the relationship."
@@ -21,9 +21,9 @@ type MediaCharacter {
 An input to create or update a relationship between a
 Media and a Character or a Person.
 """
-type MediaCharacterInput @goModel(model: "data.MediaCharacter") {
-  "An integer identifier for the MediaCharacter."
-  id: Int!
+input MediaCharacterInput @goModel(model: "data.MediaCharacter") {
+  "The metadata for the Character."
+  meta: MetadataInput!
   """
   The ID of the Media in the relationship. The Media
   referenced by this ID must already exist.

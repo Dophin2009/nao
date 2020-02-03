@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"time"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -13,7 +14,15 @@ import (
 
 // Model encompasses all data models.
 type Model interface {
-	Iden() int
+	Metadata() *ModelMetadata
+}
+
+// ModelMetadata contains information about
+type ModelMetadata struct {
+	ID        int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Version   int
 }
 
 // Service provides various functions to operate on Models. All implementations
@@ -25,7 +34,7 @@ type Service interface {
 	Clean(m Model) error
 	Validate(m Model) error
 
-	Initialize(m Model, id int) error
+	Initialize(m Model) error
 	PersistOldProperties(n Model, o Model) error
 
 	Marshal(m Model) ([]byte, error)
@@ -95,7 +104,13 @@ func Create(m Model, ser Service) error {
 			return fmt.Errorf("%s: %w", errmsgBucketNextSeq, err)
 		}
 
-		err = ser.Initialize(m, int(id))
+		// Initialize metadata
+		meta := m.Metadata()
+		meta.ID = int(id)
+		meta.CreatedAt = time.Now()
+		meta.UpdatedAt = time.Now()
+		meta.Version = 0
+		err = ser.Initialize(m)
 		if err != nil {
 			return fmt.Errorf("%s: %w", errmsgModelInitialize, err)
 		}
@@ -106,7 +121,7 @@ func Create(m Model, ser Service) error {
 			return fmt.Errorf("%s: %w", errmsgModelMarshal, err)
 		}
 
-		err = b.Put(itob(m.Iden()), buf)
+		err = b.Put(itob(meta.ID), buf)
 		if err != nil {
 			return fmt.Errorf("%s %q: %w", errmsgBucketPut, ser.Bucket(), err)
 		}
@@ -134,10 +149,12 @@ func Update(m Model, ser Service) error {
 	}
 
 	return ser.Database().Update(func(tx *bolt.Tx) error {
+		meta := m.Metadata()
+
 		// Check if entity with ID exists
-		v, err := GetRawByID(m.Iden(), ser.Bucket(), ser.Database())
+		v, err := GetRawByID(meta.ID, ser.Bucket(), ser.Database())
 		if err != nil {
-			return fmt.Errorf("failed to get by id %d: %w", m.Iden(), err)
+			return fmt.Errorf("failed to get by id %d: %w", meta.ID, err)
 		}
 
 		// Unmarshall old
@@ -154,6 +171,8 @@ func Update(m Model, ser Service) error {
 
 		// Replace properties of updated with certain frozen
 		// ones of old
+		meta.UpdatedAt = time.Now()
+		meta.Version = meta.Version + 1
 		err = ser.PersistOldProperties(m, o)
 		if err != nil {
 			return fmt.Errorf("%s: %w", errmsgModelPersistOld, err)
@@ -165,7 +184,7 @@ func Update(m Model, ser Service) error {
 			return fmt.Errorf("%s: %w", errmsgModelMarshal, err)
 		}
 
-		err = b.Put(itob(m.Iden()), buf)
+		err = b.Put(itob(meta.ID), buf)
 		if err != nil {
 			return fmt.Errorf("%s %q: %w", errmsgBucketPut, ser.Bucket(), err)
 		}

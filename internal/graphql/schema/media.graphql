@@ -2,8 +2,8 @@
 A type that describes a Media.
 """
 type Media @goModel(model: "data.Media") {
-  "An integer identifier for the Media."
-  id: Int!
+  "The metadata for the Character."
+  meta: Metadata!
   "A list of titles used to named the Media."
   titles(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
   """
@@ -49,8 +49,8 @@ type Media @goModel(model: "data.Media") {
 An input to create or update an existing Media.
 """
 input MediaInput @goModel(model: "data.Media") {
-  "An integer identifier for the Media"
-  id: Int!
+  "The metadata for the Character."
+  meta: MetadataInput!
   "A list of titles used to named the Media."
   titles: [TitleInput!]!
   """

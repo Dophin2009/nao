@@ -13,35 +13,31 @@ import (
 
 // Episode represents a single episode or chapter for some media.
 type Episode struct {
-	ID       int
 	Titles   []Title
 	Synopses []Title
 	Date     *time.Time
 	Duration *int
 	Filler   bool
 	Recap    bool
-	Version  int
-	Model
+	Meta     ModelMetadata
 }
 
-// Iden returns the ID.
-func (ep *Episode) Iden() int {
-	return ep.ID
+// Metadata returns Meta.
+func (ep *Episode) Metadata() *ModelMetadata {
+	return &ep.Meta
 }
 
 // EpisodeSet is an ordered list of episodes.
 type EpisodeSet struct {
-	ID           int
 	MediaID      int
 	Descriptions []Title
 	Episodes     []int
-	Version      int
-	Model
+	Meta         ModelMetadata
 }
 
-// Iden returns the ID.
-func (set *EpisodeSet) Iden() int {
-	return set.ID
+// Metadata returns the Meta.
+func (set *EpisodeSet) Metadata() *ModelMetadata {
+	return &set.Meta
 }
 
 // EpisodeBucket is the name of the database bucket for Episodes.
@@ -170,28 +166,13 @@ func (ser *EpisodeService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *EpisodeService) Initialize(m Model, id int) error {
-	ep, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	ep.ID = id
-	ep.Version = 0
+func (ser *EpisodeService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing Episode in
 // updates.
 func (ser *EpisodeService) PersistOldProperties(n Model, o Model) error {
-	nep, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	oep, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	nep.Version = oep.Version + 1
 	return nil
 }
 
@@ -360,28 +341,13 @@ func (ser *EpisodeSetService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *EpisodeSetService) Initialize(m Model, id int) error {
-	set, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	set.ID = id
-	set.Version = 0
+func (ser *EpisodeSetService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing EpisodeSet
 // in updates.
 func (ser *EpisodeSetService) PersistOldProperties(n Model, o Model) error {
-	nset, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	oset, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	nset.Version = oset.Version + 1
 	return nil
 }
 

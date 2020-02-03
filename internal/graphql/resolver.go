@@ -146,10 +146,11 @@ func (r *characterResolver) Media(
 	}
 
 	ser := ds.MediaCharacterService
-	list, err := ser.GetByCharacter(obj.ID, first, skip)
+	list, err := ser.GetByCharacter(obj.Meta.ID, first, skip)
 	if err != nil {
 		return nil,
-			fmt.Errorf("failed to get MediaCharacters by Character id %d: %w", obj.ID, err)
+			fmt.Errorf("failed to get MediaCharacters by Character id %d: %w",
+				obj.Meta.ID, err)
 	}
 
 	return list, nil
@@ -245,10 +246,11 @@ func (r *genreResolver) Media(
 	}
 
 	ser := ds.MediaGenreService
-	list, err := ser.GetByGenre(obj.ID, first, skip)
+	list, err := ser.GetByGenre(obj.Meta.ID, first, skip)
 	if err != nil {
 		return nil,
-			fmt.Errorf("failed to get MediaGenres by Genre id %d: %w", obj.ID, err)
+			fmt.Errorf("failed to get MediaGenres by Genre id %d: %w",
+				obj.Meta.ID, err)
 	}
 
 	return list, nil
@@ -288,10 +290,11 @@ func (r *mediaResolver) EpisodeSets(
 	}
 
 	ser := ds.EpisodeSetService
-	list, err := ser.GetByMedia(obj.ID, first, skip)
+	list, err := ser.GetByMedia(obj.Meta.ID, first, skip)
 	if err != nil {
 		return nil,
-			fmt.Errorf("failed to get EpisodeSets by Media id %d: %w", obj.ID, err)
+			fmt.Errorf("failed to get EpisodeSets by Media id %d: %w",
+				obj.Meta.ID, err)
 	}
 
 	return list, nil
@@ -307,10 +310,10 @@ func (r *mediaResolver) Producers(
 	}
 
 	ser := ds.MediaProducerService
-	list, err := ser.GetByMedia(obj.ID, first, skip)
+	list, err := ser.GetByMedia(obj.Meta.ID, first, skip)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to get MediaProducers by Media id %d: %w", obj.ID, err)
+		return nil, fmt.Errorf("failed to get MediaProducers by Media id %d: %w",
+			obj.Meta.ID, err)
 	}
 
 	return list, nil
@@ -326,10 +329,10 @@ func (r *mediaResolver) Characters(
 	}
 
 	ser := ds.MediaCharacterService
-	list, err := ser.GetByMedia(obj.ID, first, skip)
+	list, err := ser.GetByMedia(obj.Meta.ID, first, skip)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"failed to get MediaCharacters by Media id %d: %w", obj.ID, err)
+			"failed to get MediaCharacters by Media id %d: %w", obj.Meta.ID, err)
 	}
 
 	return list, nil
@@ -345,10 +348,10 @@ func (r *mediaResolver) Genres(
 	}
 
 	ser := ds.MediaGenreService
-	list, err := ser.GetByMedia(obj.ID, first, skip)
+	list, err := ser.GetByMedia(obj.Meta.ID, first, skip)
 	if err != nil {
-		return nil,
-			fmt.Errorf("failed to get MediaGenres by Media id %d: %w", obj.ID, err)
+		return nil, fmt.Errorf("failed to get MediaGenres by Media id %d: %w",
+			obj.Meta.ID, err)
 	}
 
 	return list, nil
@@ -517,10 +520,10 @@ func (r *personResolver) Media(
 	}
 
 	ser := ds.MediaCharacterService
-	list, err := ser.GetByPerson(obj.ID, first, skip)
+	list, err := ser.GetByPerson(obj.Meta.ID, first, skip)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"failed to get MediaCharacters by Person id %d: %w", obj.ID, err)
+			"failed to get MediaCharacters by Person id %d: %w", obj.Meta.ID, err)
 	}
 
 	return list, nil
@@ -546,10 +549,10 @@ func (r *producerResolver) Media(
 	}
 
 	ser := ds.MediaProducerService
-	list, err := ser.GetByProducer(obj.ID, first, skip)
+	list, err := ser.GetByProducer(obj.Meta.ID, first, skip)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"failed to get MediaProducers by Producer id %d: %w", obj.ID, err)
+			"failed to get MediaProducers by Producer id %d: %w", obj.Meta.ID, err)
 	}
 
 	return list, nil

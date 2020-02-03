@@ -11,16 +11,14 @@ import (
 
 // Producer represents a single studio, producer, licensor, etc.
 type Producer struct {
-	ID      int
-	Titles  []Title
-	Types   []string
-	Version int
-	Model
+	Titles []Title
+	Types  []string
+	Meta   ModelMetadata
 }
 
-// Iden returns the ID.
-func (p *Producer) Iden() int {
-	return p.ID
+// Metadata return Meta.
+func (p *Producer) Metadata() *ModelMetadata {
+	return &p.Meta
 }
 
 // ProducerBucket is the name of the database bucket for Producer.
@@ -153,28 +151,13 @@ func (ser *ProducerService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *ProducerService) Initialize(m Model, id int) error {
-	p, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	p.ID = id
-	p.Version = 0
+func (ser *ProducerService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing Producer
 // in updates.
 func (ser *ProducerService) PersistOldProperties(n Model, o Model) error {
-	np, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	op, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	np.Version = op.Version + 1
 	return nil
 }
 

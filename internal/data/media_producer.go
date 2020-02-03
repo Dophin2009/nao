@@ -12,17 +12,15 @@ import (
 // MediaProducer represents a relationship between single instances of Media
 // and Producer.
 type MediaProducer struct {
-	ID         int
 	MediaID    int
 	ProducerID int
 	Role       string
-	Version    int
-	Model
+	Meta       ModelMetadata
 }
 
-// Iden returns the ID.
-func (mc *MediaProducer) Iden() int {
-	return mc.ID
+// Metadata returns Meta.
+func (mp *MediaProducer) Metadata() *ModelMetadata {
+	return &mp.Meta
 }
 
 // MediaProducerBucket is the name of the database bucket for MediaProducer.
@@ -200,28 +198,13 @@ func (ser *MediaProducerService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *MediaProducerService) Initialize(m Model, id int) error {
-	mp, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	mp.ID = id
-	mp.Version = 0
+func (ser *MediaProducerService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // MediaProducer in updates.
 func (ser *MediaProducerService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	om, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	nm.Version = om.Version + 1
 	return nil
 }
 

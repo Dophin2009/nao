@@ -10,18 +10,16 @@ import (
 
 // UserMediaList represents a User-created list of UserMedia.
 type UserMediaList struct {
-	ID           int
 	UserID       int
 	Names        []Title
 	Descriptions []Title
 	UserMedia    []int
-	Version      int
-	Model
+	Meta         ModelMetadata
 }
 
-// Iden returns the ID.
-func (uml *UserMediaList) Iden() int {
-	return uml.ID
+// Metadata returns Meta.
+func (uml *UserMediaList) Metadata() *ModelMetadata {
+	return &uml.Meta
 }
 
 // UserMediaListBucket is the name of the database bucket for UserMediaList.
@@ -179,28 +177,13 @@ func (ser *UserMediaListService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *UserMediaListService) Initialize(m Model, id int) error {
-	uml, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	uml.ID = id
-	uml.Version = 0
+func (ser *UserMediaListService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // UserMediaList in updates.
 func (ser *UserMediaListService) PersistOldProperties(n Model, o Model) error {
-	nm, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	om, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	nm.Version = om.Version + 1
 	return nil
 }
 

@@ -12,16 +12,14 @@ import (
 
 // Character represents a single character.
 type Character struct {
-	ID          int
 	Names       []Title
 	Information []Title
-	Version     int
-	Model
+	Meta        ModelMetadata
 }
 
-// Iden returns the ID.
-func (c *Character) Iden() int {
-	return c.ID
+// Metadata returns Meta.
+func (c *Character) Metadata() *ModelMetadata {
+	return &c.Meta
 }
 
 // CharacterBucket is the name of the database bucket for Character.
@@ -151,28 +149,13 @@ func (ser *CharacterService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *CharacterService) Initialize(m Model, id int) error {
-	c, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	c.ID = id
-	c.Version = 0
+func (ser *CharacterService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing Character
 // in updates.
 func (ser *CharacterService) PersistOldProperties(n Model, o Model) error {
-	nc, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	oc, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	nc.Version = oc.Version + 1
 	return nil
 }
 

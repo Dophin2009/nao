@@ -14,20 +14,18 @@ import (
 
 // User represents a single user.
 type User struct {
-	ID       int
 	Username string
 	Email    string
 	Password []byte
 	// Permissions states the permissions the user has regarding shared/global
 	// data.
 	Permissions Permission
-	Version     int
-	Model
+	Meta        ModelMetadata
 }
 
-// Iden returns the ID.
-func (u *User) Iden() int {
-	return u.ID
+// Metadata returns Meta.
+func (u *User) Metadata() *ModelMetadata {
+	return &u.Meta
 }
 
 // Permission contains a number of permissions for reading/writing data.
@@ -222,7 +220,7 @@ func (ser *UserService) ChangePassword(userID int, password string) error {
 			return fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 		}
 
-		err = b.Put(itob(int(u.ID)), buf)
+		err = b.Put(itob(int(u.Meta.ID)), buf)
 		if err != nil {
 			return fmt.Errorf("%s: %w", errmsgBucketPut, err)
 		}
@@ -295,7 +293,7 @@ func (ser *UserService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *UserService) Initialize(m Model, id int) error {
+func (ser *UserService) Initialize(m Model) error {
 	u, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -306,9 +304,6 @@ func (ser *UserService) Initialize(m Model, id int) error {
 		return fmt.Errorf("failed to generate password hash: %w", err)
 	}
 	u.Password = pass
-
-	u.ID = id
-	u.Version = 0
 	return nil
 }
 
@@ -325,7 +320,6 @@ func (ser *UserService) PersistOldProperties(n Model, o Model) error {
 	}
 	// Password may not be changed through update; must use ChangePassword
 	nu.Password = ou.Password
-	nu.Version = ou.Version + 1
 	return nil
 }
 

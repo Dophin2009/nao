@@ -2,8 +2,8 @@
 A type that describes a Character.
 """
 type Character {
-  "An integer identifier for the Character."
-  id: Int!
+  "The metadata for the Character."
+  meta: Metadata!
   "A list of names used to name the Character."
   names(first: Int, skip: Int): [Title!]! @goField(forceResolver: true)
   """
@@ -22,8 +22,8 @@ type Character {
 A input to create or update an existing Media.
 """
 input CharacterInput @goModel(model: "data.Character") {
-  "An integer identifier for the Character."
-  id: Int
+  "The metadata for the Character."
+  meta: MetadataInput!
   "A list of names used to name the Character."
   names: [TitleInput!]!
   """

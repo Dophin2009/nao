@@ -111,7 +111,7 @@ func LoginHandler(
 
 			expirationTime := time.Now().Add(5 * time.Minute)
 			claims := &data.JWTClaims{
-				UserID: user.ID,
+				UserID: user.Meta.ID,
 				StandardClaims: jwt.StandardClaims{
 					ExpiresAt: expirationTime.Unix(),
 				},

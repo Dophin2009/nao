@@ -11,17 +11,16 @@ import (
 // UserCharacter represents a relationship between a User and a Character,
 // containing information about the User's opinion on the Character.
 type UserCharacter struct {
-	ID          int
 	UserID      int
 	CharacterID int
 	Score       *int
 	Comments    []Title
-	Version     int
+	Meta        ModelMetadata
 }
 
-// Iden returns the ID.
-func (uc *UserCharacter) Iden() int {
-	return uc.ID
+// Metadata returns Meta.
+func (uc *UserCharacter) Metadata() *ModelMetadata {
+	return &uc.Meta
 }
 
 // UserCharacterBucket is the name of the database bucket for UserCharacter.
@@ -192,28 +191,13 @@ func (ser *UserCharacterService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *UserCharacterService) Initialize(m Model, id int) error {
-	uc, err := ser.AssertType(m)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	uc.ID = id
-	uc.Version = 0
+func (ser *UserCharacterService) Initialize(m Model) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // UserCharacter in updates.
 func (ser *UserCharacterService) PersistOldProperties(n Model, o Model) error {
-	nuc, err := ser.AssertType(n)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	ouc, err := ser.AssertType(o)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-	}
-	nuc.Version = ouc.Version + 1
 	return nil
 }
 

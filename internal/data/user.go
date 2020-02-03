@@ -141,7 +141,7 @@ func (ser *UserService) GetByID(id int) (*User, error) {
 
 // GetByUsername retrieves a single instance of User with the given username.
 func (ser *UserService) GetByUsername(username string) (*User, error) {
-	var e User
+	var e *User = nil
 	err := ser.DB.View(func(tx *bolt.Tx) error {
 		// Open User bucket
 		b, err := Bucket(ser.Bucket(), tx)
@@ -149,9 +149,23 @@ func (ser *UserService) GetByUsername(username string) (*User, error) {
 			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 		}
 
+		// Find last key; will stop iteration when reached
+		var lk []byte
+		d := b.Cursor()
+		lk, _ = d.Last()
+
 		// Iterate through values until username matches
 		c := b.Cursor()
-		for id, v := c.First(); id != nil; id, v = c.Next() {
+		lastReached := false
+		for k, v := c.First(); !lastReached; k, v = c.Next() {
+			if bytes.Equal(k, lk) {
+				lastReached = true
+			}
+
+			if k == nil {
+				continue
+			}
+
 			m, err := ser.Unmarshal(v)
 			if err != nil {
 				return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
@@ -163,18 +177,18 @@ func (ser *UserService) GetByUsername(username string) (*User, error) {
 			}
 
 			if u.Username == username {
-				e = *u
+				*e = *u
 				return nil
 			}
 		}
 
-		return fmt.Errorf("username %q: %w", username, errNotFound)
+		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return &e, nil
+	return e, nil
 }
 
 // AuthenticateWithPassword checks if the password for the User given by the
@@ -270,48 +284,9 @@ func (ser *UserService) Validate(m Model) error {
 	}
 
 	// Check that username does not already exist
-	err = ser.Database().View(func(tx *bolt.Tx) error {
-		// Get bucket, exit if error
-		b, err := Bucket(ser.Bucket(), tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
-		}
-
-		// Find last key; will stop iteration when reached
-		var lk []byte
-		d := b.Cursor()
-		lk, _ = d.Last()
-
-		// Check for duplicate username
-		c := b.Cursor()
-		lastReached := false
-		for k, v := c.First(); !lastReached; k, v = c.Next() {
-			if bytes.Equal(k, lk) {
-				lastReached = true
-			}
-
-			if k == nil {
-				continue
-			}
-
-			m, err := ser.Unmarshal(v)
-			if err != nil {
-				return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
-			}
-
-			w, err := ser.AssertType(m)
-			if err != nil {
-				return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-			}
-
-			if w.Username == u.Username {
-				return fmt.Errorf("username %q: %w", u.Username, errAlreadyExists)
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failed to verify uniqueness of username: %w", err)
+	sameUsername, err := ser.GetByUsername(u.Username)
+	if sameUsername != nil {
+		return fmt.Errorf("username %q: %w", u.Username, errAlreadyExists)
 	}
 
 	return nil

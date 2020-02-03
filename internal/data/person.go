@@ -28,7 +28,6 @@ const PersonBucket = "Person"
 // PersonService performs operations on Persons.
 type PersonService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given Person.

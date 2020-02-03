@@ -106,7 +106,6 @@ const UserMediaBucket = "UserMedia"
 // UserMediaService performs operations on UserMedia.
 type UserMediaService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given UserMedia.

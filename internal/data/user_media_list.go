@@ -28,7 +28,6 @@ const UserMediaListBucket = "UserMediaList"
 // UserMediaListService performs operations on UserMediaList.
 type UserMediaListService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given UserMediaList.

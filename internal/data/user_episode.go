@@ -29,7 +29,6 @@ const UserEpisodeBucket = "UserEpisode"
 // UserEpisodeService performs operations on UserEpisode.
 type UserEpisodeService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given UserEpisode.

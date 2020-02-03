@@ -46,7 +46,6 @@ const EpisodeBucket = "Episode"
 // EpisodeService performs operations on Episodes.
 type EpisodeService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given Episode.

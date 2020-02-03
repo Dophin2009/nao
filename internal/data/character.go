@@ -28,7 +28,6 @@ const CharacterBucket = "Character"
 // CharacterService performs operations on Characters.
 type CharacterService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given Character.

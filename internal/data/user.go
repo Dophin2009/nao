@@ -41,7 +41,6 @@ const UserBucket = "User"
 // UserService performs operations on User.
 type UserService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given User.

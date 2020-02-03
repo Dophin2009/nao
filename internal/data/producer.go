@@ -27,7 +27,6 @@ const ProducerBucket = "Producer"
 // ProducerService performs operations on Producer.
 type ProducerService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given Producer.

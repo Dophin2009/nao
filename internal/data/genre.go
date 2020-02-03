@@ -26,7 +26,6 @@ const GenreBucket = "Genre"
 // GenreService performs operations on genre.
 type GenreService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given Genre.

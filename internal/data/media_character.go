@@ -31,7 +31,6 @@ const MediaCharacterBucket = "MediaCharacter"
 // MediaCharacterService performs operations on MediaCharacter.
 type MediaCharacterService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given MediaCharacter.

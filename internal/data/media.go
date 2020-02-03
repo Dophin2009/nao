@@ -118,7 +118,6 @@ const MediaBucket = "Media"
 // MediaService performs operations on Media.
 type MediaService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given Media.

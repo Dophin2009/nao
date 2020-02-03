@@ -27,7 +27,6 @@ const MediaGenreBucket = "MediaGenre"
 // MediaGenreService performs operations on MediaGenre.
 type MediaGenreService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given MediaGenre.
@@ -136,6 +135,16 @@ func (ser *MediaGenreService) GetByGenre(
 	return ser.GetFilter(first, skip, func(mg *MediaGenre) bool {
 		return mg.GenreID == gID
 	})
+}
+
+// Database returns the database reference.
+func (ser *MediaGenreService) Database() *bolt.DB {
+	return ser.DB
+}
+
+// Bucket returns the name of the bucket for MediaGenre.
+func (ser *MediaGenreService) Bucket() string {
+	return MediaGenreBucket
 }
 
 // Clean cleans the given MediaGenre for storage.

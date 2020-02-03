@@ -29,7 +29,6 @@ const MediaRelationBucket = "MediaRelation"
 // MediaRelationService performs operations on MediaRelation.
 type MediaRelationService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given MediaRelation.

@@ -29,7 +29,6 @@ const MediaProducerBucket = "MediaProducer"
 // MediaProducerService performs operations on MediaProducer.
 type MediaProducerService struct {
 	DB *bolt.DB
-	Service
 }
 
 // Create persists the given MediaProducer.

@@ -11,7 +11,8 @@ import (
 
 // BoltDatabase implements Database for boltDB.
 type BoltDatabase struct {
-	Bolt *bolt.DB
+	Bolt    *bolt.DB
+	Buckets []string
 }
 
 // BoltTx implements Transaction for boltDB.
@@ -42,7 +43,7 @@ func ConnectBoltDatabase(path string, mode os.FileMode, buckets []string) (*Bolt
 	// Check buckets exist
 	if len(buckets) > 0 {
 		err = bdb.Update(func(tx *bolt.Tx) error {
-			for _, bucket := range Buckets() {
+			for _, bucket := range buckets {
 				_, err = tx.CreateBucketIfNotExists([]byte(bucket))
 				if err != nil {
 					return fmt.Errorf("failed to create bucket: %w", err)
@@ -55,14 +56,14 @@ func ConnectBoltDatabase(path string, mode os.FileMode, buckets []string) (*Bolt
 		}
 	}
 
-	db := BoltDatabase{bdb}
+	db := BoltDatabase{bdb, buckets}
 	return &db, nil
 }
 
 // Clear removes all buckets in the given database.
 func (db *BoltDatabase) Clear() error {
 	err := db.Bolt.Update(func(tx *bolt.Tx) error {
-		for _, bucket := range Buckets() {
+		for _, bucket := range db.Buckets {
 			err := tx.DeleteBucket([]byte(bucket))
 			if err != nil {
 				return fmt.Errorf("failed to delete bucket: %w", err)

@@ -59,17 +59,6 @@ type Tx interface {
 	Unwrap() interface{}
 }
 
-// Buckets provides an array of all the buckets in the database
-func Buckets() []string {
-	return []string{
-		MediaBucket, ProducerBucket, GenreBucket, EpisodeBucket, EpisodeSetBucket,
-		CharacterBucket, PersonBucket, UserBucket, MediaProducerBucket,
-		MediaRelationBucket, MediaGenreBucket, MediaCharacterBucket,
-		UserCharacterBucket, UserEpisodeBucket, UserMediaBucket,
-		UserMediaListBucket, UserPersonBucket, JWTBucket,
-	}
-}
-
 // checkService returns an error if the given service or its DB are nil.
 func checkService(ser Service) error {
 	if ser == nil {

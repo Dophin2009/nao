@@ -39,7 +39,7 @@ func (ser *MediaRelationService) Update(mr *MediaRelation, tx Tx) error {
 
 // Delete deletes the MediaRelation with the given ID.
 func (ser *MediaRelationService) Delete(id int, tx Tx) error {
-	return tx.Database().Delete(id, ser)
+	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of MediaRelation.

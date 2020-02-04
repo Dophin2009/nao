@@ -6,7 +6,6 @@ import (
 	"time"
 
 	json "github.com/json-iterator/go"
-	bolt "go.etcd.io/bbolt"
 )
 
 // TODO: User rating/comments/etc. of Episodes
@@ -220,10 +219,7 @@ func (ser *EpisodeService) mapFromModel(vlist []Model) ([]*Episode, error) {
 }
 
 // EpisodeSetService performs operations on EpisodeSets.
-type EpisodeSetService struct {
-	DB *bolt.DB
-	Service
-}
+type EpisodeSetService struct{}
 
 // Create persists the given EpisodeSet.
 func (ser *EpisodeSetService) Create(set *EpisodeSet, tx Tx) (int, error) {

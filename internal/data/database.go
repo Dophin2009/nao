@@ -39,6 +39,7 @@ type Service interface {
 // database.
 type Database interface {
 	Transaction(writable bool, logic func(Tx) error) error
+	Close() error
 
 	Create(m Model, ser Service, tx Tx) (int, error)
 	Update(m Model, ser Service, tx Tx) error

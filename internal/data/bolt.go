@@ -11,8 +11,9 @@ import (
 
 // BoltDatabase implements Database for boltDB.
 type BoltDatabase struct {
-	Bolt    *bolt.DB
-	Buckets []string
+	Bolt         *bolt.DB
+	Buckets      []string
+	ClearOnClose bool
 }
 
 // BoltTx implements Transaction for boltDB.
@@ -31,19 +32,26 @@ func (btx *BoltTx) Unwrap() interface{} {
 	return btx.Tx
 }
 
+type BoltDatabaseConfig struct {
+	Path         string
+	FileMode     os.FileMode
+	Buckets      []string
+	ClearOnClose bool
+}
+
 // ConnectBoltDatabase connects to the database file at the given path and
 // returns a new BoltDatabase pointer.
-func ConnectBoltDatabase(path string, mode os.FileMode, buckets []string) (*BoltDatabase, error) {
+func ConnectBoltDatabase(conf *BoltDatabaseConfig) (*BoltDatabase, error) {
 	// Open database connection
-	bdb, err := bolt.Open(path, mode, nil)
+	bdb, err := bolt.Open(conf.Path, conf.FileMode, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
 	// Check buckets exist
-	if len(buckets) > 0 {
+	if len(conf.Buckets) > 0 {
 		err = bdb.Update(func(tx *bolt.Tx) error {
-			for _, bucket := range buckets {
+			for _, bucket := range conf.Buckets {
 				_, err = tx.CreateBucketIfNotExists([]byte(bucket))
 				if err != nil {
 					return fmt.Errorf("failed to create bucket: %w", err)
@@ -56,8 +64,23 @@ func ConnectBoltDatabase(path string, mode os.FileMode, buckets []string) (*Bolt
 		}
 	}
 
-	db := BoltDatabase{bdb, buckets}
+	db := BoltDatabase{
+		Bolt:         bdb,
+		Buckets:      conf.Buckets,
+		ClearOnClose: conf.ClearOnClose,
+	}
 	return &db, nil
+}
+
+func (db *BoltDatabase) Close() error {
+	if db.ClearOnClose {
+		err := db.Clear()
+		if err != nil {
+			return fmt.Errorf("failed to clear database: %w", err)
+		}
+	}
+	db.Bolt.Close()
+	return nil
 }
 
 // Clear removes all buckets in the given database.

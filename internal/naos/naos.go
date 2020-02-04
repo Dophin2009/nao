@@ -77,9 +77,12 @@ func NewApplication(c *Configuration) (*Application, error) {
 		userMediaListService.Bucket(),
 	}
 
-	db, err := data.ConnectBoltDatabase(
-		c.DB.Path, os.FileMode(c.DB.Filemode), buckets,
-	)
+	db, err := data.ConnectBoltDatabase(&data.BoltDatabaseConfig{
+		Path:         c.DB.Path,
+		FileMode:     os.FileMode(c.DB.Filemode),
+		Buckets:      buckets,
+		ClearOnClose: true,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}

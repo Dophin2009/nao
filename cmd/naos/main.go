@@ -7,7 +7,6 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"gitlab.com/Dophin2009/nao/internal/data"
 	"gitlab.com/Dophin2009/nao/internal/naos"
 )
 
@@ -33,9 +32,7 @@ func main() {
 		log.Fatalf("Failed to initialize application: %v", err)
 		return
 	}
-	// Clear database and close connection at the end
-	defer s.DB.Close()
-	defer data.ClearDatabase(s.DB)
+	defer s.DataLayer.Database.Close()
 
 	// Launch server in goroutine
 	shttp := s.HTTPServer()

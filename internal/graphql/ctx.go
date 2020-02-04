@@ -7,9 +7,10 @@ import (
 	"gitlab.com/Dophin2009/nao/internal/data"
 )
 
-// DataServices contains all data layer services required, to be passed around
+// DataService contains all data layer services required, to be passed around
 // in a context object.
-type DataServices struct {
+type DataService struct {
+	Database              *data.Database
 	CharacterService      *data.CharacterService
 	EpisodeService        *data.EpisodeService
 	EpisodeSetService     *data.EpisodeSetService
@@ -26,11 +27,11 @@ type DataServices struct {
 	UserMediaListService  *data.UserMediaListService
 }
 
-// DataServicesKey is the context key value for DataServices.
-const DataServicesKey = "DataServicesKey"
+// DataServiceKey is the context key value for DataServices.
+const DataServiceKey = "DataServicesKey"
 
-func getDataServicesFromCtx(ctx context.Context) (*DataServices, error) {
-	v, ok := ctx.Value(DataServicesKey).(*DataServices)
+func getCtxDataService(ctx context.Context) (*DataService, error) {
+	v, ok := ctx.Value(DataServiceKey).(*DataService)
 	if !ok {
 		return nil, errors.New("DataServices not found in context")
 	}

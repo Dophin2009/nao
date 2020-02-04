@@ -84,7 +84,7 @@ type queryResolver struct{ *Resolver }
 func (r *queryResolver) MediaByID(
 	ctx context.Context, id int,
 ) (*data.Media, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -105,7 +105,7 @@ type mutationResolver struct{ *Resolver }
 func (r *mutationResolver) CreateMedia(
 	ctx context.Context, media data.Media,
 ) (*data.Media, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -140,7 +140,7 @@ func (r *characterResolver) Information(
 func (r *characterResolver) Media(
 	ctx context.Context, obj *data.Character, first *int, skip *int,
 ) ([]*data.MediaCharacter, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -186,7 +186,7 @@ func (r *episodeSetResolver) Descriptions(
 // Media resolves the Media the EpisodeSet object belongs to.
 func (r *episodeSetResolver) Media(
 	ctx context.Context, obj *data.EpisodeSet) (*data.Media, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -205,7 +205,7 @@ func (r *episodeSetResolver) Media(
 func (r *episodeSetResolver) Episodes(
 	ctx context.Context, obj *data.EpisodeSet, first *int, skip *int,
 ) ([]*data.Episode, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -240,7 +240,7 @@ func (r *genreResolver) Descriptions(
 func (r *genreResolver) Media(
 	ctx context.Context, obj *data.Genre, first *int, skip *int,
 ) ([]*data.MediaGenre, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -284,7 +284,7 @@ func (r *mediaResolver) Background(
 func (r *mediaResolver) EpisodeSets(
 	ctx context.Context, obj *data.Media, first *int, skip *int,
 ) ([]*data.EpisodeSet, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -304,7 +304,7 @@ func (r *mediaResolver) EpisodeSets(
 func (r *mediaResolver) Producers(
 	ctx context.Context, obj *data.Media, first *int, skip *int,
 ) ([]*data.MediaProducer, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -323,7 +323,7 @@ func (r *mediaResolver) Producers(
 func (r *mediaResolver) Characters(
 	ctx context.Context, obj *data.Media, first *int, skip *int,
 ) ([]*data.MediaCharacter, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -342,7 +342,7 @@ func (r *mediaResolver) Characters(
 func (r *mediaResolver) Genres(
 	ctx context.Context, obj *data.Media, first *int, skip *int,
 ) ([]*data.MediaGenre, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -372,7 +372,7 @@ func (r *mediaCharacterResolver) Media(
 func (r *mediaCharacterResolver) Character(
 	ctx context.Context, obj *data.MediaCharacter,
 ) (*data.Character, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -395,7 +395,7 @@ func (r *mediaCharacterResolver) Character(
 func (r *mediaCharacterResolver) Person(
 	ctx context.Context, obj *data.MediaCharacter,
 ) (*data.Person, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -428,7 +428,7 @@ func (r *mediaGenreResolver) Media(
 func (r *mediaGenreResolver) Genre(
 	ctx context.Context, obj *data.MediaGenre,
 ) (*data.Genre, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -458,7 +458,7 @@ func (r *mediaProducerResolver) Media(
 func (r *mediaProducerResolver) Producer(
 	ctx context.Context, obj *data.MediaProducer,
 ) (*data.Producer, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -514,7 +514,7 @@ func (r *personResolver) Information(
 func (r *personResolver) Media(
 	ctx context.Context, obj *data.Person, first *int, skip *int,
 ) ([]*data.MediaCharacter, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -543,7 +543,7 @@ func (r *producerResolver) Titles(
 func (r *producerResolver) Media(
 	ctx context.Context, obj *data.Producer, first *int, skip *int,
 ) ([]*data.MediaProducer, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
@@ -559,7 +559,7 @@ func (r *producerResolver) Media(
 }
 
 func resolveMediaByID(ctx context.Context, mID int) (*data.Media, error) {
-	ds, err := getDataServicesFromCtx(ctx)
+	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}

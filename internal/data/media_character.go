@@ -24,9 +24,6 @@ func (mc *MediaCharacter) Metadata() *ModelMetadata {
 	return &mc.Meta
 }
 
-// MediaCharacterBucket is the name of the database bucket for MediaCharacter.
-const MediaCharacterBucket = "MediaCharacter"
-
 // MediaCharacterService performs operations on MediaCharacter.
 type MediaCharacterService struct {
 	MediaService     *MediaService
@@ -157,7 +154,7 @@ func (ser *MediaCharacterService) GetByPerson(
 
 // Bucket returns the name of the bucket for MediaCharacter.
 func (ser *MediaCharacterService) Bucket() string {
-	return MediaCharacterBucket
+	return "MediaCharacter"
 }
 
 // Clean cleans the given MediaCharacter for storage.

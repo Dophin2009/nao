@@ -22,9 +22,6 @@ func (uc *UserCharacter) Metadata() *ModelMetadata {
 	return &uc.Meta
 }
 
-// UserCharacterBucket is the name of the database bucket for UserCharacter.
-const UserCharacterBucket = "UserCharacter"
-
 // UserCharacterService performs operations on UserCharacter.
 type UserCharacterService struct {
 	UserService      *UserService
@@ -142,7 +139,7 @@ func (ser *UserCharacterService) GetByCharacter(
 
 // Bucket returns the name of the bucket for UserCharacter.
 func (ser *UserCharacterService) Bucket() string {
-	return UserCharacterBucket
+	return "UserCharacter"
 }
 
 // Clean cleans the given UserCharacter for storage.

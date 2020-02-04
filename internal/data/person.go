@@ -21,9 +21,6 @@ func (p *Person) Metadata() *ModelMetadata {
 	return &p.Meta
 }
 
-// PersonBucket is the name of the database bucket for Person.
-const PersonBucket = "Person"
-
 // PersonService performs operations on Persons.
 type PersonService struct{}
 
@@ -119,7 +116,7 @@ func (ser *PersonService) GetByID(id int, tx Tx) (*Person, error) {
 
 // Bucket returns the name of the bucket for Person.
 func (ser *PersonService) Bucket() string {
-	return PersonBucket
+	return "Person"
 }
 
 // Clean cleans the given Person for storage.

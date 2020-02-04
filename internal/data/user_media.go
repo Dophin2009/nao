@@ -99,9 +99,6 @@ func (ws *WatchStatus) MarshalJSON() (v []byte, err error) {
 	return v, nil
 }
 
-// UserMediaBucket is the name of the database bucket for UserMedia.
-const UserMediaBucket = "UserMedia"
-
 // UserMediaService performs operations on UserMedia.
 type UserMediaService struct {
 	UserService  *UserService
@@ -218,7 +215,7 @@ func (ser *UserMediaService) GetByMedia(
 
 // Bucket returns the name of the bucket for UserMedia.
 func (ser *UserMediaService) Bucket() string {
-	return UserMediaBucket
+	return "UserMedia"
 }
 
 // Clean cleans the given UserMedia for storage.

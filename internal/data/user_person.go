@@ -22,9 +22,6 @@ func (up *UserPerson) Metadata() *ModelMetadata {
 	return &up.Meta
 }
 
-// UserPersonBucket is the name of the database bucket for UserPerson.
-const UserPersonBucket = "UserPerson"
-
 // UserPersonService performs operations on UserPerson.
 type UserPersonService struct {
 	UserService   *UserService
@@ -142,7 +139,7 @@ func (ser *UserPersonService) GetByPerson(
 
 // Bucket returns the name of the bucket for UserPerson.
 func (ser *UserPersonService) Bucket() string {
-	return UserPersonBucket
+	return "UserPerson"
 }
 
 // Clean cleans the given UserPerson for storage.

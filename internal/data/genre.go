@@ -19,9 +19,6 @@ func (g *Genre) Metadata() *ModelMetadata {
 	return &g.Meta
 }
 
-// GenreBucket is the name of the database bucket for Genre.
-const GenreBucket = "Genre"
-
 // GenreService performs operations on genre.
 type GenreService struct{}
 
@@ -117,7 +114,7 @@ func (ser *GenreService) GetByID(id int, tx Tx) (*Genre, error) {
 
 // Bucket returns the name of the bucket for Genre.
 func (ser *GenreService) Bucket() string {
-	return GenreBucket
+	return "Genre"
 }
 
 // Clean cleans the given Genre for storage

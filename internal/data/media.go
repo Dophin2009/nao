@@ -111,9 +111,6 @@ func (q Quarter) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(q.String()))
 }
 
-// MediaBucket is the name of the database bucket for Media.
-const MediaBucket = "Media"
-
 // MediaService performs operations on Media.
 type MediaService struct{}
 
@@ -208,7 +205,7 @@ func (ser *MediaService) GetByID(id int, tx Tx) (*Media, error) {
 
 // Bucket returns the name of the bucket for Media.
 func (ser *MediaService) Bucket() string {
-	return MediaBucket
+	return "Media"
 }
 
 // Clean cleans the given Media for storage

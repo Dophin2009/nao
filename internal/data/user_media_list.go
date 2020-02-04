@@ -21,9 +21,6 @@ func (uml *UserMediaList) Metadata() *ModelMetadata {
 	return &uml.Meta
 }
 
-// UserMediaListBucket is the name of the database bucket for UserMediaList.
-const UserMediaListBucket = "UserMediaList"
-
 // UserMediaListService performs operations on UserMediaList.
 type UserMediaListService struct {
 	UserService      *UserService
@@ -122,7 +119,7 @@ func (ser *UserMediaListService) GetByID(id int, tx Tx) (*UserMediaList, error) 
 
 // Bucket returns the name of the bucket for UserMediaList.
 func (ser *UserMediaListService) Bucket() string {
-	return UserMediaListBucket
+	return "UserMediaList"
 }
 
 // Clean cleans the given UserMediaList for storage.

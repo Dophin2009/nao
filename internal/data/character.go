@@ -21,9 +21,6 @@ func (c *Character) Metadata() *ModelMetadata {
 	return &c.Meta
 }
 
-// CharacterBucket is the name of the database bucket for Character.
-const CharacterBucket = "Character"
-
 // CharacterService performs operations on Characters.
 type CharacterService struct{}
 
@@ -120,7 +117,7 @@ func (ser *CharacterService) GetByID(id int, tx Tx) (*Character, error) {
 
 // Bucket returns the name of the bucket for Media.
 func (ser *CharacterService) Bucket() string {
-	return CharacterBucket
+	return "Character"
 }
 
 // Clean cleans the given Character for storage

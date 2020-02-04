@@ -22,9 +22,6 @@ func (mp *MediaProducer) Metadata() *ModelMetadata {
 	return &mp.Meta
 }
 
-// MediaProducerBucket is the name of the database bucket for MediaProducer.
-const MediaProducerBucket = "MediaProducer"
-
 // MediaProducerService performs operations on MediaProducer.
 type MediaProducerService struct {
 	MediaService    *MediaService
@@ -146,7 +143,7 @@ func (ser *MediaProducerService) GetByProducer(
 
 // Bucket returns the name of the bucket for MediaProducer.
 func (ser *MediaProducerService) Bucket() string {
-	return MediaProducerBucket
+	return "MediaProducer"
 }
 
 // Clean cleans the given MediaProducer for storage.

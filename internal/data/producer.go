@@ -20,9 +20,6 @@ func (p *Producer) Metadata() *ModelMetadata {
 	return &p.Meta
 }
 
-// ProducerBucket is the name of the database bucket for Producer.
-const ProducerBucket = "Producer"
-
 // ProducerService performs operations on Producer.
 type ProducerService struct{}
 
@@ -118,7 +115,7 @@ func (ser *ProducerService) GetByID(id int, tx Tx) (*Producer, error) {
 
 // Bucket returns the name of the bucket for Producer.
 func (ser *ProducerService) Bucket() string {
-	return ProducerBucket
+	return "Producer"
 }
 
 // Clean cleans the given Producer for storage.

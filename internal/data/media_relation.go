@@ -22,9 +22,6 @@ func (mr *MediaRelation) Metadata() *ModelMetadata {
 	return &mr.Meta
 }
 
-// MediaRelationBucket is the name of the database bucket for MediaRelation.
-const MediaRelationBucket = "MediaRelation"
-
 // MediaRelationService performs operations on MediaRelation.
 type MediaRelationService struct {
 	MediaService *MediaService
@@ -152,7 +149,7 @@ func (ser *MediaRelationService) GetByRelationship(
 
 // Bucket returns the name of the bucket for MediaRelation.
 func (ser *MediaRelationService) Bucket() string {
-	return MediaRelationBucket
+	return "MediaRelation"
 }
 
 // Clean cleans the given MediaRelation for storage.

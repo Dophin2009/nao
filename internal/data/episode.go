@@ -40,9 +40,6 @@ func (set *EpisodeSet) Metadata() *ModelMetadata {
 	return &set.Meta
 }
 
-// EpisodeBucket is the name of the database bucket for Episodes.
-const EpisodeBucket = "Episode"
-
 // EpisodeService performs operations on Episodes.
 type EpisodeService struct{}
 
@@ -138,7 +135,7 @@ func (ser *EpisodeService) GetByID(id int, tx Tx) (*Episode, error) {
 
 // Bucket returns the name of the bucket for Episode.
 func (ser *EpisodeService) Bucket() string {
-	return EpisodeBucket
+	return "Episode"
 }
 
 // Clean cleans the given Episode for storage.
@@ -221,9 +218,6 @@ func (ser *EpisodeService) mapFromModel(vlist []Model) ([]*Episode, error) {
 	}
 	return list, nil
 }
-
-// EpisodeSetBucket is the name of the database bucket for EpisodeSets.
-const EpisodeSetBucket = "EpisodeSet"
 
 // EpisodeSetService performs operations on EpisodeSets.
 type EpisodeSetService struct {
@@ -333,7 +327,7 @@ func (ser *EpisodeSetService) GetByMedia(
 
 // Bucket returns the name of the bucket for EpisodeSet.
 func (ser *EpisodeSetService) Bucket() string {
-	return EpisodeBucket
+	return "EpisodeSet"
 }
 
 // Clean cleans the given EpisodeSet for storage.

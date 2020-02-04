@@ -35,9 +35,6 @@ type UserPermission struct {
 	WriteUsers bool
 }
 
-// UserBucket is the name of the database bucket for User.
-const UserBucket = "User"
-
 // UserService performs operations on User.
 type UserService struct{}
 
@@ -229,7 +226,7 @@ func (ser *UserService) HashPassword(pass []byte) ([]byte, error) {
 
 // Bucket returns the name of the bucket for User.
 func (ser *UserService) Bucket() string {
-	return UserBucket
+	return "User"
 }
 
 // Clean cleans the given User for storage.

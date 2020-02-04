@@ -20,9 +20,6 @@ func (mg *MediaGenre) Metadata() *ModelMetadata {
 	return &mg.Meta
 }
 
-// MediaGenreBucket is the name of the database bucket for MediaGenre.
-const MediaGenreBucket = "MediaGenre"
-
 // MediaGenreService performs operations on MediaGenre.
 type MediaGenreService struct {
 	MediaService *MediaService
@@ -141,7 +138,7 @@ func (ser *MediaGenreService) GetByGenre(
 
 // Bucket returns the name of the bucket for MediaGenre.
 func (ser *MediaGenreService) Bucket() string {
-	return MediaGenreBucket
+	return "MediaGenre"
 }
 
 // Clean cleans the given MediaGenre for storage.

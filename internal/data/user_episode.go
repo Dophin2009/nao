@@ -22,9 +22,6 @@ func (uep *UserEpisode) Metadata() *ModelMetadata {
 	return &uep.Meta
 }
 
-// UserEpisodeBucket is the name of the database bucket for UserEpisode.
-const UserEpisodeBucket = "UserEpisode"
-
 // UserEpisodeService performs operations on UserEpisode.
 type UserEpisodeService struct {
 	UserService    *UserService
@@ -142,7 +139,7 @@ func (ser *UserEpisodeService) GetByEpisode(
 
 // Bucket returns the name of the bucket for UserEpisode.
 func (ser *UserEpisodeService) Bucket() string {
-	return UserEpisodeBucket
+	return "UserEpisode"
 }
 
 // Clean cleans the given UserEpisode for storage.

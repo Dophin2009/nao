@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	json "github.com/json-iterator/go"
-	bolt "go.etcd.io/bbolt"
 )
 
 // UserCharacter represents a relationship between a User and a Character,
@@ -28,27 +27,28 @@ const UserCharacterBucket = "UserCharacter"
 
 // UserCharacterService performs operations on UserCharacter.
 type UserCharacterService struct {
-	DB *bolt.DB
+	UserService      *UserService
+	CharacterService *CharacterService
 }
 
 // Create persists the given UserCharacter.
-func (ser *UserCharacterService) Create(uc *UserCharacter) error {
-	return Create(uc, ser)
+func (ser *UserCharacterService) Create(uc *UserCharacter, tx Tx) (int, error) {
+	return tx.Database().Create(uc, ser, tx)
 }
 
 // Update ruclaces the value of the UserCharacter with the given ID.
-func (ser *UserCharacterService) Update(uc *UserCharacter) error {
-	return Update(uc, ser)
+func (ser *UserCharacterService) Update(uc *UserCharacter, tx Tx) error {
+	return tx.Database().Update(uc, ser, tx)
 }
 
 // Delete deletes the UserCharacter with the given ID.
-func (ser *UserCharacterService) Delete(id int) error {
-	return Delete(id, ser)
+func (ser *UserCharacterService) Delete(id int, tx Tx) error {
+	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of UserCharacter.
-func (ser *UserCharacterService) GetAll(first *int, skip *int) ([]*UserCharacter, error) {
-	vlist, err := GetAll(ser, first, skip)
+func (ser *UserCharacterService) GetAll(first *int, skip *int, tx Tx) ([]*UserCharacter, error) {
+	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -63,15 +63,16 @@ func (ser *UserCharacterService) GetAll(first *int, skip *int) ([]*UserCharacter
 // GetFilter retrieves all persisted values of UserCharacter that pass the
 // filter.
 func (ser *UserCharacterService) GetFilter(
-	first *int, skip *int, keep func(uc *UserCharacter) bool,
+	first *int, skip *int, tx Tx, keep func(uc *UserCharacter) bool,
 ) ([]*UserCharacter, error) {
-	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
-		uc, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(uc)
-	})
+	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
+		func(m Model) bool {
+			uc, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(uc)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -86,15 +87,16 @@ func (ser *UserCharacterService) GetFilter(
 // GetMultiple retrieves the persisted UserCharacter values specified by the
 // given IDs that pass the filter.
 func (ser *UserCharacterService) GetMultiple(
-	ids []int, first *int, skip *int, keep func(uc *UserCharacter) bool,
+	ids []int, first *int, skip *int, tx Tx, keep func(uc *UserCharacter) bool,
 ) ([]*UserCharacter, error) {
-	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
-		uc, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(uc)
-	})
+	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+		func(m Model) bool {
+			uc, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(uc)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +109,8 @@ func (ser *UserCharacterService) GetMultiple(
 }
 
 // GetByID retrieves the persisted UserCharacter with the given ID.
-func (ser *UserCharacterService) GetByID(id int) (*UserCharacter, error) {
-	m, err := GetByID(id, ser)
+func (ser *UserCharacterService) GetByID(id int, tx Tx) (*UserCharacter, error) {
+	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -122,25 +124,20 @@ func (ser *UserCharacterService) GetByID(id int) (*UserCharacter, error) {
 
 // GetByUser retrieves the persisted UserCharacter with the given User ID.
 func (ser *UserCharacterService) GetByUser(
-	uID int, first *int, skip *int,
+	uID int, first *int, skip *int, tx Tx,
 ) ([]*UserCharacter, error) {
-	return ser.GetFilter(first, skip, func(uc *UserCharacter) bool {
+	return ser.GetFilter(first, skip, tx, func(uc *UserCharacter) bool {
 		return uc.UserID == uID
 	})
 }
 
 // GetByCharacter retrieves the persisted UserCharacter with the given Character ID.
 func (ser *UserCharacterService) GetByCharacter(
-	cID int, first *int, skip *int,
+	cID int, first *int, skip *int, tx Tx,
 ) ([]*UserCharacter, error) {
-	return ser.GetFilter(first, skip, func(uc *UserCharacter) bool {
+	return ser.GetFilter(first, skip, tx, func(uc *UserCharacter) bool {
 		return uc.CharacterID == cID
 	})
-}
-
-// Database returns the database reference.
-func (ser *UserCharacterService) Database() *bolt.DB {
-	return ser.DB
 }
 
 // Bucket returns the name of the bucket for UserCharacter.
@@ -149,54 +146,49 @@ func (ser *UserCharacterService) Bucket() string {
 }
 
 // Clean cleans the given UserCharacter for storage.
-func (ser *UserCharacterService) Clean(m Model) error {
+func (ser *UserCharacterService) Clean(m Model, _ Tx) error {
 	_, err := ser.AssertType(m)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelCleaning, err)
+	}
+	return nil
 }
 
 // Validate returns an error if the UserCharacter is not valid for the database.
-func (ser *UserCharacterService) Validate(m Model) error {
+func (ser *UserCharacterService) Validate(m Model, tx Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
-	return ser.DB.View(func(tx *bolt.Tx) error {
-		// Check if User with ID specified in UserCharacter exists
-		// Get User bucket, exit if error
-		ub, err := Bucket(UserBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, UserBucket, err)
-		}
-		_, err = get(e.UserID, ub)
-		if err != nil {
-			return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
-		}
+	db := tx.Database()
 
-		// Check if Character with ID specified in UserCharacter exists
-		// Get Character bucket, exit if error
-		cb, err := Bucket(CharacterBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, CharacterBucket, err)
-		}
-		_, err = get(e.CharacterID, cb)
-		if err != nil {
-			return fmt.Errorf(
-				"failed to get Character with ID %d: %w", e.CharacterID, err)
-		}
+	// Check if User with ID specified in UserCharacter exists
+	// Get User bucket, exit if error
+	_, err = db.GetRawByID(e.UserID, ser.UserService, tx)
+	if err != nil {
+		return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
+	}
 
-		return nil
-	})
+	// Check if Character with ID specified in UserCharacter exists
+	// Get Character bucket, exit if error
+	_, err = db.GetRawByID(e.CharacterID, ser.CharacterService, tx)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to get Character with ID %d: %w", e.CharacterID, err)
+	}
+
+	return nil
 }
 
 // Initialize sets initial values for some properties.
-func (ser *UserCharacterService) Initialize(m Model) error {
+func (ser *UserCharacterService) Initialize(_ Model, _ Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // UserCharacter in updates.
-func (ser *UserCharacterService) PersistOldProperties(n Model, o Model) error {
+func (ser *UserCharacterService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
 	return nil
 }
 

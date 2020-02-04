@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	json "github.com/json-iterator/go"
-	bolt "go.etcd.io/bbolt"
 )
 
 // UserMediaList represents a User-created list of UserMedia.
@@ -27,27 +26,28 @@ const UserMediaListBucket = "UserMediaList"
 
 // UserMediaListService performs operations on UserMediaList.
 type UserMediaListService struct {
-	DB *bolt.DB
+	UserService      *UserService
+	UserMediaService *UserMediaService
 }
 
 // Create persists the given UserMediaList.
-func (ser *UserMediaListService) Create(uml *UserMediaList) error {
-	return Create(uml, ser)
+func (ser *UserMediaListService) Create(uml *UserMediaList, tx Tx) (int, error) {
+	return tx.Database().Create(uml, ser, tx)
 }
 
 // Update rumllaces the value of the UserMediaList with the given ID.
-func (ser *UserMediaListService) Update(uml *UserMediaList) error {
-	return Update(uml, ser)
+func (ser *UserMediaListService) Update(uml *UserMediaList, tx Tx) error {
+	return tx.Database().Update(uml, ser, tx)
 }
 
 // Delete deletes the UserMediaList with the given ID.
-func (ser *UserMediaListService) Delete(id int) error {
-	return Delete(id, ser)
+func (ser *UserMediaListService) Delete(id int, tx Tx) error {
+	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of UserMediaList.
-func (ser *UserMediaListService) GetAll(first *int, skip *int) ([]*UserMediaList, error) {
-	vlist, err := GetAll(ser, first, skip)
+func (ser *UserMediaListService) GetAll(first *int, skip *int, tx Tx) ([]*UserMediaList, error) {
+	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -62,15 +62,16 @@ func (ser *UserMediaListService) GetAll(first *int, skip *int) ([]*UserMediaList
 // GetFilter retrieves all persisted values of UserMediaList that pass the
 // filter.
 func (ser *UserMediaListService) GetFilter(
-	first *int, skip *int, keep func(uml *UserMediaList) bool,
+	first *int, skip *int, tx Tx, keep func(uml *UserMediaList) bool,
 ) ([]*UserMediaList, error) {
-	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
-		uml, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(uml)
-	})
+	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
+		func(m Model) bool {
+			uml, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(uml)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -85,9 +86,9 @@ func (ser *UserMediaListService) GetFilter(
 // GetMultiple retrieves the persisted UserMediaList values specified by the
 // given IDs that pass the filter.
 func (ser *UserMediaListService) GetMultiple(
-	ids []int, first *int, skip *int, keep func(uml *UserMediaList) bool,
+	ids []int, first *int, skip *int, tx Tx, keep func(uml *UserMediaList) bool,
 ) ([]*UserMediaList, error) {
-	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
+	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx, func(m Model) bool {
 		uml, err := ser.AssertType(m)
 		if err != nil {
 			return false
@@ -106,8 +107,8 @@ func (ser *UserMediaListService) GetMultiple(
 }
 
 // GetByID retrieves the persisted UserMediaList with the given ID.
-func (ser *UserMediaListService) GetByID(id int) (*UserMediaList, error) {
-	m, err := GetByID(id, ser)
+func (ser *UserMediaListService) GetByID(id int, tx Tx) (*UserMediaList, error) {
+	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -119,18 +120,13 @@ func (ser *UserMediaListService) GetByID(id int) (*UserMediaList, error) {
 	return uml, nil
 }
 
-// Database returns the database reference.
-func (ser *UserMediaListService) Database() *bolt.DB {
-	return ser.DB
-}
-
 // Bucket returns the name of the bucket for UserMediaList.
 func (ser *UserMediaListService) Bucket() string {
 	return UserMediaListBucket
 }
 
 // Clean cleans the given UserMediaList for storage.
-func (ser *UserMediaListService) Clean(m Model) error {
+func (ser *UserMediaListService) Clean(m Model, _ Tx) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -140,49 +136,39 @@ func (ser *UserMediaListService) Clean(m Model) error {
 
 // Validate returns an error if the UserMediaList is not valid for the
 // database.
-func (ser *UserMediaListService) Validate(m Model) error {
+func (ser *UserMediaListService) Validate(m Model, tx Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
-	return ser.DB.View(func(tx *bolt.Tx) error {
-		// Check if User with ID specified in UserMediaList exists
-		// Get User bucket, exit if error
-		ub, err := Bucket(UserBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s: %w", errmsgBucketOpen, err)
-		}
-		_, err = get(e.UserID, ub)
-		if err != nil {
-			return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
-		}
+	db := tx.Database()
 
-		// Check if UserMedia with IDs specified in UserMediaList exist
-		// Get UserMedia bucket, exit if error
-		umb, err := Bucket(UserMediaBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s: %w", errmsgBucketOpen, err)
-		}
-		for _, umID := range e.UserMedia {
-			_, err = get(umID, umb)
-			if err != nil {
-				return fmt.Errorf("failed to get UserMedia with ID %d: %w", umID, err)
-			}
-		}
+	// Check if User with ID specified in UserMediaList exists
+	_, err = db.GetRawByID(e.UserID, ser.UserService, tx)
+	if err != nil {
+		return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
+	}
 
-		return nil
-	})
+	// Check if UserMedia with IDs specified in UserMediaList exist
+	for _, umID := range e.UserMedia {
+		_, err = db.GetRawByID(umID, ser.UserMediaService, tx)
+		if err != nil {
+			return fmt.Errorf("failed to get UserMedia with ID %d: %w", umID, err)
+		}
+	}
+
+	return nil
 }
 
 // Initialize sets initial values for some properties.
-func (ser *UserMediaListService) Initialize(m Model) error {
+func (ser *UserMediaListService) Initialize(_ Model, _ Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // UserMediaList in updates.
-func (ser *UserMediaListService) PersistOldProperties(n Model, o Model) error {
+func (ser *UserMediaListService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
 	return nil
 }
 

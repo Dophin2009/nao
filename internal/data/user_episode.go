@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	json "github.com/json-iterator/go"
-	bolt "go.etcd.io/bbolt"
 )
 
 // UserEpisode represents a relationship between a User and an Episode,
@@ -28,27 +27,28 @@ const UserEpisodeBucket = "UserEpisode"
 
 // UserEpisodeService performs operations on UserEpisode.
 type UserEpisodeService struct {
-	DB *bolt.DB
+	UserService    *UserService
+	EpisodeService *EpisodeService
 }
 
 // Create persists the given UserEpisode.
-func (ser *UserEpisodeService) Create(uep *UserEpisode) error {
-	return Create(uep, ser)
+func (ser *UserEpisodeService) Create(uep *UserEpisode, tx Tx) (int, error) {
+	return tx.Database().Create(uep, ser, tx)
 }
 
 // Update rueplaces the value of the UserEpisode with the given ID.
-func (ser *UserEpisodeService) Update(uep *UserEpisode) error {
-	return Update(uep, ser)
+func (ser *UserEpisodeService) Update(uep *UserEpisode, tx Tx) error {
+	return tx.Database().Update(uep, ser, tx)
 }
 
 // Delete deletes the UserEpisode with the given ID.
-func (ser *UserEpisodeService) Delete(id int) error {
-	return Delete(id, ser)
+func (ser *UserEpisodeService) Delete(id int, tx Tx) error {
+	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of UserEpisode.
-func (ser *UserEpisodeService) GetAll(first *int, skip *int) ([]*UserEpisode, error) {
-	vlist, err := GetAll(ser, first, skip)
+func (ser *UserEpisodeService) GetAll(first *int, skip *int, tx Tx) ([]*UserEpisode, error) {
+	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -63,15 +63,16 @@ func (ser *UserEpisodeService) GetAll(first *int, skip *int) ([]*UserEpisode, er
 // GetFilter retrieves all persisted values of UserEpisode that pass the
 // filter.
 func (ser *UserEpisodeService) GetFilter(
-	first *int, skip *int, keep func(uep *UserEpisode) bool,
+	first *int, skip *int, tx Tx, keep func(uep *UserEpisode) bool,
 ) ([]*UserEpisode, error) {
-	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
-		uep, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(uep)
-	})
+	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
+		func(m Model) bool {
+			uep, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(uep)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -86,15 +87,16 @@ func (ser *UserEpisodeService) GetFilter(
 // GetMultiple retrieves the persisted UserEpisode values specified by the
 // given IDs that pass the filter.
 func (ser *UserEpisodeService) GetMultiple(
-	ids []int, first *int, skip *int, keep func(uep *UserEpisode) bool,
+	ids []int, first *int, skip *int, tx Tx, keep func(uep *UserEpisode) bool,
 ) ([]*UserEpisode, error) {
-	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
-		uep, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(uep)
-	})
+	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+		func(m Model) bool {
+			uep, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(uep)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +109,8 @@ func (ser *UserEpisodeService) GetMultiple(
 }
 
 // GetByID retrieves the persisted UserEpisode with the given ID.
-func (ser *UserEpisodeService) GetByID(id int) (*UserEpisode, error) {
-	m, err := GetByID(id, ser)
+func (ser *UserEpisodeService) GetByID(id int, tx Tx) (*UserEpisode, error) {
+	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -122,25 +124,20 @@ func (ser *UserEpisodeService) GetByID(id int) (*UserEpisode, error) {
 
 // GetByUser retrieves the persisted UserEpisode with the given User ID.
 func (ser *UserEpisodeService) GetByUser(
-	uID int, first *int, skip *int,
+	uID int, first *int, skip *int, tx Tx,
 ) ([]*UserEpisode, error) {
-	return ser.GetFilter(first, skip, func(uep *UserEpisode) bool {
+	return ser.GetFilter(first, skip, tx, func(uep *UserEpisode) bool {
 		return uep.UserID == uID
 	})
 }
 
 // GetByEpisode retrieves the persisted UserEpisode with the given Episode ID.
 func (ser *UserEpisodeService) GetByEpisode(
-	epID int, first *int, skip *int,
+	epID int, first *int, skip *int, tx Tx,
 ) ([]*UserEpisode, error) {
-	return ser.GetFilter(first, skip, func(uep *UserEpisode) bool {
+	return ser.GetFilter(first, skip, tx, func(uep *UserEpisode) bool {
 		return uep.EpisodeID == epID
 	})
-}
-
-// Database returns the database reference.
-func (ser *UserEpisodeService) Database() *bolt.DB {
-	return ser.DB
 }
 
 // Bucket returns the name of the bucket for UserEpisode.
@@ -149,54 +146,47 @@ func (ser *UserEpisodeService) Bucket() string {
 }
 
 // Clean cleans the given UserEpisode for storage.
-func (ser *UserEpisodeService) Clean(m Model) error {
+func (ser *UserEpisodeService) Clean(m Model, _ Tx) error {
 	_, err := ser.AssertType(m)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+	}
+	return nil
 }
 
 // Validate returns an error if the UserEpisode is not valid for the database.
-func (ser *UserEpisodeService) Validate(m Model) error {
+func (ser *UserEpisodeService) Validate(m Model, tx Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
-	return ser.DB.View(func(tx *bolt.Tx) error {
-		// Check if User with ID specified in UserEpisode exists
-		// Get User bucket, exit if error
-		ub, err := Bucket(UserBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, UserBucket, err)
-		}
-		_, err = get(e.UserID, ub)
-		if err != nil {
-			return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
-		}
+	db := tx.Database()
 
-		// Check if Episode with ID specified in UserEpisode exists
-		// Get Episode bucket, exit if error
-		epb, err := Bucket(EpisodeBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, EpisodeBucket, err)
-		}
-		_, err = get(e.EpisodeID, epb)
-		if err != nil {
-			return fmt.Errorf(
-				"failed to get Episode with ID %d: %w", e.EpisodeID, err)
-		}
+	// Check if User with ID specified in UserEpisode exists
+	_, err = db.GetRawByID(e.UserID, ser.UserService, tx)
+	if err != nil {
+		return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
+	}
 
-		return nil
-	})
+	// Check if Episode with ID specified in UserEpisode exists
+	_, err = db.GetRawByID(e.EpisodeID, ser.EpisodeService, tx)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to get Episode with ID %d: %w", e.EpisodeID, err)
+	}
+
+	return nil
 }
 
 // Initialize sets initial values for some properties.
-func (ser *UserEpisodeService) Initialize(m Model) error {
+func (ser *UserEpisodeService) Initialize(_ Model, _ Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // UserEpisode in updates.
-func (ser *UserEpisodeService) PersistOldProperties(n Model, o Model) error {
+func (ser *UserEpisodeService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
 	return nil
 }
 

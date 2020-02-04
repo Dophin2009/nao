@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	json "github.com/json-iterator/go"
-	bolt "go.etcd.io/bbolt"
 )
 
 // MediaCharacter represents a relationship between single instances of Media
@@ -30,27 +29,29 @@ const MediaCharacterBucket = "MediaCharacter"
 
 // MediaCharacterService performs operations on MediaCharacter.
 type MediaCharacterService struct {
-	DB *bolt.DB
+	MediaService     *MediaService
+	CharacterService *CharacterService
+	PersonService    *PersonService
 }
 
 // Create persists the given MediaCharacter.
-func (ser *MediaCharacterService) Create(mc *MediaCharacter) error {
-	return Create(mc, ser)
+func (ser *MediaCharacterService) Create(mc *MediaCharacter, tx Tx) (int, error) {
+	return tx.Database().Create(mc, ser, tx)
 }
 
 // Update rmclaces the value of the MediaCharacter with the given ID.
-func (ser *MediaCharacterService) Update(mc *MediaCharacter) error {
-	return Update(mc, ser)
+func (ser *MediaCharacterService) Update(mc *MediaCharacter, tx Tx) error {
+	return tx.Database().Update(mc, ser, tx)
 }
 
 // Delete deletes the MediaCharacter with the given ID.
-func (ser *MediaCharacterService) Delete(id int) error {
-	return Delete(id, ser)
+func (ser *MediaCharacterService) Delete(id int, tx Tx) error {
+	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of MediaCharacter.
-func (ser *MediaCharacterService) GetAll(first *int, skip *int) ([]*MediaCharacter, error) {
-	vlist, err := GetAll(ser, first, skip)
+func (ser *MediaCharacterService) GetAll(first *int, skip *int, tx Tx) ([]*MediaCharacter, error) {
+	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -65,15 +66,16 @@ func (ser *MediaCharacterService) GetAll(first *int, skip *int) ([]*MediaCharact
 // GetFilter retrieves all persisted values of MediaCharacter that pass the
 // filter.
 func (ser *MediaCharacterService) GetFilter(
-	first *int, skip *int, keep func(mc *MediaCharacter) bool,
+	first *int, skip *int, tx Tx, keep func(mc *MediaCharacter) bool,
 ) ([]*MediaCharacter, error) {
-	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
-		mc, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(mc)
-	})
+	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
+		func(m Model) bool {
+			mc, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(mc)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -88,15 +90,16 @@ func (ser *MediaCharacterService) GetFilter(
 // GetMultiple retrieves the persisted MediaCharacter values specified by the
 // given IDs that pass the filter.
 func (ser *MediaCharacterService) GetMultiple(
-	ids []int, first *int, skip *int, keep func(mc *MediaCharacter) bool,
+	ids []int, first *int, skip *int, tx Tx, keep func(mc *MediaCharacter) bool,
 ) ([]*MediaCharacter, error) {
-	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
-		mc, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(mc)
-	})
+	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+		func(m Model) bool {
+			mc, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(mc)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +112,8 @@ func (ser *MediaCharacterService) GetMultiple(
 }
 
 // GetByID retrieves the persisted MediaCharacter with the given ID.
-func (ser *MediaCharacterService) GetByID(id int) (*MediaCharacter, error) {
-	m, err := GetByID(id, ser)
+func (ser *MediaCharacterService) GetByID(id int, tx Tx) (*MediaCharacter, error) {
+	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -125,9 +128,9 @@ func (ser *MediaCharacterService) GetByID(id int) (*MediaCharacter, error) {
 // GetByMedia retrieves a list of instances of MediaCharacter with the given
 // Media ID.
 func (ser *MediaCharacterService) GetByMedia(
-	mID int, first *int, skip *int,
+	mID int, first *int, skip *int, tx Tx,
 ) ([]*MediaCharacter, error) {
-	return ser.GetFilter(first, skip, func(mc *MediaCharacter) bool {
+	return ser.GetFilter(first, skip, tx, func(mc *MediaCharacter) bool {
 		return mc.MediaID == mID
 	})
 }
@@ -135,24 +138,21 @@ func (ser *MediaCharacterService) GetByMedia(
 // GetByCharacter retrieves a list of instances of MediaCharacter with the
 // given Character ID.
 func (ser *MediaCharacterService) GetByCharacter(
-	cID int, first *int, skip *int,
+	cID int, first *int, skip *int, tx Tx,
 ) ([]*MediaCharacter, error) {
-	return ser.GetFilter(first, skip, func(mc *MediaCharacter) bool {
+	return ser.GetFilter(first, skip, tx, func(mc *MediaCharacter) bool {
 		return *mc.CharacterID == cID
 	})
 }
 
 // GetByPerson retrieves a list of instances of MediaCharacter with the given
 // Person ID.
-func (ser *MediaCharacterService) GetByPerson(pID int, first *int, skip *int) ([]*MediaCharacter, error) {
-	return ser.GetFilter(first, skip, func(mc *MediaCharacter) bool {
+func (ser *MediaCharacterService) GetByPerson(
+	pID int, first *int, skip *int, tx Tx,
+) ([]*MediaCharacter, error) {
+	return ser.GetFilter(first, skip, tx, func(mc *MediaCharacter) bool {
 		return *mc.CharacterID == pID
 	})
-}
-
-// Database returns the database reference.
-func (ser *MediaCharacterService) Database() *bolt.DB {
-	return ser.DB
 }
 
 // Bucket returns the name of the bucket for MediaCharacter.
@@ -161,7 +161,7 @@ func (ser *MediaCharacterService) Bucket() string {
 }
 
 // Clean cleans the given MediaCharacter for storage.
-func (ser *MediaCharacterService) Clean(m Model) error {
+func (ser *MediaCharacterService) Clean(m Model, _ Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -178,103 +178,90 @@ func (ser *MediaCharacterService) Clean(m Model) error {
 
 // Validate returns an error if the MediaCharacter is not valid for the
 // database.
-func (ser *MediaCharacterService) Validate(m Model) error {
+func (ser *MediaCharacterService) Validate(m Model, tx Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
-	return ser.DB.View(func(tx *bolt.Tx) error {
-		// Check if Media with ID specified in new MediaCharacter exists
-		// Get Media bucket, exit if error
-		mb, err := Bucket(MediaBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, MediaBucket, err)
-		}
-		_, err = get(e.MediaID, mb)
-		if err != nil {
-			return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
-		}
+	db := tx.Database()
 
-		// Invalid if both Character and Person are not specified
-		if e.CharacterID == nil && e.PersonID == nil {
-			nsterr := fmt.Errorf("character ID and person ID: %w", errNil)
+	// Check if Media with ID specified in MediaCharacter exists
+	_, err = db.GetRawByID(e.MediaID, ser.MediaService, tx)
+	if err != nil {
+		return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
+	}
+
+	// Invalid if both Character and Person are not specified
+	if e.CharacterID == nil && e.PersonID == nil {
+		nsterr := fmt.Errorf("character ID and person ID: %w", errNil)
+		return fmt.Errorf(
+			"either character ID or person ID must be specified: %w", nsterr)
+	}
+
+	// Check if Character with ID specified in new MediaCharacter exists
+	// CharacterID might be not specified
+	if e.CharacterID != nil {
+		// CharacterRole must be present if CharacterID is specified
+		if e.CharacterRole == nil {
+			nsterr := fmt.Errorf("character role: %w", errNil)
 			return fmt.Errorf(
-				"either character ID or person ID must be specified: %w", nsterr)
+				"character role must not be nil if character ID is specified: %w",
+				nsterr,
+			)
 		}
 
-		// Check if Character with ID specified in new MediaCharacter exists
-		// CharacterID might be not specified
-		if e.CharacterID != nil {
-			// CharacterRole must be present if CharacterID is specified
-			if e.CharacterRole == nil {
-				nsterr := fmt.Errorf("character role: %w", errNil)
-				return fmt.Errorf(
-					"character role must not be nil if character ID is specified: %w",
-					nsterr,
-				)
-			}
+		cID := *e.CharacterID
+		_, err = db.GetRawByID(cID, ser.CharacterService, tx)
+		if err != nil {
+			return fmt.Errorf("failed to get Character with ID %d: %w", cID, err)
+		}
+	} else {
+		// CharacterRole must not be specified if CharacterID is not
+		if e.CharacterRole != nil {
+			nsterr := fmt.Errorf("character ID: %w", errNil)
+			return fmt.Errorf(
+				"character role must be nil if character ID is not specified: %w",
+				nsterr,
+			)
+		}
+	}
 
-			// Get Character bucket, exit if error
-			cID := *e.CharacterID
-			cb, err := Bucket(CharacterBucket, tx)
-			if err != nil {
-				return fmt.Errorf("%s %q: %w", errmsgBucketOpen, CharacterBucket, err)
-			}
-			_, err = get(cID, cb)
-			if err != nil {
-				return fmt.Errorf("failed to get Character with ID %d: %w", cID, err)
-			}
-		} else {
-			// CharacterRole must not be specified if CharacterID is not
-			if e.CharacterRole != nil {
-				nsterr := fmt.Errorf("character ID: %w", errNil)
-				return fmt.Errorf(
-					"character role must be nil if character ID is not specified: %w",
-					nsterr,
-				)
-			}
+	// Check if Person with ID specified in new MediaCharacter exists
+	// PersonID may be not specified
+	if e.PersonID != nil {
+		// PersonRole must be present if PersonID is specified
+		if e.PersonRole == nil {
+			nsterr := fmt.Errorf("person role: %w", errNil)
+			return fmt.Errorf(
+				"person role must not be nil if person ID is specified: %w", nsterr)
 		}
 
-		// Check if Person with ID specified in new MediaCharacter exists
-		// PersonID may be not specified
-		if e.PersonID != nil {
-			// PersonRole must be present if PersonID is specified
-			if e.PersonRole == nil {
-				nsterr := fmt.Errorf("person role: %w", errNil)
-				return fmt.Errorf(
-					"person role must not be nil if person ID is specified: %w", nsterr)
-			}
-			// Get Person bucket, exit if error
-			pb, err := Bucket(PersonBucket, tx)
-			if err != nil {
-				return err
-			}
-			_, err = get(*e.PersonID, pb)
-			if err != nil {
-				return err
-			}
-		} else {
-			// PersonRole must not be specified if PersonID is not
-			if e.PersonRole != nil {
-				nsterr := fmt.Errorf("person ID: %w", errNil)
-				return fmt.Errorf(
-					"person role must be nil if person ID is not specified: %w", nsterr)
-			}
+		pID := *e.PersonID
+		_, err = db.GetRawByID(pID, ser.PersonService, tx)
+		if err != nil {
+			return fmt.Errorf("failed to get Person with ID %d: %w", pID, err)
 		}
+	} else {
+		// PersonRole must not be specified if PersonID is not
+		if e.PersonRole != nil {
+			nsterr := fmt.Errorf("person ID: %w", errNil)
+			return fmt.Errorf(
+				"person role must be nil if person ID is not specified: %w", nsterr)
+		}
+	}
 
-		return nil
-	})
+	return nil
 }
 
 // Initialize sets initial values for some properties.
-func (ser *MediaCharacterService) Initialize(m Model) error {
+func (ser *MediaCharacterService) Initialize(_ Model, _ Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // MediaCharacter in updates.
-func (ser *MediaCharacterService) PersistOldProperties(n Model, o Model) error {
+func (ser *MediaCharacterService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
 	return nil
 }
 

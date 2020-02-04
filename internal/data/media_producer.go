@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	json "github.com/json-iterator/go"
-	bolt "go.etcd.io/bbolt"
 )
 
 // MediaProducer represents a relationship between single instances of Media
@@ -28,28 +27,30 @@ const MediaProducerBucket = "MediaProducer"
 
 // MediaProducerService performs operations on MediaProducer.
 type MediaProducerService struct {
-	DB *bolt.DB
+	MediaService    *MediaService
+	ProducerService *ProducerService
 }
 
 // Create persists the given MediaProducer.
-func (ser *MediaProducerService) Create(mp *MediaProducer) error {
-	return Create(mp, ser)
+func (ser *MediaProducerService) Create(mp *MediaProducer, tx Tx) (int, error) {
+	return tx.Database().Create(mp, ser, tx)
 }
 
 // Update rmplaces the value of the MediaProducer with the
 // given ID.
-func (ser *MediaProducerService) Update(mp *MediaProducer) error {
-	return Update(mp, ser)
+func (ser *MediaProducerService) Update(mp *MediaProducer, tx Tx) error {
+	return tx.Database().Update(mp, ser, tx)
 }
 
 // Delete deletes the MediaProducer with the given ID.
-func (ser *MediaProducerService) Delete(id int) error {
-	return Delete(id, ser)
+func (ser *MediaProducerService) Delete(id int, tx Tx) error {
+	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of MediaProducer.
-func (ser *MediaProducerService) GetAll(first *int, skip *int) ([]*MediaProducer, error) {
-	vlist, err := GetAll(ser, first, skip)
+func (ser *MediaProducerService) GetAll(
+	first *int, skip *int, tx Tx) ([]*MediaProducer, error) {
+	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -64,15 +65,16 @@ func (ser *MediaProducerService) GetAll(first *int, skip *int) ([]*MediaProducer
 // GetFilter retrieves all persisted values of MediaProducer that pass the
 // filter.
 func (ser *MediaProducerService) GetFilter(
-	first *int, skip *int, keep func(mp *MediaProducer) bool,
+	first *int, skip *int, tx Tx, keep func(mp *MediaProducer) bool,
 ) ([]*MediaProducer, error) {
-	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
-		mp, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(mp)
-	})
+	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
+		func(m Model) bool {
+			mp, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(mp)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -87,15 +89,16 @@ func (ser *MediaProducerService) GetFilter(
 // GetMultiple retrieves the persisted MediaProducer values specified by the
 // given IDs that pass the filter.
 func (ser *MediaProducerService) GetMultiple(
-	ids []int, first *int, skip *int, keep func(mp *MediaProducer) bool,
+	ids []int, first *int, skip *int, tx Tx, keep func(mp *MediaProducer) bool,
 ) ([]*MediaProducer, error) {
-	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
-		mp, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(mp)
-	})
+	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+		func(m Model) bool {
+			mp, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(mp)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -108,8 +111,8 @@ func (ser *MediaProducerService) GetMultiple(
 }
 
 // GetByID retrieves the persisted MediaProducer with the given ID.
-func (ser *MediaProducerService) GetByID(id int) (*MediaProducer, error) {
-	m, err := GetByID(id, ser)
+func (ser *MediaProducerService) GetByID(id int, tx Tx) (*MediaProducer, error) {
+	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -124,9 +127,9 @@ func (ser *MediaProducerService) GetByID(id int) (*MediaProducer, error) {
 // GetByMedia retrieves a list of instances of MediaProducer with the given
 // Media ID.
 func (ser *MediaProducerService) GetByMedia(
-	mID int, first *int, skip *int,
+	mID int, first *int, skip *int, tx Tx,
 ) ([]*MediaProducer, error) {
-	return ser.GetFilter(first, skip, func(mp *MediaProducer) bool {
+	return ser.GetFilter(first, skip, tx, func(mp *MediaProducer) bool {
 		return mp.MediaID == mID
 	})
 }
@@ -134,16 +137,11 @@ func (ser *MediaProducerService) GetByMedia(
 // GetByProducer retrieves a list of instances of MediaProducer with the given
 // Producer ID.
 func (ser *MediaProducerService) GetByProducer(
-	pID int, first *int, skip *int,
+	pID int, first *int, skip *int, tx Tx,
 ) ([]*MediaProducer, error) {
-	return ser.GetFilter(first, skip, func(mp *MediaProducer) bool {
+	return ser.GetFilter(first, skip, tx, func(mp *MediaProducer) bool {
 		return mp.ProducerID == pID
 	})
-}
-
-// Database returns the database reference.
-func (ser *MediaProducerService) Database() *bolt.DB {
-	return ser.DB
 }
 
 // Bucket returns the name of the bucket for MediaProducer.
@@ -152,7 +150,7 @@ func (ser *MediaProducerService) Bucket() string {
 }
 
 // Clean cleans the given MediaProducer for storage.
-func (ser *MediaProducerService) Clean(m Model) error {
+func (ser *MediaProducerService) Clean(m Model, _ Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -163,47 +161,37 @@ func (ser *MediaProducerService) Clean(m Model) error {
 
 // Validate returns an error if the MediaProducer is not valid for the
 // database.
-func (ser *MediaProducerService) Validate(m Model) error {
+func (ser *MediaProducerService) Validate(m Model, tx Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
-	return ser.DB.View(func(tx *bolt.Tx) error {
-		// Check if Media with ID specified in new MediaProducer exists
-		// Get Media bucket, exit if error
-		mb, err := Bucket(MediaBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, MediaBucket, err)
-		}
-		_, err = get(e.MediaID, mb)
-		if err != nil {
-			return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
-		}
+	db := tx.Database()
 
-		// Check if Producer with ID specified in new MediaProducer exists
-		// Get Producer bucket, exit if error
-		pb, err := Bucket(ProducerBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ProducerBucket, err)
-		}
-		_, err = get(e.ProducerID, pb)
-		if err != nil {
-			return fmt.Errorf("failed to get Producer with ID %d: %w", e.ProducerID, err)
-		}
+	// Check if Media with ID specified in new MediaProducer exists
+	_, err = db.GetRawByID(e.MediaID, ser, tx)
+	if err != nil {
+		return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
+	}
 
-		return nil
-	})
+	// Check if Producer with ID specified in new MediaProducer exists
+	_, err = db.GetRawByID(e.ProducerID, ser, tx)
+	if err != nil {
+		return fmt.Errorf("failed to get Producer with ID %d: %w", e.ProducerID, err)
+	}
+
+	return nil
 }
 
 // Initialize sets initial values for some properties.
-func (ser *MediaProducerService) Initialize(m Model) error {
+func (ser *MediaProducerService) Initialize(_ Model, _ Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // MediaProducer in updates.
-func (ser *MediaProducerService) PersistOldProperties(n Model, o Model) error {
+func (ser *MediaProducerService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
 	return nil
 }
 

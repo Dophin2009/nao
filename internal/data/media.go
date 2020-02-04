@@ -241,13 +241,13 @@ func (ser *MediaService) Validate(m Model, _ Tx) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *MediaService) Initialize(m Model, _ Tx) error {
+func (ser *MediaService) Initialize(_ Model, _ Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing Media in
 // updates.
-func (ser *MediaService) PersistOldProperties(n Model, o Model, _ Tx) error {
+func (ser *MediaService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
 	return nil
 }
 

@@ -50,6 +50,7 @@ type Database interface {
 	GetAll(first *int, skip *int, ser Service, tx Tx) ([]Model, error)
 	GetFilter(first *int, skip *int, ser Service, tx Tx,
 		keep func(Model) bool) ([]Model, error)
+	FindFirst(ser Service, tx Tx, match func(Model) (bool, error)) (Model, error)
 }
 
 // Tx defines a wrapper for database transactions objects.

@@ -176,7 +176,7 @@ func (db *BoltDatabase) Create(m Model, ser Service, tx Tx) (int, error) {
 	}
 
 	// Save model in bucket
-	buf, err := ser.Marshal(m, tx)
+	buf, err := ser.Marshal(m)
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", errmsgModelMarshal, err)
 	}
@@ -234,7 +234,7 @@ func (db *BoltDatabase) Update(m Model, ser Service, tx Tx) error {
 	}
 
 	// Unmarshal old
-	o, err := ser.Unmarshal(v, tx)
+	o, err := ser.Unmarshal(v)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
 	}
@@ -250,7 +250,7 @@ func (db *BoltDatabase) Update(m Model, ser Service, tx Tx) error {
 	}
 
 	// Save model
-	buf, err := ser.Marshal(m, tx)
+	buf, err := ser.Marshal(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelMarshal, err)
 	}
@@ -318,7 +318,7 @@ func (db *BoltDatabase) GetByID(id int, ser Service, tx Tx) (Model, error) {
 	}
 
 	// Unmarshal and return
-	m, err := ser.Unmarshal(v, tx)
+	m, err := ser.Unmarshal(v)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgModelMarshal, err)
 	}
@@ -474,7 +474,7 @@ func (db *BoltDatabase) GetFilter(first *int, skip *int, ser Service, tx Tx,
 	list := []Model{}
 	for i := start; i < end && k != nil; k, v = c.Next() {
 		// Unmarshal element
-		m, err := ser.Unmarshal(v, tx)
+		m, err := ser.Unmarshal(v)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
 		}
@@ -489,6 +489,36 @@ func (db *BoltDatabase) GetFilter(first *int, skip *int, ser Service, tx Tx,
 	}
 
 	return list, nil
+}
+
+// FindFirst returns the first element that matches the conditions in the
+// given function. Elements are iterated through in key order.
+func (db *BoltDatabase) FindFirst(
+	ser Service, tx Tx, match func(Model) (bool, error)) (Model, error) {
+	var m Model
+	err := db.iterateKeys(ser.Bucket(), tx, func(k, v []byte, tx Tx) (bool, error) {
+		e, err := ser.Unmarshal(v)
+		if err != nil {
+			return true, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
+		}
+
+		t, err := match(m)
+		if err != nil {
+			return true, fmt.Errorf("failed to check if match was found: %w", err)
+		}
+
+		if t {
+			m = e
+			return true, nil
+		}
+
+		return false, nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to iterate through keys: %w", err)
+	}
+
+	return m, nil
 }
 
 // iterateKeys iterates through the keys of the given database bucket and

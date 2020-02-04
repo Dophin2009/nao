@@ -6,7 +6,6 @@ import (
 	"time"
 
 	json "github.com/json-iterator/go"
-	bolt "go.etcd.io/bbolt"
 )
 
 // UserMedia represents a relationship between a User and a Media, containing
@@ -105,27 +104,28 @@ const UserMediaBucket = "UserMedia"
 
 // UserMediaService performs operations on UserMedia.
 type UserMediaService struct {
-	DB *bolt.DB
+	UserService  *UserService
+	MediaService *MediaService
 }
 
 // Create persists the given UserMedia.
-func (ser *UserMediaService) Create(um *UserMedia) error {
-	return Create(um, ser)
+func (ser *UserMediaService) Create(um *UserMedia, tx Tx) (int, error) {
+	return tx.Database().Create(um, ser, tx)
 }
 
 // Update rumlaces the value of the UserMedia with the given ID.
-func (ser *UserMediaService) Update(um *UserMedia) error {
-	return Update(um, ser)
+func (ser *UserMediaService) Update(um *UserMedia, tx Tx) error {
+	return tx.Database().Update(um, ser, tx)
 }
 
 // Delete deletes the UserMedia with the given ID.
-func (ser *UserMediaService) Delete(id int) error {
-	return Delete(id, ser)
+func (ser *UserMediaService) Delete(id int, tx Tx) error {
+	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of UserMedia.
-func (ser *UserMediaService) GetAll(first *int, skip *int) ([]*UserMedia, error) {
-	vlist, err := GetAll(ser, first, skip)
+func (ser *UserMediaService) GetAll(first *int, skip *int, tx Tx) ([]*UserMedia, error) {
+	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -139,15 +139,16 @@ func (ser *UserMediaService) GetAll(first *int, skip *int) ([]*UserMedia, error)
 
 // GetFilter retrieves all persisted values of UserMedia that pass the filter.
 func (ser *UserMediaService) GetFilter(
-	first *int, skip *int, keep func(um *UserMedia) bool,
+	first *int, skip *int, tx Tx, keep func(um *UserMedia) bool,
 ) ([]*UserMedia, error) {
-	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
-		um, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(um)
-	})
+	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
+		func(m Model) bool {
+			um, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(um)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -162,15 +163,16 @@ func (ser *UserMediaService) GetFilter(
 // GetMultiple retrieves the persisted UserMedia values specified by the
 // given IDs that pass the filter.
 func (ser *UserMediaService) GetMultiple(
-	ids []int, first *int, skip *int, keep func(um *UserMedia) bool,
+	ids []int, first *int, skip *int, tx Tx, keep func(um *UserMedia) bool,
 ) ([]*UserMedia, error) {
-	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
-		um, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(um)
-	})
+	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+		func(m Model) bool {
+			um, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(um)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -183,8 +185,8 @@ func (ser *UserMediaService) GetMultiple(
 }
 
 // GetByID retrieves the persisted UserMedia with the given ID.
-func (ser *UserMediaService) GetByID(id int) (*UserMedia, error) {
-	m, err := GetByID(id, ser)
+func (ser *UserMediaService) GetByID(id int, tx Tx) (*UserMedia, error) {
+	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -198,25 +200,20 @@ func (ser *UserMediaService) GetByID(id int) (*UserMedia, error) {
 
 // GetByUser retrieves the persisted UserMedia with the given User ID.
 func (ser *UserMediaService) GetByUser(
-	uID int, first *int, skip *int,
+	uID int, first *int, skip *int, tx Tx,
 ) ([]*UserMedia, error) {
-	return ser.GetFilter(first, skip, func(um *UserMedia) bool {
+	return ser.GetFilter(first, skip, tx, func(um *UserMedia) bool {
 		return um.UserID == uID
 	})
 }
 
 // GetByMedia retrieves the persisted UserMedia with the given Media ID.
 func (ser *UserMediaService) GetByMedia(
-	mID int, first *int, skip *int,
+	mID int, first *int, skip *int, tx Tx,
 ) ([]*UserMedia, error) {
-	return ser.GetFilter(first, skip, func(um *UserMedia) bool {
+	return ser.GetFilter(first, skip, tx, func(um *UserMedia) bool {
 		return um.MediaID == mID
 	})
-}
-
-// Database returns the database reference.
-func (ser *UserMediaService) Database() *bolt.DB {
-	return ser.DB
 }
 
 // Bucket returns the name of the bucket for UserMedia.
@@ -225,53 +222,46 @@ func (ser *UserMediaService) Bucket() string {
 }
 
 // Clean cleans the given UserMedia for storage.
-func (ser *UserMediaService) Clean(m Model) error {
+func (ser *UserMediaService) Clean(m Model, _ Tx) error {
 	_, err := ser.AssertType(m)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s :%w", errmsgModelAssertType, err)
+	}
+	return nil
 }
 
 // Validate returns an error if the UserMedia is not valid for the database.
-func (ser *UserMediaService) Validate(m Model) error {
+func (ser *UserMediaService) Validate(m Model, tx Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
-	return ser.DB.View(func(tx *bolt.Tx) error {
-		// Check if User with ID specified in UserMedia exists
-		// Get User bucket, exit if error
-		ub, err := Bucket(UserBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, UserBucket, err)
-		}
-		_, err = get(e.UserID, ub)
-		if err != nil {
-			return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
-		}
+	db := tx.Database()
 
-		// Check if Media with ID specified in MediaCharacter exists
-		// Get Media bucket, exit if error
-		mb, err := Bucket(MediaBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, MediaBucket, err)
-		}
-		_, err = get(e.MediaID, mb)
-		if err != nil {
-			return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
-		}
+	// Check if User with ID specified in UserMedia exists
+	_, err = db.GetRawByID(e.UserID, ser.UserService, tx)
+	if err != nil {
+		return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
+	}
 
-		return nil
-	})
+	// Check if Media with ID specified in MediaCharacter exists
+	_, err = db.GetRawByID(e.MediaID, ser.MediaService, tx)
+	if err != nil {
+		return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
+	}
+
+	return nil
 }
 
 // Initialize sets initial values for some properties.
-func (ser *UserMediaService) Initialize(m Model) error {
+func (ser *UserMediaService) Initialize(_ Model, _ Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing UserMedia
 // in updates.
-func (ser *UserMediaService) PersistOldProperties(n Model, o Model) error {
+func (ser *UserMediaService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
 	return nil
 }
 

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	json "github.com/json-iterator/go"
-	bolt "go.etcd.io/bbolt"
 )
 
 // Genre represents a single instance of a genre.
@@ -20,32 +19,27 @@ func (g *Genre) Metadata() *ModelMetadata {
 	return &g.Meta
 }
 
-// GenreBucket is the name of the database bucket for Genre.
-const GenreBucket = "Genre"
-
 // GenreService performs operations on genre.
-type GenreService struct {
-	DB *bolt.DB
-}
+type GenreService struct{}
 
 // Create persists the given Genre.
-func (ser *GenreService) Create(g *Genre) error {
-	return Create(g, ser)
+func (ser *GenreService) Create(g *Genre, tx Tx) (int, error) {
+	return tx.Database().Create(g, ser, tx)
 }
 
 // Update rglaces the value of the Genre with the given ID.
-func (ser *GenreService) Update(g *Genre) error {
-	return Update(g, ser)
+func (ser *GenreService) Update(g *Genre, tx Tx) error {
+	return tx.Database().Update(g, ser, tx)
 }
 
 // Delete deletes the Genre with the given ID.
-func (ser *GenreService) Delete(id int) error {
-	return Delete(id, ser)
+func (ser *GenreService) Delete(id int, tx Tx) error {
+	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of Genre.
-func (ser *GenreService) GetAll(first *int, skip *int) ([]*Genre, error) {
-	vlist, err := GetAll(ser, first, skip)
+func (ser *GenreService) GetAll(first *int, skip *int, tx Tx) ([]*Genre, error) {
+	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -59,15 +53,16 @@ func (ser *GenreService) GetAll(first *int, skip *int) ([]*Genre, error) {
 
 // GetFilter retrieves all persisted values of Genre that pass the filter.
 func (ser *GenreService) GetFilter(
-	first *int, skip *int, keep func(g *Genre) bool,
+	first *int, skip *int, tx Tx, keep func(g *Genre) bool,
 ) ([]*Genre, error) {
-	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
-		g, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(g)
-	})
+	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
+		func(m Model) bool {
+			g, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(g)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -82,15 +77,16 @@ func (ser *GenreService) GetFilter(
 // GetMultiple retrieves the persisted Genre values specified by the given
 // IDs that pass the filter.
 func (ser *GenreService) GetMultiple(
-	ids []int, first *int, skip *int, keep func(c *Genre) bool,
+	ids []int, first *int, skip *int, tx Tx, keep func(c *Genre) bool,
 ) ([]*Genre, error) {
-	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
-		g, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(g)
-	})
+	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+		func(m Model) bool {
+			g, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(g)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -103,8 +99,8 @@ func (ser *GenreService) GetMultiple(
 }
 
 // GetByID retrieves the persisted Genre with the given ID.
-func (ser *GenreService) GetByID(id int) (*Genre, error) {
-	m, err := GetByID(id, ser)
+func (ser *GenreService) GetByID(id int, tx Tx) (*Genre, error) {
+	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -116,18 +112,13 @@ func (ser *GenreService) GetByID(id int) (*Genre, error) {
 	return g, nil
 }
 
-// Database returns the database reference.
-func (ser *GenreService) Database() *bolt.DB {
-	return ser.DB
-}
-
 // Bucket returns the name of the bucket for Genre.
 func (ser *GenreService) Bucket() string {
-	return GenreBucket
+	return "Genre"
 }
 
 // Clean cleans the given Genre for storage
-func (ser *GenreService) Clean(m Model) error {
+func (ser *GenreService) Clean(m Model, _ Tx) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -136,7 +127,7 @@ func (ser *GenreService) Clean(m Model) error {
 }
 
 // Validate returns an error if the Genre is not valid for the database.
-func (ser *GenreService) Validate(m Model) error {
+func (ser *GenreService) Validate(m Model, _ Tx) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -145,13 +136,13 @@ func (ser *GenreService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *GenreService) Initialize(m Model) error {
+func (ser *GenreService) Initialize(_ Model, _ Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing Genre in
 // updates.
-func (ser *GenreService) PersistOldProperties(n Model, o Model) error {
+func (ser *GenreService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
 	return nil
 }
 

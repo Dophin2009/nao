@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	json "github.com/json-iterator/go"
-	bolt "go.etcd.io/bbolt"
 )
 
 // MediaGenre represents a relationship between single instances of Media and
@@ -21,32 +20,30 @@ func (mg *MediaGenre) Metadata() *ModelMetadata {
 	return &mg.Meta
 }
 
-// MediaGenreBucket is the name of the database bucket for MediaGenre.
-const MediaGenreBucket = "MediaGenre"
-
 // MediaGenreService performs operations on MediaGenre.
 type MediaGenreService struct {
-	DB *bolt.DB
+	MediaService *MediaService
+	GenreService *GenreService
 }
 
 // Create persists the given MediaGenre.
-func (ser *MediaGenreService) Create(mg *MediaGenre) error {
-	return Create(mg, ser)
+func (ser *MediaGenreService) Create(mg *MediaGenre, tx Tx) (int, error) {
+	return tx.Database().Create(mg, ser, tx)
 }
 
 // Update rmglaces the value of the MediaGenre with the given ID.
-func (ser *MediaGenreService) Update(mg *MediaGenre) error {
-	return Update(mg, ser)
+func (ser *MediaGenreService) Update(mg *MediaGenre, tx Tx) error {
+	return tx.Database().Update(mg, ser, tx)
 }
 
 // Delete deletes the MediaGenre with the given ID.
-func (ser *MediaGenreService) Delete(id int) error {
-	return Delete(id, ser)
+func (ser *MediaGenreService) Delete(id int, tx Tx) error {
+	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of MediaGenre.
-func (ser *MediaGenreService) GetAll(first *int, skip *int) ([]*MediaGenre, error) {
-	vlist, err := GetAll(ser, first, skip)
+func (ser *MediaGenreService) GetAll(first *int, skip *int, tx Tx) ([]*MediaGenre, error) {
+	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -60,15 +57,16 @@ func (ser *MediaGenreService) GetAll(first *int, skip *int) ([]*MediaGenre, erro
 
 // GetFilter retrieves all persisted values of MediaGenre that pass the filter.
 func (ser *MediaGenreService) GetFilter(
-	first *int, skip *int, keep func(mg *MediaGenre) bool,
+	first *int, skip *int, tx Tx, keep func(mg *MediaGenre) bool,
 ) ([]*MediaGenre, error) {
-	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
-		mg, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(mg)
-	})
+	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
+		func(m Model) bool {
+			mg, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(mg)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +79,8 @@ func (ser *MediaGenreService) GetFilter(
 }
 
 // GetByID retrieves the persisted MediaGenre with the given ID.
-func (ser *MediaGenreService) GetByID(id int) (*MediaGenre, error) {
-	m, err := GetByID(id, ser)
+func (ser *MediaGenreService) GetByID(id int, tx Tx) (*MediaGenre, error) {
+	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -97,15 +95,16 @@ func (ser *MediaGenreService) GetByID(id int) (*MediaGenre, error) {
 // GetMultiple retrieves the persisted MediaGenre values specified by the given
 // IDs that pass the filter.
 func (ser *MediaGenreService) GetMultiple(
-	ids []int, first *int, skip *int, keep func(mg *MediaGenre) bool,
+	ids []int, first *int, skip *int, tx Tx, keep func(mg *MediaGenre) bool,
 ) ([]*MediaGenre, error) {
-	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
-		mg, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(mg)
-	})
+	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+		func(m Model) bool {
+			mg, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(mg)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -120,9 +119,9 @@ func (ser *MediaGenreService) GetMultiple(
 // GetByMedia retrieves a list of instances of MediaGenre with the given Media
 // ID.
 func (ser *MediaGenreService) GetByMedia(
-	mID int, first *int, skip *int,
+	mID int, first *int, skip *int, tx Tx,
 ) ([]*MediaGenre, error) {
-	return ser.GetFilter(first, skip, func(mg *MediaGenre) bool {
+	return ser.GetFilter(first, skip, tx, func(mg *MediaGenre) bool {
 		return mg.MediaID == mID
 	})
 }
@@ -130,71 +129,55 @@ func (ser *MediaGenreService) GetByMedia(
 // GetByGenre retrieves a list of instances of MediaGenre with the given Genre
 // ID.
 func (ser *MediaGenreService) GetByGenre(
-	gID int, first *int, skip *int,
+	gID int, first *int, skip *int, tx Tx,
 ) ([]*MediaGenre, error) {
-	return ser.GetFilter(first, skip, func(mg *MediaGenre) bool {
+	return ser.GetFilter(first, skip, tx, func(mg *MediaGenre) bool {
 		return mg.GenreID == gID
 	})
 }
 
-// Database returns the database reference.
-func (ser *MediaGenreService) Database() *bolt.DB {
-	return ser.DB
-}
-
 // Bucket returns the name of the bucket for MediaGenre.
 func (ser *MediaGenreService) Bucket() string {
-	return MediaGenreBucket
+	return "MediaGenre"
 }
 
 // Clean cleans the given MediaGenre for storage.
-func (ser *MediaGenreService) Clean(m Model) error {
-	_, err := ser.AssertType(m)
-	return err
+func (ser *MediaGenreService) Clean(_ Model, _ Tx) error {
+	return nil
 }
 
 // Validate returns an error if the MediaGenre is not valid for the database.
-func (ser *MediaGenreService) Validate(m Model) error {
+func (ser *MediaGenreService) Validate(m Model, tx Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
-	return ser.DB.View(func(tx *bolt.Tx) error {
-		// Check if Media with ID specified in new MediaGenre exists
-		// Get Media bucket, exit if error
-		mb, err := Bucket(MediaBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, MediaBucket, err)
-		}
-		_, err = get(e.MediaID, mb)
-		if err != nil {
-			return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
-		}
+	db := tx.Database()
 
-		// Check if Genre with ID specified in new MediaGenre exists
-		// Get Genre bucket, exit if error
-		gb, err := Bucket(GenreBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, GenreBucket, err)
-		}
-		_, err = get(e.GenreID, gb)
-		if err != nil {
-			return fmt.Errorf("failed to get Genre with ID %d: %w", e.GenreID, err)
-		}
+	// Check if Media with ID specified in new MediaGenre exists
+	_, err = db.GetRawByID(e.MediaID, ser.MediaService, tx)
+	if err != nil {
+		return fmt.Errorf("failed to get Media with ID %d: %w", e.MediaID, err)
+	}
 
-		return nil
-	})
+	// Check if Genre with ID specified in new MediaGenre exists
+	_, err = db.GetRawByID(e.GenreID, ser.GenreService, tx)
+	if err != nil {
+		return fmt.Errorf("failed to get Genre with ID %d: %w", e.GenreID, err)
+	}
+
+	return nil
 }
 
 // Initialize sets initial values for some properties.
-func (ser *MediaGenreService) Initialize(m Model) error {
+func (ser *MediaGenreService) Initialize(_ Model, _ Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing MediaGenre
 // in updates.
-func (ser *MediaGenreService) PersistOldProperties(n Model, o Model) error {
+func (ser *MediaGenreService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
 	return nil
 }
 

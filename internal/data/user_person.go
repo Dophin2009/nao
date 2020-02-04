@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	json "github.com/json-iterator/go"
-	bolt "go.etcd.io/bbolt"
 )
 
 // UserPerson represents a relationship between a User and a Person,
@@ -23,32 +22,30 @@ func (up *UserPerson) Metadata() *ModelMetadata {
 	return &up.Meta
 }
 
-// UserPersonBucket is the name of the database bucket for UserPerson.
-const UserPersonBucket = "UserPerson"
-
 // UserPersonService performs operations on UserPerson.
 type UserPersonService struct {
-	DB *bolt.DB
+	UserService   *UserService
+	PersonService *PersonService
 }
 
 // Create persists the given UserPerson.
-func (ser *UserPersonService) Create(up *UserPerson) error {
-	return Create(up, ser)
+func (ser *UserPersonService) Create(up *UserPerson, tx Tx) (int, error) {
+	return tx.Database().Create(up, ser, tx)
 }
 
 // Update ruplaces the value of the UserPerson with the given ID.
-func (ser *UserPersonService) Update(up *UserPerson) error {
-	return Update(up, ser)
+func (ser *UserPersonService) Update(up *UserPerson, tx Tx) error {
+	return tx.Database().Update(up, ser, tx)
 }
 
 // Delete deletes the UserPerson with the given ID.
-func (ser *UserPersonService) Delete(id int) error {
-	return Delete(id, ser)
+func (ser *UserPersonService) Delete(id int, tx Tx) error {
+	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of UserPerson.
-func (ser *UserPersonService) GetAll(first *int, skip *int) ([]*UserPerson, error) {
-	vlist, err := GetAll(ser, first, skip)
+func (ser *UserPersonService) GetAll(first *int, skip *int, tx Tx) ([]*UserPerson, error) {
+	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -63,15 +60,16 @@ func (ser *UserPersonService) GetAll(first *int, skip *int) ([]*UserPerson, erro
 // GetFilter retrieves all persisted values of UserPerson that pass the
 // filter.
 func (ser *UserPersonService) GetFilter(
-	first *int, skip *int, keep func(up *UserPerson) bool,
+	first *int, skip *int, tx Tx, keep func(up *UserPerson) bool,
 ) ([]*UserPerson, error) {
-	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
-		up, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(up)
-	})
+	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
+		func(m Model) bool {
+			up, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(up)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -86,15 +84,16 @@ func (ser *UserPersonService) GetFilter(
 // GetMultiple retrieves the persisted UserPerson values specified by the
 // given IDs that pass the filter.
 func (ser *UserPersonService) GetMultiple(
-	ids []int, first *int, skip *int, keep func(up *UserPerson) bool,
+	ids []int, first *int, skip *int, tx Tx, keep func(up *UserPerson) bool,
 ) ([]*UserPerson, error) {
-	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
-		up, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(up)
-	})
+	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+		func(m Model) bool {
+			up, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(up)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +106,8 @@ func (ser *UserPersonService) GetMultiple(
 }
 
 // GetByID retrieves the persisted UserPerson with the given ID.
-func (ser *UserPersonService) GetByID(id int) (*UserPerson, error) {
-	m, err := GetByID(id, ser)
+func (ser *UserPersonService) GetByID(id int, tx Tx) (*UserPerson, error) {
+	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -122,81 +121,69 @@ func (ser *UserPersonService) GetByID(id int) (*UserPerson, error) {
 
 // GetByUser retrieves the persisted UserPerson with the given User ID.
 func (ser *UserPersonService) GetByUser(
-	uID int, first *int, skip *int,
+	uID int, first *int, skip *int, tx Tx,
 ) ([]*UserPerson, error) {
-	return ser.GetFilter(first, skip, func(up *UserPerson) bool {
+	return ser.GetFilter(first, skip, tx, func(up *UserPerson) bool {
 		return up.UserID == uID
 	})
 }
 
 // GetByPerson retrieves the persisted UserPerson with the given Person ID.
 func (ser *UserPersonService) GetByPerson(
-	cID int, first *int, skip *int,
+	cID int, first *int, skip *int, tx Tx,
 ) ([]*UserPerson, error) {
-	return ser.GetFilter(first, skip, func(up *UserPerson) bool {
+	return ser.GetFilter(first, skip, tx, func(up *UserPerson) bool {
 		return up.PersonID == cID
 	})
 }
 
-// Database returns the database reference.
-func (ser *UserPersonService) Database() *bolt.DB {
-	return ser.DB
-}
-
 // Bucket returns the name of the bucket for UserPerson.
 func (ser *UserPersonService) Bucket() string {
-	return UserPersonBucket
+	return "UserPerson"
 }
 
 // Clean cleans the given UserPerson for storage.
-func (ser *UserPersonService) Clean(m Model) error {
+func (ser *UserPersonService) Clean(m Model, _ Tx) error {
 	_, err := ser.AssertType(m)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+	}
+	return nil
 }
 
 // Validate returns an error if the UserPerson is not valid for the database.
-func (ser *UserPersonService) Validate(m Model) error {
+func (ser *UserPersonService) Validate(m Model, tx Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
-	return ser.DB.View(func(tx *bolt.Tx) error {
-		// Check if User with ID specified in UserPerson exists
-		// Get User bucket, exit if error
-		ub, err := Bucket(UserBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, UserBucket, err)
-		}
-		_, err = get(e.UserID, ub)
-		if err != nil {
-			return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
-		}
+	db := tx.Database()
 
-		// Check if Person with ID specified in UserPerson exists
-		// Get Person bucket, exit if error
-		cb, err := Bucket(PersonBucket, tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, PersonBucket, err)
-		}
-		_, err = get(e.PersonID, cb)
-		if err != nil {
-			return fmt.Errorf(
-				"failed to get Person with ID %d: %w", e.PersonID, err)
-		}
+	// Check if User with ID specified in UserPerson exists
+	_, err = db.GetRawByID(e.UserID, ser.UserService, tx)
+	if err != nil {
+		return fmt.Errorf("failed to get User with ID %d: %w", e.UserID, err)
+	}
 
-		return nil
-	})
+	// Check if Person with ID specified in UserPerson exists
+	_, err = db.GetRawByID(e.PersonID, ser.PersonService, tx)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to get Person with ID %d: %w", e.PersonID, err)
+	}
+
+	return nil
 }
 
 // Initialize sets initial values for some properties.
-func (ser *UserPersonService) Initialize(m Model) error {
+func (ser *UserPersonService) Initialize(_ Model, _ Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // UserPerson in updates.
-func (ser *UserPersonService) PersistOldProperties(n Model, o Model) error {
+func (ser *UserPersonService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
 	return nil
 }
 

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	json "github.com/json-iterator/go"
-	bolt "go.etcd.io/bbolt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,6 +18,7 @@ type User struct {
 	Password    []byte
 	Permissions UserPermission
 	Meta        ModelMetadata
+	updatedPass bool `json:"-"`
 }
 
 // Metadata returns Meta.
@@ -35,32 +35,27 @@ type UserPermission struct {
 	WriteUsers bool
 }
 
-// UserBucket is the name of the database bucket for User.
-const UserBucket = "User"
-
 // UserService performs operations on User.
-type UserService struct {
-	DB *bolt.DB
-}
+type UserService struct{}
 
 // Create persists the given User.
-func (ser *UserService) Create(u *User) error {
-	return Create(u, ser)
+func (ser *UserService) Create(u *User, tx Tx) (int, error) {
+	return tx.Database().Create(u, ser, tx)
 }
 
 // Update rulaces the value of the User with the given ID.
-func (ser *UserService) Update(u *User) error {
-	return Update(u, ser)
+func (ser *UserService) Update(u *User, tx Tx) error {
+	return tx.Database().Update(u, ser, tx)
 }
 
 // Delete deletes the User with the given ID.
-func (ser *UserService) Delete(id int) error {
-	return Delete(id, ser)
+func (ser *UserService) Delete(id int, tx Tx) error {
+	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of User.
-func (ser *UserService) GetAll(first *int, skip *int) ([]*User, error) {
-	vlist, err := GetAll(ser, first, skip)
+func (ser *UserService) GetAll(first *int, skip *int, tx Tx) ([]*User, error) {
+	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -74,15 +69,16 @@ func (ser *UserService) GetAll(first *int, skip *int) ([]*User, error) {
 
 // GetFilter retrieves all persisted values of User that pass the filter.
 func (ser *UserService) GetFilter(
-	first *int, skip *int, keep func(u *User) bool,
+	first *int, skip *int, tx Tx, keep func(u *User) bool,
 ) ([]*User, error) {
-	vlist, err := GetFilter(ser, first, skip, func(m Model) bool {
-		u, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(u)
-	})
+	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
+		func(m Model) bool {
+			u, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(u)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -97,15 +93,16 @@ func (ser *UserService) GetFilter(
 // GetMultiple retrieves the persisted User values specified by the
 // given IDs that pass the filter.
 func (ser *UserService) GetMultiple(
-	ids []int, first *int, skip *int, keep func(u *User) bool,
+	ids []int, first *int, skip *int, tx Tx, keep func(u *User) bool,
 ) ([]*User, error) {
-	vlist, err := GetMultiple(ser, ids, first, skip, func(m Model) bool {
-		u, err := ser.AssertType(m)
-		if err != nil {
-			return false
-		}
-		return keep(u)
-	})
+	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+		func(m Model) bool {
+			u, err := ser.AssertType(m)
+			if err != nil {
+				return false
+			}
+			return keep(u)
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -118,8 +115,8 @@ func (ser *UserService) GetMultiple(
 }
 
 // GetByID retrieves the persisted User with the given ID.
-func (ser *UserService) GetByID(id int) (*User, error) {
-	m, err := GetByID(id, ser)
+func (ser *UserService) GetByID(id int, tx Tx) (*User, error) {
+	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -132,51 +129,32 @@ func (ser *UserService) GetByID(id int) (*User, error) {
 }
 
 // GetByUsername retrieves a single instance of User with the given username.
-func (ser *UserService) GetByUsername(username string) (*User, error) {
-	var e *User = nil
-	err := ser.DB.View(func(tx *bolt.Tx) error {
-		// Open User bucket
-		b, err := Bucket(ser.Bucket(), tx)
+func (ser *UserService) GetByUsername(username string, tx Tx) (*User, error) {
+	var e User
+	_, err := tx.Database().FindFirst(ser, tx, func(m Model) (bool, error) {
+		u, err := ser.AssertType(m)
 		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
+			return false, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 		}
 
-		err = iterateKeys(b, func(v []byte) (bool, error) {
-			m, err := ser.Unmarshal(v)
-			if err != nil {
-				return true, fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
-			}
-
-			u, err := ser.AssertType(m)
-			if err != nil {
-				return true, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
-			}
-
-			if u.Username == username {
-				*e = *u
-				return true, nil
-			}
-
-			return false, nil
-		})
-		if err != nil {
-			return fmt.Errorf("failed to iterate through keys: %w", err)
+		if u.Username == username {
+			e = *u
+			return true, nil
 		}
 
-		return nil
+		return false, nil
 	})
-
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to iterate through keys: %w", err)
 	}
 
-	return e, nil
+	return &e, nil
 }
 
 // Authorize checks if the user with the given ID has permissions that meet
 // the requirements.
-func (ser *UserService) Authorize(userID int, req *UserPermission) (*User, error) {
-	user, err := ser.GetByID(userID)
+func (ser *UserService) Authorize(userID int, req *UserPermission, tx Tx) (*User, error) {
+	user, err := ser.GetByID(userID, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -198,8 +176,9 @@ func (ser *UserService) RequirementsMet(
 // AuthenticateWithPassword checks if the password for the User given by the
 // username matches the provided password; returns nil if correct password,
 // error if otherwise.
-func (ser *UserService) AuthenticateWithPassword(username string, password string) error {
-	u, err := ser.GetByUsername(username)
+func (ser *UserService) AuthenticateWithPassword(
+	username string, password string, tx Tx) error {
+	u, err := ser.GetByUsername(username, tx)
 	if err != nil {
 		return fmt.Errorf("failed to get User by username %q: %w", username, err)
 	}
@@ -214,8 +193,8 @@ func (ser *UserService) AuthenticateWithPassword(username string, password strin
 
 // ChangePassword replaces the password of the User specified by the given ID
 // with a new one.
-func (ser *UserService) ChangePassword(userID int, password string) error {
-	u, err := ser.GetByID(userID)
+func (ser *UserService) ChangePassword(userID int, password string, tx Tx) error {
+	u, err := ser.GetByID(userID, tx)
 	if err != nil {
 		return fmt.Errorf("failed to get User by ID %d: %w", userID, err)
 	}
@@ -225,27 +204,14 @@ func (ser *UserService) ChangePassword(userID int, password string) error {
 		return fmt.Errorf("failed to generate password hash: %w", err)
 	}
 	u.Password = pass
+	u.updatedPass = true
 
-	return ser.DB.Update(func(tx *bolt.Tx) error {
-		// Get bucket, exit if error
-		b, err := Bucket(ser.Bucket(), tx)
-		if err != nil {
-			return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
-		}
+	err = tx.Database().Update(u, ser, tx)
+	if err != nil {
+		return err
+	}
 
-		// Save entity in bucket
-		buf, err := json.Marshal(u)
-		if err != nil {
-			return fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
-		}
-
-		err = b.Put(itob(int(u.Meta.ID)), buf)
-		if err != nil {
-			return fmt.Errorf("%s: %w", errmsgBucketPut, err)
-		}
-
-		return nil
-	})
+	return nil
 }
 
 // HashPassword hashes the given password and returns the result.
@@ -258,18 +224,13 @@ func (ser *UserService) HashPassword(pass []byte) ([]byte, error) {
 	return res, nil
 }
 
-// Database returns the database reference.
-func (ser *UserService) Database() *bolt.DB {
-	return ser.DB
-}
-
 // Bucket returns the name of the bucket for User.
 func (ser *UserService) Bucket() string {
-	return UserBucket
+	return "User"
 }
 
 // Clean cleans the given User for storage.
-func (ser *UserService) Clean(m Model) error {
+func (ser *UserService) Clean(m Model, _ Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -281,14 +242,14 @@ func (ser *UserService) Clean(m Model) error {
 }
 
 // Validate checks if the given User is valid for the database.
-func (ser *UserService) Validate(m Model) error {
+func (ser *UserService) Validate(m Model, tx Tx) error {
 	u, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
 	// Check that username does not already exist
-	sameUsername, err := ser.GetByUsername(u.Username)
+	sameUsername, err := ser.GetByUsername(u.Username, tx)
 	if sameUsername != nil {
 		return fmt.Errorf("username %q: %w", u.Username, errAlreadyExists)
 	}
@@ -297,7 +258,7 @@ func (ser *UserService) Validate(m Model) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *UserService) Initialize(m Model) error {
+func (ser *UserService) Initialize(m Model, _ Tx) error {
 	u, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -313,7 +274,7 @@ func (ser *UserService) Initialize(m Model) error {
 
 // PersistOldProperties maintains certain properties of the existing User in
 // updates.
-func (ser *UserService) PersistOldProperties(n Model, o Model) error {
+func (ser *UserService) PersistOldProperties(n Model, o Model, _ Tx) error {
 	nu, err := ser.AssertType(n)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -322,8 +283,11 @@ func (ser *UserService) PersistOldProperties(n Model, o Model) error {
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
-	// Password may not be changed through update; must use ChangePassword
-	nu.Password = ou.Password
+	// Password may not be changed directly through update; must use
+	// ChangePassword
+	if !nu.updatedPass {
+		nu.Password = ou.Password
+	}
 	return nil
 }
 

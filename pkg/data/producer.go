@@ -6,17 +6,18 @@ import (
 	"strings"
 
 	json "github.com/json-iterator/go"
+	"gitlab.com/Dophin2009/nao/pkg/db"
 )
 
 // Producer represents a single studio, producer, licensor, etc.
 type Producer struct {
 	Titles []Title
 	Types  []string
-	Meta   ModelMetadata
+	Meta   db.ModelMetadata
 }
 
 // Metadata return Meta.
-func (p *Producer) Metadata() *ModelMetadata {
+func (p *Producer) Metadata() *db.ModelMetadata {
 	return &p.Meta
 }
 
@@ -24,22 +25,22 @@ func (p *Producer) Metadata() *ModelMetadata {
 type ProducerService struct{}
 
 // Create persists the given Producer.
-func (ser *ProducerService) Create(p *Producer, tx Tx) (int, error) {
+func (ser *ProducerService) Create(p *Producer, tx db.Tx) (int, error) {
 	return tx.Database().Create(p, ser, tx)
 }
 
 // Update rplaces the value of the Producer with the given ID.
-func (ser *ProducerService) Update(p *Producer, tx Tx) error {
+func (ser *ProducerService) Update(p *Producer, tx db.Tx) error {
 	return tx.Database().Update(p, ser, tx)
 }
 
 // Delete deletes the Producer with the given ID.
-func (ser *ProducerService) Delete(id int, tx Tx) error {
+func (ser *ProducerService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of Producer.
-func (ser *ProducerService) GetAll(first *int, skip *int, tx Tx) ([]*Producer, error) {
+func (ser *ProducerService) GetAll(first *int, skip *int, tx db.Tx) ([]*Producer, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -54,10 +55,10 @@ func (ser *ProducerService) GetAll(first *int, skip *int, tx Tx) ([]*Producer, e
 
 // GetFilter retrieves all persisted values of Producer that pass the filter.
 func (ser *ProducerService) GetFilter(
-	first *int, skip *int, tx Tx, keep func(p *Producer) bool,
+	first *int, skip *int, tx db.Tx, keep func(p *Producer) bool,
 ) ([]*Producer, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
-		func(m Model) bool {
+		func(m db.Model) bool {
 			p, err := ser.AssertType(m)
 			if err != nil {
 				return false
@@ -78,10 +79,10 @@ func (ser *ProducerService) GetFilter(
 // GetMultiple retrieves the persisted Producer values specified by the
 // given IDs that pass the filter.
 func (ser *ProducerService) GetMultiple(
-	ids []int, first *int, skip *int, tx Tx, keep func(p *Producer) bool,
+	ids []int, first *int, skip *int, tx db.Tx, keep func(p *Producer) bool,
 ) ([]*Producer, error) {
 	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
-		func(m Model) bool {
+		func(m db.Model) bool {
 			p, err := ser.AssertType(m)
 			if err != nil {
 				return false
@@ -100,7 +101,7 @@ func (ser *ProducerService) GetMultiple(
 }
 
 // GetByID retrieves the persisted Producer with the given ID.
-func (ser *ProducerService) GetByID(id int, tx Tx) (*Producer, error) {
+func (ser *ProducerService) GetByID(id int, tx db.Tx) (*Producer, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -119,7 +120,7 @@ func (ser *ProducerService) Bucket() string {
 }
 
 // Clean cleans the given Producer for storage.
-func (ser *ProducerService) Clean(m Model, _ Tx) error {
+func (ser *ProducerService) Clean(m db.Model, _ db.Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -132,7 +133,7 @@ func (ser *ProducerService) Clean(m Model, _ Tx) error {
 }
 
 // Validate returns an error if the Producer is not valid for the database.
-func (ser *ProducerService) Validate(m Model, _ Tx) error {
+func (ser *ProducerService) Validate(m db.Model, _ db.Tx) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -141,18 +142,18 @@ func (ser *ProducerService) Validate(m Model, _ Tx) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *ProducerService) Initialize(_ Model, _ Tx) error {
+func (ser *ProducerService) Initialize(_ db.Model, _ db.Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing Producer
 // in updates.
-func (ser *ProducerService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
+func (ser *ProducerService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
 }
 
 // Marshal transforms the given Producer into JSON.
-func (ser *ProducerService) Marshal(m Model) ([]byte, error) {
+func (ser *ProducerService) Marshal(m db.Model) ([]byte, error) {
 	p, err := ser.AssertType(m)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -167,7 +168,7 @@ func (ser *ProducerService) Marshal(m Model) ([]byte, error) {
 }
 
 // Unmarshal parses the given JSON into Producer.
-func (ser *ProducerService) Unmarshal(buf []byte) (Model, error) {
+func (ser *ProducerService) Unmarshal(buf []byte) (db.Model, error) {
 	var p Producer
 	err := json.Unmarshal(buf, &p)
 	if err != nil {
@@ -177,7 +178,7 @@ func (ser *ProducerService) Unmarshal(buf []byte) (Model, error) {
 }
 
 // AssertType exposes the given Model as a Producer.
-func (ser *ProducerService) AssertType(m Model) (*Producer, error) {
+func (ser *ProducerService) AssertType(m db.Model) (*Producer, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
@@ -191,7 +192,7 @@ func (ser *ProducerService) AssertType(m Model) (*Producer, error) {
 
 // mapfromModel returns a list of Producer type asserted from the given list of
 // Model.
-func (ser *ProducerService) mapFromModel(vlist []Model) ([]*Producer, error) {
+func (ser *ProducerService) mapFromModel(vlist []db.Model) ([]*Producer, error) {
 	list := make([]*Producer, len(vlist))
 	var err error
 	for i, v := range vlist {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	json "github.com/json-iterator/go"
+	"gitlab.com/Dophin2009/nao/pkg/db"
 )
 
 // UserPerson represents a relationship between a User and a Person,
@@ -14,11 +15,11 @@ type UserPerson struct {
 	PersonID int
 	Score    *int
 	Comments []Title
-	Meta     ModelMetadata
+	Meta     db.ModelMetadata
 }
 
 // Metadata returns Meta.
-func (up *UserPerson) Metadata() *ModelMetadata {
+func (up *UserPerson) Metadata() *db.ModelMetadata {
 	return &up.Meta
 }
 
@@ -29,22 +30,22 @@ type UserPersonService struct {
 }
 
 // Create persists the given UserPerson.
-func (ser *UserPersonService) Create(up *UserPerson, tx Tx) (int, error) {
+func (ser *UserPersonService) Create(up *UserPerson, tx db.Tx) (int, error) {
 	return tx.Database().Create(up, ser, tx)
 }
 
 // Update ruplaces the value of the UserPerson with the given ID.
-func (ser *UserPersonService) Update(up *UserPerson, tx Tx) error {
+func (ser *UserPersonService) Update(up *UserPerson, tx db.Tx) error {
 	return tx.Database().Update(up, ser, tx)
 }
 
 // Delete deletes the UserPerson with the given ID.
-func (ser *UserPersonService) Delete(id int, tx Tx) error {
+func (ser *UserPersonService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of UserPerson.
-func (ser *UserPersonService) GetAll(first *int, skip *int, tx Tx) ([]*UserPerson, error) {
+func (ser *UserPersonService) GetAll(first *int, skip *int, tx db.Tx) ([]*UserPerson, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -52,7 +53,7 @@ func (ser *UserPersonService) GetAll(first *int, skip *int, tx Tx) ([]*UserPerso
 
 	list, err := ser.mapFromModel(vlist)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map Models to UserPerson: %w", err)
+		return nil, fmt.Errorf("failed to map db.Models to UserPerson: %w", err)
 	}
 	return list, nil
 }
@@ -60,10 +61,10 @@ func (ser *UserPersonService) GetAll(first *int, skip *int, tx Tx) ([]*UserPerso
 // GetFilter retrieves all persisted values of UserPerson that pass the
 // filter.
 func (ser *UserPersonService) GetFilter(
-	first *int, skip *int, tx Tx, keep func(up *UserPerson) bool,
+	first *int, skip *int, tx db.Tx, keep func(up *UserPerson) bool,
 ) ([]*UserPerson, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
-		func(m Model) bool {
+		func(m db.Model) bool {
 			up, err := ser.AssertType(m)
 			if err != nil {
 				return false
@@ -76,7 +77,7 @@ func (ser *UserPersonService) GetFilter(
 
 	list, err := ser.mapFromModel(vlist)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map Models to UserPerson: %w", err)
+		return nil, fmt.Errorf("failed to map db.Models to UserPerson: %w", err)
 	}
 	return list, nil
 }
@@ -84,10 +85,10 @@ func (ser *UserPersonService) GetFilter(
 // GetMultiple retrieves the persisted UserPerson values specified by the
 // given IDs that pass the filter.
 func (ser *UserPersonService) GetMultiple(
-	ids []int, first *int, skip *int, tx Tx, keep func(up *UserPerson) bool,
+	ids []int, first *int, skip *int, tx db.Tx, keep func(up *UserPerson) bool,
 ) ([]*UserPerson, error) {
 	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
-		func(m Model) bool {
+		func(m db.Model) bool {
 			up, err := ser.AssertType(m)
 			if err != nil {
 				return false
@@ -100,13 +101,13 @@ func (ser *UserPersonService) GetMultiple(
 
 	list, err := ser.mapFromModel(vlist)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map Models to UserPersons: %w", err)
+		return nil, fmt.Errorf("failed to map db.Models to UserPersons: %w", err)
 	}
 	return list, nil
 }
 
 // GetByID retrieves the persisted UserPerson with the given ID.
-func (ser *UserPersonService) GetByID(id int, tx Tx) (*UserPerson, error) {
+func (ser *UserPersonService) GetByID(id int, tx db.Tx) (*UserPerson, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -121,7 +122,7 @@ func (ser *UserPersonService) GetByID(id int, tx Tx) (*UserPerson, error) {
 
 // GetByUser retrieves the persisted UserPerson with the given User ID.
 func (ser *UserPersonService) GetByUser(
-	uID int, first *int, skip *int, tx Tx,
+	uID int, first *int, skip *int, tx db.Tx,
 ) ([]*UserPerson, error) {
 	return ser.GetFilter(first, skip, tx, func(up *UserPerson) bool {
 		return up.UserID == uID
@@ -130,7 +131,7 @@ func (ser *UserPersonService) GetByUser(
 
 // GetByPerson retrieves the persisted UserPerson with the given Person ID.
 func (ser *UserPersonService) GetByPerson(
-	cID int, first *int, skip *int, tx Tx,
+	cID int, first *int, skip *int, tx db.Tx,
 ) ([]*UserPerson, error) {
 	return ser.GetFilter(first, skip, tx, func(up *UserPerson) bool {
 		return up.PersonID == cID
@@ -143,7 +144,7 @@ func (ser *UserPersonService) Bucket() string {
 }
 
 // Clean cleans the given UserPerson for storage.
-func (ser *UserPersonService) Clean(m Model, _ Tx) error {
+func (ser *UserPersonService) Clean(m db.Model, _ db.Tx) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -152,7 +153,7 @@ func (ser *UserPersonService) Clean(m Model, _ Tx) error {
 }
 
 // Validate returns an error if the UserPerson is not valid for the database.
-func (ser *UserPersonService) Validate(m Model, tx Tx) error {
+func (ser *UserPersonService) Validate(m db.Model, tx db.Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -177,18 +178,18 @@ func (ser *UserPersonService) Validate(m Model, tx Tx) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *UserPersonService) Initialize(_ Model, _ Tx) error {
+func (ser *UserPersonService) Initialize(_ db.Model, _ db.Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // UserPerson in updates.
-func (ser *UserPersonService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
+func (ser *UserPersonService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
 }
 
 // Marshal transforms the given UserPerson into JSON.
-func (ser *UserPersonService) Marshal(m Model) ([]byte, error) {
+func (ser *UserPersonService) Marshal(m db.Model) ([]byte, error) {
 	up, err := ser.AssertType(m)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -203,7 +204,7 @@ func (ser *UserPersonService) Marshal(m Model) ([]byte, error) {
 }
 
 // Unmarshal parses the given JSON into UserPerson.
-func (ser *UserPersonService) Unmarshal(buf []byte) (Model, error) {
+func (ser *UserPersonService) Unmarshal(buf []byte) (db.Model, error) {
 	var up UserPerson
 	err := json.Unmarshal(buf, &up)
 	if err != nil {
@@ -212,8 +213,8 @@ func (ser *UserPersonService) Unmarshal(buf []byte) (Model, error) {
 	return &up, nil
 }
 
-// AssertType exposes the given Model as a UserPerson.
-func (ser *UserPersonService) AssertType(m Model) (*UserPerson, error) {
+// AssertType exposes the given db.Model as a UserPerson.
+func (ser *UserPersonService) AssertType(m db.Model) (*UserPerson, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
@@ -227,8 +228,8 @@ func (ser *UserPersonService) AssertType(m Model) (*UserPerson, error) {
 }
 
 // mapfromModel returns a list of UserPerson type asserted from the given
-// list of Model.
-func (ser *UserPersonService) mapFromModel(vlist []Model) ([]*UserPerson, error) {
+// list of db.Model.
+func (ser *UserPersonService) mapFromModel(vlist []db.Model) ([]*UserPerson, error) {
 	list := make([]*UserPerson, len(vlist))
 	var err error
 	for i, v := range vlist {

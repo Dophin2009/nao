@@ -17,6 +17,7 @@ resolver:
 
 autobind:
   - gitlab.com/Dophin2009/nao/pkg/data
+  - gitlab.com/Dophin2009/nao/pkg/db
 
 models:
   StringMap:

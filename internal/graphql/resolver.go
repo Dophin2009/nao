@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"gitlab.com/Dophin2009/nao/pkg/data"
+	"gitlab.com/Dophin2009/nao/pkg/db"
 )
 
 // TODO: Implement authentication
@@ -90,7 +91,7 @@ func (r *queryResolver) MediaByID(
 	}
 
 	var md *data.Media
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaService
 		md, err = ser.GetByID(id, tx)
 		if err != nil {
@@ -116,7 +117,7 @@ func (r *mutationResolver) CreateMedia(
 		return nil, errorGetDataServices(err)
 	}
 
-	err = ds.Database.Transaction(true, func(tx data.Tx) error {
+	err = ds.Database.Transaction(true, func(tx db.Tx) error {
 		ser := ds.MediaService
 		_, err = ser.Create(&media, tx)
 		if err != nil {
@@ -158,7 +159,7 @@ func (r *characterResolver) Media(
 	}
 
 	var list []*data.MediaCharacter
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaCharacterService
 		list, err = ser.GetByCharacter(obj.Meta.ID, first, skip, tx)
 		if err != nil {
@@ -210,7 +211,7 @@ func (r *episodeSetResolver) Media(
 	}
 
 	var md *data.Media
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaService
 		md, err = ser.GetByID(obj.MediaID, tx)
 		if err != nil {
@@ -235,7 +236,7 @@ func (r *episodeSetResolver) Episodes(
 	}
 
 	var list []*data.Episode
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.EpisodeService
 		list, err = ser.GetMultiple(obj.Episodes, first, skip, tx, nil)
 		if err != nil {
@@ -277,7 +278,7 @@ func (r *genreResolver) Media(
 	}
 
 	var list []*data.MediaGenre
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaGenreService
 		list, err = ser.GetByGenre(obj.Meta.ID, first, skip, tx)
 		if err != nil {
@@ -327,7 +328,7 @@ func (r *mediaResolver) EpisodeSets(
 	}
 
 	var list []*data.EpisodeSet
-	ds.Database.Transaction(false, func(tx data.Tx) error {
+	ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.EpisodeSetService
 		list, err = ser.GetByMedia(obj.Meta.ID, first, skip, tx)
 		if err != nil {
@@ -350,7 +351,7 @@ func (r *mediaResolver) Producers(
 	}
 
 	var list []*data.MediaProducer
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaProducerService
 		list, err = ser.GetByMedia(obj.Meta.ID, first, skip, tx)
 		if err != nil {
@@ -373,7 +374,7 @@ func (r *mediaResolver) Characters(
 	}
 
 	var list []*data.MediaCharacter
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaCharacterService
 		list, err = ser.GetByMedia(obj.Meta.ID, first, skip, tx)
 		if err != nil {
@@ -396,7 +397,7 @@ func (r *mediaResolver) Genres(
 	}
 
 	var list []*data.MediaGenre
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaGenreService
 		list, err = ser.GetByMedia(obj.Meta.ID, first, skip, tx)
 		if err != nil {
@@ -434,7 +435,7 @@ func (r *mediaCharacterResolver) Character(
 	}
 
 	var c *data.Character
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.CharacterService
 		c, err = ser.GetByID(*obj.CharacterID, tx)
 		if err != nil {
@@ -461,7 +462,7 @@ func (r *mediaCharacterResolver) Person(
 	}
 
 	var p *data.Person
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.PersonService
 		p, err = ser.GetByID(*obj.PersonID, tx)
 		if err != nil {
@@ -494,7 +495,7 @@ func (r *mediaGenreResolver) Genre(
 	}
 
 	var g *data.Genre
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.GenreService
 		g, err = ser.GetByID(obj.GenreID, tx)
 		if err != nil {
@@ -527,7 +528,7 @@ func (r *mediaProducerResolver) Producer(
 	}
 
 	var p *data.Producer
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.ProducerService
 		p, err = ser.GetByID(obj.ProducerID, tx)
 		if err != nil {
@@ -586,7 +587,7 @@ func (r *personResolver) Media(
 	}
 
 	var list []*data.MediaCharacter
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaCharacterService
 		list, err = ser.GetByPerson(obj.Meta.ID, first, skip, tx)
 		if err != nil {
@@ -619,7 +620,7 @@ func (r *producerResolver) Media(
 	}
 
 	var list []*data.MediaProducer
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaProducerService
 		list, err = ser.GetByProducer(obj.Meta.ID, first, skip, tx)
 		if err != nil {
@@ -639,7 +640,7 @@ func resolveMediaByID(ctx context.Context, mID int) (*data.Media, error) {
 	}
 
 	var md *data.Media
-	err = ds.Database.Transaction(false, func(tx data.Tx) error {
+	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaService
 		md, err = ser.GetByID(mID, tx)
 		if err != nil {

@@ -1,4 +1,4 @@
-package data
+package db
 
 import (
 	"encoding/binary"
@@ -82,14 +82,10 @@ const (
 	errmsgModelPersistOld = "failed to persist old model values"
 	errmsgModelMarshal    = "failed to marshal model"
 	errmsgModelUnmarshal  = "failed to unmarshal model"
-	errmsgModelAssertType = "failed to assert type of model"
 	errmsgBucketOpen      = "failed to open bucket"
 	errmsgBucketNextSeq   = "failed to generate next sequence ID"
 	errmsgBucketPut       = "failed to put value in bucket"
 	errmsgBucketDelete    = "failed to delete value in bucket"
-
-	errmsgJSONMarshal   = "failed to marshal to JSON"
-	errmsgJSONUnmarshal = "failed to unmarshal from JSON"
 )
 
 // checkService returns an error if the given service or its DB are nil.

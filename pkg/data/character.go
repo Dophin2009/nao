@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	json "github.com/json-iterator/go"
+	"gitlab.com/Dophin2009/nao/pkg/db"
 )
 
 // TODO: User ratings/favoriting/comments/etc. of Characters
@@ -13,11 +14,11 @@ import (
 type Character struct {
 	Names       []Title
 	Information []Title
-	Meta        ModelMetadata
+	Meta        db.ModelMetadata
 }
 
 // Metadata returns Meta.
-func (c *Character) Metadata() *ModelMetadata {
+func (c *Character) Metadata() *db.ModelMetadata {
 	return &c.Meta
 }
 
@@ -25,22 +26,22 @@ func (c *Character) Metadata() *ModelMetadata {
 type CharacterService struct{}
 
 // Create persists the given Character.
-func (ser *CharacterService) Create(c *Character, tx Tx) (int, error) {
+func (ser *CharacterService) Create(c *Character, tx db.Tx) (int, error) {
 	return tx.Database().Create(c, ser, tx)
 }
 
 // Update replaces the value of the Character with the given ID.
-func (ser *CharacterService) Update(c *Character, tx Tx) error {
+func (ser *CharacterService) Update(c *Character, tx db.Tx) error {
 	return tx.Database().Update(c, ser, tx)
 }
 
 // Delete deletes the Character with the given ID.
-func (ser *CharacterService) Delete(id int, tx Tx) error {
+func (ser *CharacterService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of Character.
-func (ser *CharacterService) GetAll(first *int, skip *int, tx Tx) ([]*Character, error) {
+func (ser *CharacterService) GetAll(first *int, skip *int, tx db.Tx) ([]*Character, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -55,11 +56,11 @@ func (ser *CharacterService) GetAll(first *int, skip *int, tx Tx) ([]*Character,
 
 // GetFilter retrieves all persisted values of Character that pass the filter.
 func (ser *CharacterService) GetFilter(
-	first *int, skip *int, tx Tx,
+	first *int, skip *int, tx db.Tx,
 	keep func(c *Character) bool,
 ) ([]*Character, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
-		func(m Model) bool {
+		func(m db.Model) bool {
 			c, err := ser.AssertType(m)
 			if err != nil {
 				return false
@@ -80,10 +81,10 @@ func (ser *CharacterService) GetFilter(
 // GetMultiple retrieves the persisted Character values specified by the given
 // IDs that pass the filter.
 func (ser *CharacterService) GetMultiple(
-	ids []int, first *int, skip *int, tx Tx, keep func(c *Character) bool,
+	ids []int, first *int, skip *int, tx db.Tx, keep func(c *Character) bool,
 ) ([]*Character, error) {
 	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
-		func(m Model) bool {
+		func(m db.Model) bool {
 			c, err := ser.AssertType(m)
 			if err != nil {
 				return false
@@ -102,7 +103,7 @@ func (ser *CharacterService) GetMultiple(
 }
 
 // GetByID retrieves the persisted Character with the given ID.
-func (ser *CharacterService) GetByID(id int, tx Tx) (*Character, error) {
+func (ser *CharacterService) GetByID(id int, tx db.Tx) (*Character, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -121,7 +122,7 @@ func (ser *CharacterService) Bucket() string {
 }
 
 // Clean cleans the given Character for storage
-func (ser *CharacterService) Clean(m Model, _ Tx) error {
+func (ser *CharacterService) Clean(m db.Model, _ db.Tx) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -130,7 +131,7 @@ func (ser *CharacterService) Clean(m Model, _ Tx) error {
 }
 
 // Validate returns an error if the Character is not valid for the database.
-func (ser *CharacterService) Validate(m Model, _ Tx) error {
+func (ser *CharacterService) Validate(m db.Model, _ db.Tx) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -139,18 +140,18 @@ func (ser *CharacterService) Validate(m Model, _ Tx) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *CharacterService) Initialize(_ Model, _ Tx) error {
+func (ser *CharacterService) Initialize(_ db.Model, _ db.Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing Character
 // in updates.
-func (ser *CharacterService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
+func (ser *CharacterService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
 }
 
 // Marshal transforms the given Character into JSON.
-func (ser *CharacterService) Marshal(m Model) ([]byte, error) {
+func (ser *CharacterService) Marshal(m db.Model) ([]byte, error) {
 	c, err := ser.AssertType(m)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -165,7 +166,7 @@ func (ser *CharacterService) Marshal(m Model) ([]byte, error) {
 }
 
 // Unmarshal parses the given JSON into Character.
-func (ser *CharacterService) Unmarshal(buf []byte) (Model, error) {
+func (ser *CharacterService) Unmarshal(buf []byte) (db.Model, error) {
 	var c Character
 	err := json.Unmarshal(buf, &c)
 	if err != nil {
@@ -175,7 +176,7 @@ func (ser *CharacterService) Unmarshal(buf []byte) (Model, error) {
 }
 
 // AssertType exposes the given Model as a Character.
-func (ser *CharacterService) AssertType(m Model) (*Character, error) {
+func (ser *CharacterService) AssertType(m db.Model) (*Character, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
@@ -189,7 +190,7 @@ func (ser *CharacterService) AssertType(m Model) (*Character, error) {
 
 // mapFromModel returns a list of Character type asserted from the given list
 // of Model.
-func (ser *CharacterService) mapFromModel(vlist []Model) ([]*Character, error) {
+func (ser *CharacterService) mapFromModel(vlist []db.Model) ([]*Character, error) {
 	list := make([]*Character, len(vlist))
 	var err error
 	for i, v := range vlist {

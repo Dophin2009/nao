@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	json "github.com/json-iterator/go"
+	"gitlab.com/Dophin2009/nao/pkg/db"
 )
 
 // MediaCharacter represents a relationship between single instances of Media
@@ -16,11 +17,11 @@ type MediaCharacter struct {
 	CharacterRole *string
 	PersonID      *int
 	PersonRole    *string
-	Meta          ModelMetadata
+	Meta          db.ModelMetadata
 }
 
 // Metadata returns Meta.
-func (mc *MediaCharacter) Metadata() *ModelMetadata {
+func (mc *MediaCharacter) Metadata() *db.ModelMetadata {
 	return &mc.Meta
 }
 
@@ -32,22 +33,22 @@ type MediaCharacterService struct {
 }
 
 // Create persists the given MediaCharacter.
-func (ser *MediaCharacterService) Create(mc *MediaCharacter, tx Tx) (int, error) {
+func (ser *MediaCharacterService) Create(mc *MediaCharacter, tx db.Tx) (int, error) {
 	return tx.Database().Create(mc, ser, tx)
 }
 
 // Update rmclaces the value of the MediaCharacter with the given ID.
-func (ser *MediaCharacterService) Update(mc *MediaCharacter, tx Tx) error {
+func (ser *MediaCharacterService) Update(mc *MediaCharacter, tx db.Tx) error {
 	return tx.Database().Update(mc, ser, tx)
 }
 
 // Delete deletes the MediaCharacter with the given ID.
-func (ser *MediaCharacterService) Delete(id int, tx Tx) error {
+func (ser *MediaCharacterService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of MediaCharacter.
-func (ser *MediaCharacterService) GetAll(first *int, skip *int, tx Tx) ([]*MediaCharacter, error) {
+func (ser *MediaCharacterService) GetAll(first *int, skip *int, tx db.Tx) ([]*MediaCharacter, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -55,7 +56,7 @@ func (ser *MediaCharacterService) GetAll(first *int, skip *int, tx Tx) ([]*Media
 
 	list, err := ser.mapFromModel(vlist)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map Models to MediaCharacters: %w", err)
+		return nil, fmt.Errorf("failed to map db.Models to MediaCharacters: %w", err)
 	}
 	return list, nil
 }
@@ -63,10 +64,10 @@ func (ser *MediaCharacterService) GetAll(first *int, skip *int, tx Tx) ([]*Media
 // GetFilter retrieves all persisted values of MediaCharacter that pass the
 // filter.
 func (ser *MediaCharacterService) GetFilter(
-	first *int, skip *int, tx Tx, keep func(mc *MediaCharacter) bool,
+	first *int, skip *int, tx db.Tx, keep func(mc *MediaCharacter) bool,
 ) ([]*MediaCharacter, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
-		func(m Model) bool {
+		func(m db.Model) bool {
 			mc, err := ser.AssertType(m)
 			if err != nil {
 				return false
@@ -79,7 +80,7 @@ func (ser *MediaCharacterService) GetFilter(
 
 	list, err := ser.mapFromModel(vlist)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map Models to MediaCharacters: %w", err)
+		return nil, fmt.Errorf("failed to map db.Models to MediaCharacters: %w", err)
 	}
 	return list, nil
 }
@@ -87,10 +88,10 @@ func (ser *MediaCharacterService) GetFilter(
 // GetMultiple retrieves the persisted MediaCharacter values specified by the
 // given IDs that pass the filter.
 func (ser *MediaCharacterService) GetMultiple(
-	ids []int, first *int, skip *int, tx Tx, keep func(mc *MediaCharacter) bool,
+	ids []int, first *int, skip *int, tx db.Tx, keep func(mc *MediaCharacter) bool,
 ) ([]*MediaCharacter, error) {
 	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
-		func(m Model) bool {
+		func(m db.Model) bool {
 			mc, err := ser.AssertType(m)
 			if err != nil {
 				return false
@@ -103,13 +104,13 @@ func (ser *MediaCharacterService) GetMultiple(
 
 	list, err := ser.mapFromModel(vlist)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map Models to MediaCharacters: %w", err)
+		return nil, fmt.Errorf("failed to map db.Models to MediaCharacters: %w", err)
 	}
 	return list, nil
 }
 
 // GetByID retrieves the persisted MediaCharacter with the given ID.
-func (ser *MediaCharacterService) GetByID(id int, tx Tx) (*MediaCharacter, error) {
+func (ser *MediaCharacterService) GetByID(id int, tx db.Tx) (*MediaCharacter, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -125,7 +126,7 @@ func (ser *MediaCharacterService) GetByID(id int, tx Tx) (*MediaCharacter, error
 // GetByMedia retrieves a list of instances of MediaCharacter with the given
 // Media ID.
 func (ser *MediaCharacterService) GetByMedia(
-	mID int, first *int, skip *int, tx Tx,
+	mID int, first *int, skip *int, tx db.Tx,
 ) ([]*MediaCharacter, error) {
 	return ser.GetFilter(first, skip, tx, func(mc *MediaCharacter) bool {
 		return mc.MediaID == mID
@@ -135,7 +136,7 @@ func (ser *MediaCharacterService) GetByMedia(
 // GetByCharacter retrieves a list of instances of MediaCharacter with the
 // given Character ID.
 func (ser *MediaCharacterService) GetByCharacter(
-	cID int, first *int, skip *int, tx Tx,
+	cID int, first *int, skip *int, tx db.Tx,
 ) ([]*MediaCharacter, error) {
 	return ser.GetFilter(first, skip, tx, func(mc *MediaCharacter) bool {
 		return *mc.CharacterID == cID
@@ -145,7 +146,7 @@ func (ser *MediaCharacterService) GetByCharacter(
 // GetByPerson retrieves a list of instances of MediaCharacter with the given
 // Person ID.
 func (ser *MediaCharacterService) GetByPerson(
-	pID int, first *int, skip *int, tx Tx,
+	pID int, first *int, skip *int, tx db.Tx,
 ) ([]*MediaCharacter, error) {
 	return ser.GetFilter(first, skip, tx, func(mc *MediaCharacter) bool {
 		return *mc.CharacterID == pID
@@ -158,7 +159,7 @@ func (ser *MediaCharacterService) Bucket() string {
 }
 
 // Clean cleans the given MediaCharacter for storage.
-func (ser *MediaCharacterService) Clean(m Model, _ Tx) error {
+func (ser *MediaCharacterService) Clean(m db.Model, _ db.Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -175,7 +176,7 @@ func (ser *MediaCharacterService) Clean(m Model, _ Tx) error {
 
 // Validate returns an error if the MediaCharacter is not valid for the
 // database.
-func (ser *MediaCharacterService) Validate(m Model, tx Tx) error {
+func (ser *MediaCharacterService) Validate(m db.Model, tx db.Tx) error {
 	e, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -252,18 +253,18 @@ func (ser *MediaCharacterService) Validate(m Model, tx Tx) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *MediaCharacterService) Initialize(_ Model, _ Tx) error {
+func (ser *MediaCharacterService) Initialize(_ db.Model, _ db.Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing
 // MediaCharacter in updates.
-func (ser *MediaCharacterService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
+func (ser *MediaCharacterService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
 }
 
 // Marshal transforms the given MediaCharacter into JSON.
-func (ser *MediaCharacterService) Marshal(m Model) ([]byte, error) {
+func (ser *MediaCharacterService) Marshal(m db.Model) ([]byte, error) {
 	mc, err := ser.AssertType(m)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -278,7 +279,7 @@ func (ser *MediaCharacterService) Marshal(m Model) ([]byte, error) {
 }
 
 // Unmarshal parses the given JSON into MediaCharacter.
-func (ser *MediaCharacterService) Unmarshal(buf []byte) (Model, error) {
+func (ser *MediaCharacterService) Unmarshal(buf []byte) (db.Model, error) {
 	var mc MediaCharacter
 	err := json.Unmarshal(buf, &mc)
 	if err != nil {
@@ -287,8 +288,8 @@ func (ser *MediaCharacterService) Unmarshal(buf []byte) (Model, error) {
 	return &mc, nil
 }
 
-// AssertType exposes the given Model as a MediaCharacter.
-func (ser *MediaCharacterService) AssertType(m Model) (*MediaCharacter, error) {
+// AssertType exposes the given db.Model as a MediaCharacter.
+func (ser *MediaCharacterService) AssertType(m db.Model) (*MediaCharacter, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
@@ -301,8 +302,8 @@ func (ser *MediaCharacterService) AssertType(m Model) (*MediaCharacter, error) {
 }
 
 // mapfromModel returns a list of MediaCharacter type asserted from the given
-// list of Model.
-func (ser *MediaCharacterService) mapFromModel(vlist []Model) ([]*MediaCharacter, error) {
+// list of db.Model.
+func (ser *MediaCharacterService) mapFromModel(vlist []db.Model) ([]*MediaCharacter, error) {
 	list := make([]*MediaCharacter, len(vlist))
 	var err error
 	for i, v := range vlist {

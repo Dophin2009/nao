@@ -6,6 +6,7 @@ import (
 	"time"
 
 	json "github.com/json-iterator/go"
+	"gitlab.com/Dophin2009/nao/pkg/db"
 )
 
 // TODO: User rating/comments/etc. of Episodes
@@ -18,11 +19,11 @@ type Episode struct {
 	Duration *int
 	Filler   bool
 	Recap    bool
-	Meta     ModelMetadata
+	Meta     db.ModelMetadata
 }
 
 // Metadata returns Meta.
-func (ep *Episode) Metadata() *ModelMetadata {
+func (ep *Episode) Metadata() *db.ModelMetadata {
 	return &ep.Meta
 }
 
@@ -31,11 +32,11 @@ type EpisodeSet struct {
 	MediaID      int
 	Descriptions []Title
 	Episodes     []int
-	Meta         ModelMetadata
+	Meta         db.ModelMetadata
 }
 
 // Metadata returns the Meta.
-func (set *EpisodeSet) Metadata() *ModelMetadata {
+func (set *EpisodeSet) Metadata() *db.ModelMetadata {
 	return &set.Meta
 }
 
@@ -43,22 +44,22 @@ func (set *EpisodeSet) Metadata() *ModelMetadata {
 type EpisodeService struct{}
 
 // Create persists the given Episode.
-func (ser *EpisodeService) Create(ep *Episode, tx Tx) (int, error) {
+func (ser *EpisodeService) Create(ep *Episode, tx db.Tx) (int, error) {
 	return tx.Database().Create(ep, ser, tx)
 }
 
 // Update replaces the value of the Episode with the given ID.
-func (ser *EpisodeService) Update(ep *Episode, tx Tx) error {
+func (ser *EpisodeService) Update(ep *Episode, tx db.Tx) error {
 	return tx.Database().Update(ep, ser, tx)
 }
 
 // Delete deletes the Episode with the given ID.
-func (ser *EpisodeService) Delete(id int, tx Tx) error {
+func (ser *EpisodeService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of Episode.
-func (ser *EpisodeService) GetAll(first *int, skip *int, tx Tx) ([]*Episode, error) {
+func (ser *EpisodeService) GetAll(first *int, skip *int, tx db.Tx) ([]*Episode, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -73,10 +74,10 @@ func (ser *EpisodeService) GetAll(first *int, skip *int, tx Tx) ([]*Episode, err
 
 // GetFilter retrieves all persisted values of Episode that pass the filter.
 func (ser *EpisodeService) GetFilter(
-	first *int, skip *int, tx Tx, keep func(ep *Episode) bool,
+	first *int, skip *int, tx db.Tx, keep func(ep *Episode) bool,
 ) ([]*Episode, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
-		func(m Model) bool {
+		func(m db.Model) bool {
 			ep, err := ser.AssertType(m)
 			if err != nil {
 				return false
@@ -97,10 +98,10 @@ func (ser *EpisodeService) GetFilter(
 // GetMultiple retrieves the persisted Episode values specified by the given
 // IDs that pass the filter.
 func (ser *EpisodeService) GetMultiple(
-	ids []int, first *int, skip *int, tx Tx, keep func(ep *Episode) bool,
+	ids []int, first *int, skip *int, tx db.Tx, keep func(ep *Episode) bool,
 ) ([]*Episode, error) {
 	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
-		func(m Model) bool {
+		func(m db.Model) bool {
 			ep, err := ser.AssertType(m)
 			if err != nil {
 				return false
@@ -119,7 +120,7 @@ func (ser *EpisodeService) GetMultiple(
 }
 
 // GetByID retrieves the persisted Episode with the given ID.
-func (ser *EpisodeService) GetByID(id int, tx Tx) (*Episode, error) {
+func (ser *EpisodeService) GetByID(id int, tx db.Tx) (*Episode, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -138,7 +139,7 @@ func (ser *EpisodeService) Bucket() string {
 }
 
 // Clean cleans the given Episode for storage.
-func (ser *EpisodeService) Clean(m Model, _ Tx) error {
+func (ser *EpisodeService) Clean(m db.Model, _ db.Tx) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -147,7 +148,7 @@ func (ser *EpisodeService) Clean(m Model, _ Tx) error {
 }
 
 // Validate returns an error if the Episode is not valid for the database.
-func (ser *EpisodeService) Validate(m Model, _ Tx) error {
+func (ser *EpisodeService) Validate(m db.Model, _ db.Tx) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -156,18 +157,18 @@ func (ser *EpisodeService) Validate(m Model, _ Tx) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *EpisodeService) Initialize(_ Model, _ Tx) error {
+func (ser *EpisodeService) Initialize(_ db.Model, _ db.Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing Episode in
 // updates.
-func (ser *EpisodeService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
+func (ser *EpisodeService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
 }
 
 // Marshal transforms the given Episode into JSON.
-func (ser *EpisodeService) Marshal(m Model) ([]byte, error) {
+func (ser *EpisodeService) Marshal(m db.Model) ([]byte, error) {
 	ep, err := ser.AssertType(m)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -182,7 +183,7 @@ func (ser *EpisodeService) Marshal(m Model) ([]byte, error) {
 }
 
 // Unmarshal parses the given JSON into Episode.
-func (ser *EpisodeService) Unmarshal(buf []byte) (Model, error) {
+func (ser *EpisodeService) Unmarshal(buf []byte) (db.Model, error) {
 	var ep Episode
 	err := json.Unmarshal(buf, &ep)
 	if err != nil {
@@ -192,7 +193,7 @@ func (ser *EpisodeService) Unmarshal(buf []byte) (Model, error) {
 }
 
 // AssertType exposes the Model as an Episode.
-func (ser *EpisodeService) AssertType(m Model) (*Episode, error) {
+func (ser *EpisodeService) AssertType(m db.Model) (*Episode, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
@@ -206,7 +207,7 @@ func (ser *EpisodeService) AssertType(m Model) (*Episode, error) {
 
 // mapfromModel returns a list of Episode type asserted from the given list of
 // Model.
-func (ser *EpisodeService) mapFromModel(vlist []Model) ([]*Episode, error) {
+func (ser *EpisodeService) mapFromModel(vlist []db.Model) ([]*Episode, error) {
 	list := make([]*Episode, len(vlist))
 	var err error
 	for i, v := range vlist {
@@ -222,22 +223,22 @@ func (ser *EpisodeService) mapFromModel(vlist []Model) ([]*Episode, error) {
 type EpisodeSetService struct{}
 
 // Create persists the given EpisodeSet.
-func (ser *EpisodeSetService) Create(set *EpisodeSet, tx Tx) (int, error) {
+func (ser *EpisodeSetService) Create(set *EpisodeSet, tx db.Tx) (int, error) {
 	return tx.Database().Create(set, ser, tx)
 }
 
 // Update replaces the value of the EpisodeSet with the given ID.
-func (ser *EpisodeSetService) Update(set *EpisodeSet, tx Tx) error {
+func (ser *EpisodeSetService) Update(set *EpisodeSet, tx db.Tx) error {
 	return tx.Database().Update(set, ser, tx)
 }
 
 // Delete deletes the EpisodeSet with the given ID.
-func (ser *EpisodeSetService) Delete(id int, tx Tx) error {
+func (ser *EpisodeSetService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
 }
 
 // GetAll retrieves all persisted values of EpisodeSet.
-func (ser *EpisodeSetService) GetAll(first *int, skip *int, tx Tx) ([]*EpisodeSet, error) {
+func (ser *EpisodeSetService) GetAll(first *int, skip *int, tx db.Tx) ([]*EpisodeSet, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -252,10 +253,10 @@ func (ser *EpisodeSetService) GetAll(first *int, skip *int, tx Tx) ([]*EpisodeSe
 
 // GetFilter retrieves all persisted values of EpisodeSet that pass the filter.
 func (ser *EpisodeSetService) GetFilter(
-	first *int, skip *int, tx Tx, keep func(*EpisodeSet) bool,
+	first *int, skip *int, tx db.Tx, keep func(*EpisodeSet) bool,
 ) ([]*EpisodeSet, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
-		func(m Model) bool {
+		func(m db.Model) bool {
 			set, err := ser.AssertType(m)
 			if err != nil {
 				return false
@@ -276,10 +277,10 @@ func (ser *EpisodeSetService) GetFilter(
 // GetMultiple retrieves the persisted EpisodeSet values specified by the given
 // IDs that pass the filter.
 func (ser *EpisodeSetService) GetMultiple(
-	ids []int, first *int, skip *int, tx Tx, keep func(set *EpisodeSet) bool,
+	ids []int, first *int, skip *int, tx db.Tx, keep func(set *EpisodeSet) bool,
 ) ([]*EpisodeSet, error) {
 	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
-		func(m Model) bool {
+		func(m db.Model) bool {
 			set, err := ser.AssertType(m)
 			if err != nil {
 				return false
@@ -298,7 +299,7 @@ func (ser *EpisodeSetService) GetMultiple(
 }
 
 // GetByID retrieves the persisted EpisodeSet with the given ID.
-func (ser *EpisodeSetService) GetByID(id int, tx Tx) (*EpisodeSet, error) {
+func (ser *EpisodeSetService) GetByID(id int, tx db.Tx) (*EpisodeSet, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -314,7 +315,7 @@ func (ser *EpisodeSetService) GetByID(id int, tx Tx) (*EpisodeSet, error) {
 // GetByMedia retrieves a list of instances of EpisodeSet with the given Media
 // ID.
 func (ser *EpisodeSetService) GetByMedia(
-	mID int, first *int, skip *int, tx Tx,
+	mID int, first *int, skip *int, tx db.Tx,
 ) ([]*EpisodeSet, error) {
 	return ser.GetFilter(first, skip, tx, func(set *EpisodeSet) bool {
 		return set.MediaID == mID
@@ -327,7 +328,7 @@ func (ser *EpisodeSetService) Bucket() string {
 }
 
 // Clean cleans the given EpisodeSet for storage.
-func (ser *EpisodeSetService) Clean(m Model, _ Tx) error {
+func (ser *EpisodeSetService) Clean(m db.Model, _ db.Tx) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -336,7 +337,7 @@ func (ser *EpisodeSetService) Clean(m Model, _ Tx) error {
 }
 
 // Validate returns an error if the Episodeset is not valid for the database.
-func (ser *EpisodeSetService) Validate(m Model, _ Tx) error {
+func (ser *EpisodeSetService) Validate(m db.Model, _ db.Tx) error {
 	_, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -345,18 +346,18 @@ func (ser *EpisodeSetService) Validate(m Model, _ Tx) error {
 }
 
 // Initialize sets initial values for some properties.
-func (ser *EpisodeSetService) Initialize(_ Model, _ Tx) error {
+func (ser *EpisodeSetService) Initialize(_ db.Model, _ db.Tx) error {
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing EpisodeSet
 // in updates.
-func (ser *EpisodeSetService) PersistOldProperties(_ Model, _ Model, _ Tx) error {
+func (ser *EpisodeSetService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
 }
 
 // Marshal transforms the given EpisodeSet into JSON.
-func (ser *EpisodeSetService) Marshal(m Model) ([]byte, error) {
+func (ser *EpisodeSetService) Marshal(m db.Model) ([]byte, error) {
 	set, err := ser.AssertType(m)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
@@ -371,7 +372,7 @@ func (ser *EpisodeSetService) Marshal(m Model) ([]byte, error) {
 }
 
 // Unmarshal parses the given JSON into EpisodeSet.
-func (ser *EpisodeSetService) Unmarshal(buf []byte) (Model, error) {
+func (ser *EpisodeSetService) Unmarshal(buf []byte) (db.Model, error) {
 	var set EpisodeSet
 	err := json.Unmarshal(buf, &set)
 	if err != nil {
@@ -381,7 +382,7 @@ func (ser *EpisodeSetService) Unmarshal(buf []byte) (Model, error) {
 }
 
 // AssertType exposes the Model as an EpisodeSet.
-func (ser *EpisodeSetService) AssertType(m Model) (*EpisodeSet, error) {
+func (ser *EpisodeSetService) AssertType(m db.Model) (*EpisodeSet, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
@@ -395,7 +396,7 @@ func (ser *EpisodeSetService) AssertType(m Model) (*EpisodeSet, error) {
 
 // mapfromModel returns a list of EpisodeSet type asserted from the given list
 // of Model.
-func (ser *EpisodeSetService) mapFromModel(vlist []Model) ([]*EpisodeSet, error) {
+func (ser *EpisodeSetService) mapFromModel(vlist []db.Model) ([]*EpisodeSet, error) {
 	list := make([]*EpisodeSet, len(vlist))
 	var err error
 	for i, v := range vlist {

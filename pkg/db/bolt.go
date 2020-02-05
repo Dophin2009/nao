@@ -1,4 +1,4 @@
-package data
+package db
 
 import (
 	"fmt"
@@ -31,6 +31,8 @@ func (btx *BoltTx) Unwrap() interface{} {
 	return btx.Tx
 }
 
+// BoltDatabaseConfig defines a set of options to be passed when opening a
+// boltDB instance.
 type BoltDatabaseConfig struct {
 	Path         string
 	FileMode     os.FileMode
@@ -71,6 +73,7 @@ func ConnectBoltDatabase(conf *BoltDatabaseConfig) (*BoltDatabase, error) {
 	return &db, nil
 }
 
+// Close closes the database connection.
 func (db *BoltDatabase) Close() error {
 	if db.ClearOnClose {
 		err := db.Clear()
@@ -78,7 +81,10 @@ func (db *BoltDatabase) Close() error {
 			return fmt.Errorf("failed to clear database: %w", err)
 		}
 	}
-	db.Bolt.Close()
+	err := db.Bolt.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close boltDB: %w", err)
+	}
 	return nil
 }
 
@@ -136,9 +142,11 @@ func (db *BoltDatabase) Transaction(writable bool, logic func(Tx) error) error {
 		return err
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		return fmt.Errorf("failed to commit transaction, rolling back: %w", err)
+	if writable {
+		err = tx.Commit()
+		if err != nil {
+			return fmt.Errorf("failed to commit transaction, rolling back: %w", err)
+		}
 	}
 
 	return nil
@@ -522,7 +530,7 @@ func (db *BoltDatabase) FindFirst(
 	err := db.iterateKeys(ser.Bucket(), tx, func(k, v []byte, tx Tx) (bool, error) {
 		e, err := ser.Unmarshal(v)
 		if err != nil {
-			return true, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
+			return true, fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
 		}
 
 		t, err := match(m)

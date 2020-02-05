@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gitlab.com/Dophin2009/nao/internal/graphql"
 	"gitlab.com/Dophin2009/nao/pkg/data"
+	"gitlab.com/Dophin2009/nao/pkg/db"
 	"gitlab.com/Dophin2009/nao/pkg/web"
 )
 
@@ -77,7 +78,7 @@ func NewApplication(c *Configuration) (*Application, error) {
 		userMediaListService.Bucket(),
 	}
 
-	db, err := data.ConnectBoltDatabase(&data.BoltDatabaseConfig{
+	database, err := db.ConnectBoltDatabase(&db.BoltDatabaseConfig{
 		Path:         c.DB.Path,
 		FileMode:     os.FileMode(c.DB.Filemode),
 		Buckets:      buckets,
@@ -88,7 +89,7 @@ func NewApplication(c *Configuration) (*Application, error) {
 	}
 
 	ds := graphql.DataService{
-		Database:              db,
+		Database:              database,
 		CharacterService:      characterService,
 		EpisodeService:        episodeService,
 		EpisodeSetService:     episodeSetService,

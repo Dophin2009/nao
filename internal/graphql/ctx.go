@@ -5,12 +5,13 @@ import (
 	"errors"
 
 	"gitlab.com/Dophin2009/nao/pkg/data"
+	"gitlab.com/Dophin2009/nao/pkg/db"
 )
 
 // DataService contains all data layer services required, to be passed around
 // in a context object.
 type DataService struct {
-	Database              data.Database
+	Database              db.Database
 	CharacterService      *data.CharacterService
 	EpisodeService        *data.EpisodeService
 	EpisodeSetService     *data.EpisodeSetService

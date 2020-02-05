@@ -8,7 +8,7 @@ import (
 	"github.com/friendsofgo/graphiql"
 	"github.com/julienschmidt/httprouter"
 	"gitlab.com/Dophin2009/nao/internal/graphql"
-	"gitlab.com/Dophin2009/nao/internal/web"
+	"gitlab.com/Dophin2009/nao/pkg/web"
 )
 
 // NewGraphQLHandler returns a POST endpoint handler for the GraphQL API.

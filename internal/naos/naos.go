@@ -6,9 +6,9 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
-	"gitlab.com/Dophin2009/nao/internal/data"
 	"gitlab.com/Dophin2009/nao/internal/graphql"
-	"gitlab.com/Dophin2009/nao/internal/web"
+	"gitlab.com/Dophin2009/nao/pkg/data"
+	"gitlab.com/Dophin2009/nao/pkg/web"
 )
 
 // Application is the main naos application.

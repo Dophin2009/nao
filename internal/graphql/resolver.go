@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"gitlab.com/Dophin2009/nao/internal/data"
+	"gitlab.com/Dophin2009/nao/pkg/data"
 )
 
 // TODO: Implement authentication

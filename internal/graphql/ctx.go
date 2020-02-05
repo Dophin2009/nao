@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"gitlab.com/Dophin2009/nao/internal/data"
+	"gitlab.com/Dophin2009/nao/pkg/data"
 )
 
 // DataService contains all data layer services required, to be passed around

@@ -1,7 +1,6 @@
 package data
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -623,34 +622,3 @@ func (db *BoltDatabase) calculatePaginationBounds(first *int, skip *int) (int, i
 
 	return start, end
 }
-
-var (
-	// errNil is an error returned when some pointer is nil.
-	errNil = errors.New("is nil")
-	// errNotFound is an error returned when the requested object is not found.
-	errNotFound = errors.New("not found")
-	// errAlreadyExists is an error returned when a unique value already exists.
-	errAlreadyExists = errors.New("already exists")
-	// errInvalid is an error returned when some value is invalid.
-	errInvalid = errors.New("invalid")
-	// errUnwritableTx is an error returned when an update attempt was made with
-	// a transaction object that does now allow updates.
-	errUnwritableTx = errors.New("read-only transaction")
-)
-
-const (
-	errmsgModelCleaning   = "failed to clean model"
-	errmsgModelValidation = "failed to validate model"
-	errmsgModelInitialize = "failed to initialize model values"
-	errmsgModelPersistOld = "failed to persist old model values"
-	errmsgModelMarshal    = "failed to marshal model"
-	errmsgModelUnmarshal  = "failed to unmarshal model"
-	errmsgModelAssertType = "failed to assert type of model"
-	errmsgBucketOpen      = "failed to open bucket"
-	errmsgBucketNextSeq   = "failed to generate next sequence ID"
-	errmsgBucketPut       = "failed to put value in bucket"
-	errmsgBucketDelete    = "failed to delete value in bucket"
-
-	errmsgJSONMarshal   = "failed to marshal to JSON"
-	errmsgJSONUnmarshal = "failed to unmarshal from JSON"
-)

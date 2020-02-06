@@ -36,9 +36,13 @@ type Service interface {
 	Unmarshal(buf []byte) (Model, error)
 }
 
-// Database defines generic CRUD operations for opaque Model objects for a
-// database.
-type Database interface {
+// DatabaseService provides
+type DatabaseService struct {
+	DatabaseDriver
+}
+
+// DatabaseDriver defines generic CRUD logic for a database backend.
+type DatabaseDriver interface {
 	Transaction(writable bool, logic func(Tx) error) error
 	Close() error
 
@@ -57,7 +61,7 @@ type Database interface {
 
 // Tx defines a wrapper for database transactions objects.
 type Tx interface {
-	Database() Database
+	Database() *DatabaseService
 	Unwrap() interface{}
 }
 

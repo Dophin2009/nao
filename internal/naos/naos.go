@@ -78,7 +78,7 @@ func NewApplication(c *Configuration) (*Application, error) {
 		userMediaListService.Bucket(),
 	}
 
-	database, err := db.ConnectBoltDatabase(&db.BoltDatabaseConfig{
+	driver, err := db.ConnectBoltDatabase(&db.BoltDatabaseConfig{
 		Path:         c.DB.Path,
 		FileMode:     os.FileMode(c.DB.Filemode),
 		Buckets:      buckets,
@@ -88,6 +88,9 @@ func NewApplication(c *Configuration) (*Application, error) {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
+	database := db.DatabaseService{
+		DatabaseDriver: driver,
+	}
 	ds := graphql.DataService{
 		Database:              database,
 		CharacterService:      characterService,

@@ -17,12 +17,12 @@ type BoltDatabase struct {
 
 // BoltTx implements Transaction for boltDB.
 type BoltTx struct {
-	DB *BoltDatabase
+	DB *DatabaseService
 	Tx *bolt.Tx
 }
 
 // Database returns the database of the transaction.
-func (btx *BoltTx) Database() Database {
+func (btx *BoltTx) Database() *DatabaseService {
 	return btx.DB
 }
 
@@ -132,7 +132,9 @@ func (db *BoltDatabase) Transaction(writable bool, logic func(Tx) error) error {
 	}
 
 	btx := &BoltTx{
-		DB: db,
+		DB: &DatabaseService{
+			DatabaseDriver: db,
+		},
 		Tx: tx,
 	}
 	defer tx.Rollback()

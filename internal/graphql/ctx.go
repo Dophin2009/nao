@@ -11,7 +11,7 @@ import (
 // DataService contains all data layer services required, to be passed around
 // in a context object.
 type DataService struct {
-	Database              db.Database
+	Database              db.DatabaseService
 	CharacterService      *data.CharacterService
 	EpisodeService        *data.EpisodeService
 	EpisodeSetService     *data.EpisodeSetService

@@ -3,7 +3,6 @@ package db
 import (
 	"fmt"
 	"os"
-	"time"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -184,29 +183,8 @@ func (db *BoltDatabase) Create(m Model, ser Service, tx Tx) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", errmsgBucketNextSeq, err)
 	}
-	m.Metadata().ID = int(id)
-
-	// Verify validity of model
-	err = ser.Validate(m, tx)
-	if err != nil {
-		return 0, fmt.Errorf("%s: %w", errmsgModelValidation, err)
-	}
-
-	// Clean model
-	err = ser.Clean(m, tx)
-	if err != nil {
-		return 0, fmt.Errorf("%s: %w", errmsgModelCleaning, err)
-	}
-
-	// Initialize metadata
 	meta := m.Metadata()
-	meta.CreatedAt = time.Now()
-	meta.UpdatedAt = time.Now()
-	meta.Version = 0
-	err = ser.Initialize(m, tx)
-	if err != nil {
-		return 0, fmt.Errorf("%s: %w", errmsgModelInitialize, err)
-	}
+	meta.ID = int(id)
 
 	// Save model in bucket
 	buf, err := ser.Marshal(m)
@@ -248,47 +226,13 @@ func (db *BoltDatabase) Update(m Model, ser Service, tx Tx) error {
 		return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 	}
 
-	// Verify validity of model
-	err = ser.Validate(m, tx)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelValidation, err)
-	}
-
-	// Prepare
-	err = ser.Clean(m, tx)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelCleaning, err)
-	}
-
-	// Check if entity with ID exists
-	v, err := db.GetRawByID(m.Metadata().ID, ser, tx)
-	if err != nil {
-		return fmt.Errorf("failed to get by id %d: %w", m.Metadata().ID, err)
-	}
-
-	// Unmarshal old
-	o, err := ser.Unmarshal(v)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
-	}
-
-	// Replace properties of updated with certain frozen
-	// ones of old
-	meta := m.Metadata()
-	meta.UpdatedAt = time.Now()
-	meta.Version = meta.Version + 1
-	err = ser.PersistOldProperties(m, o, tx)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgModelPersistOld, err)
-	}
-
 	// Save model
 	buf, err := ser.Marshal(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelMarshal, err)
 	}
 
-	err = b.Put(itob(meta.ID), buf)
+	err = b.Put(itob(m.Metadata().ID), buf)
 	if err != nil {
 		return fmt.Errorf("%s %q: %w", errmsgBucketPut, ser.Bucket(), err)
 	}
@@ -333,18 +277,7 @@ func (db *BoltDatabase) Delete(id int, ser Service, tx Tx) error {
 // GetByID retrieves the persisted Model with the given ID. The given service
 // and its DB should not be nil.
 func (db *BoltDatabase) GetByID(id int, ser Service, tx Tx) (Model, error) {
-	// Unwrap transaction
-	_, err := db.unwrapTx(tx)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check service
-	err = checkService(ser)
-	if err != nil {
-		return nil, err
-	}
-
+	// Get raw value
 	v, err := db.GetRawByID(id, ser, tx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get by id %d: %w", id, err)

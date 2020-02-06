@@ -29,6 +29,35 @@ type DatabaseService struct {
 
 // Create persists a new instance of a Model type.
 func (dbs *DatabaseService) Create(m Model, ser Service, tx Tx) (int, error) {
+	// Check service
+	err := checkService(ser)
+	if err != nil {
+		return 0, err
+	}
+
+	// Verify validity of model
+	err = ser.Validate(m, tx)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", errmsgModelValidation, err)
+	}
+
+	// Clean model
+	err = ser.Clean(m, tx)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", errmsgModelCleaning, err)
+	}
+
+	// Initialize metadata
+	meta := m.Metadata()
+	meta.CreatedAt = time.Now()
+	meta.UpdatedAt = time.Now()
+	meta.Version = 0
+	err = ser.Initialize(m, tx)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", errmsgModelInitialize, err)
+	}
+
+	// Call hooks to run before create
 	hooks := ser.PersistHooks()
 	if hooks != nil {
 		err := hooks.PreCreateHook(m, ser, tx)
@@ -37,11 +66,13 @@ func (dbs *DatabaseService) Create(m Model, ser Service, tx Tx) (int, error) {
 		}
 	}
 
+	// Persist
 	id, err := dbs.DatabaseDriver.Create(m, ser, tx)
 	if err != nil {
 		return 0, err
 	}
 
+	// Call hooks to run after create
 	if hooks != nil {
 		err = hooks.PostCreateHook(m, ser, tx)
 		if err != nil {
@@ -54,6 +85,41 @@ func (dbs *DatabaseService) Create(m Model, ser Service, tx Tx) (int, error) {
 
 // Update modifies an existing instance of a Model type.
 func (dbs *DatabaseService) Update(m Model, ser Service, tx Tx) error {
+	// Check service
+	err := checkService(ser)
+	if err != nil {
+		return err
+	}
+
+	// Check if entity with ID exists
+	o, err := dbs.DatabaseDriver.GetByID(m.Metadata().ID, ser, tx)
+	if err != nil {
+		return fmt.Errorf("failed to get by id %d: %w", m.Metadata().ID, err)
+	}
+
+	// Verify validity of model
+	err = ser.Validate(m, tx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelValidation, err)
+	}
+
+	// Prepare
+	err = ser.Clean(m, tx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelCleaning, err)
+	}
+
+	// Replace properties of updated with certain frozen
+	// ones of old
+	meta := m.Metadata()
+	meta.UpdatedAt = time.Now()
+	meta.Version = meta.Version + 1
+	err = ser.PersistOldProperties(m, o, tx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", errmsgModelPersistOld, err)
+	}
+
+	// Call hooks to run before update
 	hooks := ser.PersistHooks()
 	if hooks != nil {
 		err := hooks.PreUpdateHook(m, ser, tx)
@@ -62,11 +128,13 @@ func (dbs *DatabaseService) Update(m Model, ser Service, tx Tx) error {
 		}
 	}
 
-	err := dbs.DatabaseDriver.Update(m, ser, tx)
+	// Update in database
+	err = dbs.DatabaseDriver.Update(m, ser, tx)
 	if err != nil {
 		return err
 	}
 
+	// Call hooks to run after update
 	if hooks != nil {
 		err = hooks.PostUpdateHook(m, ser, tx)
 		if err != nil {
@@ -79,12 +147,21 @@ func (dbs *DatabaseService) Update(m Model, ser Service, tx Tx) error {
 
 // Delete deletes an existing persisted instance of a Model type.
 func (dbs *DatabaseService) Delete(id int, ser Service, tx Tx) error {
+	// Check service
+	err := checkService(ser)
+	if err != nil {
+		return err
+	}
+
 	hooks := ser.PersistHooks()
+
+	// Get existing value
 	m, err := dbs.DatabaseDriver.GetByID(id, ser, tx)
 	if err != nil {
 		return err
 	}
 
+	// Call hooks to run before deletion
 	if hooks != nil {
 		err = hooks.PreDeleteHook(m, ser, tx)
 		if err != nil {
@@ -92,11 +169,13 @@ func (dbs *DatabaseService) Delete(id int, ser Service, tx Tx) error {
 		}
 	}
 
+	// Delete
 	err = dbs.DatabaseDriver.Delete(id, ser, tx)
 	if err != nil {
 		return err
 	}
 
+	// Call hooks to run after deletion
 	if hooks != nil {
 		err = ser.PersistHooks().PostDeleteHook(m, ser, tx)
 		if err != nil {

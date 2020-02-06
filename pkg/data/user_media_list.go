@@ -26,6 +26,7 @@ func (uml *UserMediaList) Metadata() *db.ModelMetadata {
 type UserMediaListService struct {
 	UserService      *UserService
 	UserMediaService *UserMediaService
+	Hooks            db.PersistHooks
 }
 
 // Create persists the given UserMediaList.
@@ -168,6 +169,11 @@ func (ser *UserMediaListService) Initialize(_ db.Model, _ db.Tx) error {
 // UserMediaList in updates.
 func (ser *UserMediaListService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *UserMediaListService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given UserMediaList into JSON.

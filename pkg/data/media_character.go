@@ -30,6 +30,7 @@ type MediaCharacterService struct {
 	MediaService     *MediaService
 	CharacterService *CharacterService
 	PersonService    *PersonService
+	Hooks            db.PersistHooks
 }
 
 // Create persists the given MediaCharacter.
@@ -261,6 +262,11 @@ func (ser *MediaCharacterService) Initialize(_ db.Model, _ db.Tx) error {
 // MediaCharacter in updates.
 func (ser *MediaCharacterService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *MediaCharacterService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given MediaCharacter into JSON.

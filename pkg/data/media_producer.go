@@ -27,6 +27,7 @@ func (mp *MediaProducer) Metadata() *db.ModelMetadata {
 type MediaProducerService struct {
 	MediaService    *MediaService
 	ProducerService *ProducerService
+	Hooks           db.PersistHooks
 }
 
 // Create persists the given MediaProducer.
@@ -191,6 +192,11 @@ func (ser *MediaProducerService) Initialize(_ db.Model, _ db.Tx) error {
 // MediaProducer in updates.
 func (ser *MediaProducerService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *MediaProducerService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given MediaProducer into JSON.

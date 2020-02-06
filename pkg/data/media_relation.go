@@ -26,6 +26,7 @@ func (mr *MediaRelation) Metadata() *db.ModelMetadata {
 // MediaRelationService performs operations on MediaRelation.
 type MediaRelationService struct {
 	MediaService *MediaService
+	Hooks        db.PersistHooks
 }
 
 // Create persists the given MediaRelation.
@@ -198,6 +199,11 @@ func (ser *MediaRelationService) Initialize(_ db.Model, _ db.Tx) error {
 // MediaRelation in updates.
 func (ser *MediaRelationService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *MediaRelationService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given MediaRelation into JSON.

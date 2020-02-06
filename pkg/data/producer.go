@@ -22,7 +22,9 @@ func (p *Producer) Metadata() *db.ModelMetadata {
 }
 
 // ProducerService performs operations on Producer.
-type ProducerService struct{}
+type ProducerService struct {
+	Hooks db.PersistHooks
+}
 
 // Create persists the given Producer.
 func (ser *ProducerService) Create(p *Producer, tx db.Tx) (int, error) {
@@ -150,6 +152,11 @@ func (ser *ProducerService) Initialize(_ db.Model, _ db.Tx) error {
 // in updates.
 func (ser *ProducerService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *ProducerService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given Producer into JSON.

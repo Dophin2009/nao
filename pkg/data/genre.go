@@ -21,7 +21,9 @@ func (g *Genre) Metadata() *db.ModelMetadata {
 }
 
 // GenreService performs operations on genre.
-type GenreService struct{}
+type GenreService struct {
+	Hooks db.PersistHooks
+}
 
 // Create persists the given Genre.
 func (ser *GenreService) Create(g *Genre, tx db.Tx) (int, error) {
@@ -145,6 +147,11 @@ func (ser *GenreService) Initialize(_ db.Model, _ db.Tx) error {
 // updates.
 func (ser *GenreService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *GenreService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given Genre into JSON.

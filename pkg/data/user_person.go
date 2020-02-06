@@ -27,6 +27,7 @@ func (up *UserPerson) Metadata() *db.ModelMetadata {
 type UserPersonService struct {
 	UserService   *UserService
 	PersonService *PersonService
+	Hooks         db.PersistHooks
 }
 
 // Create persists the given UserPerson.
@@ -186,6 +187,11 @@ func (ser *UserPersonService) Initialize(_ db.Model, _ db.Tx) error {
 // UserPerson in updates.
 func (ser *UserPersonService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *UserPersonService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given UserPerson into JSON.

@@ -104,6 +104,7 @@ func (ws *WatchStatus) MarshalJSON() (v []byte, err error) {
 type UserMediaService struct {
 	UserService  *UserService
 	MediaService *MediaService
+	Hooks        db.PersistHooks
 }
 
 // Create persists the given UserMedia.
@@ -261,6 +262,11 @@ func (ser *UserMediaService) Initialize(_ db.Model, _ db.Tx) error {
 // in updates.
 func (ser *UserMediaService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *UserMediaService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given UserMedia into JSON.

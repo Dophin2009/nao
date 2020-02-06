@@ -25,6 +25,7 @@ func (mg *MediaGenre) Metadata() *db.ModelMetadata {
 type MediaGenreService struct {
 	MediaService *MediaService
 	GenreService *GenreService
+	Hooks        db.PersistHooks
 }
 
 // Create persists the given MediaGenre.
@@ -180,6 +181,11 @@ func (ser *MediaGenreService) Initialize(_ db.Model, _ db.Tx) error {
 // in updates.
 func (ser *MediaGenreService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *MediaGenreService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given MediaGenre into JSON.

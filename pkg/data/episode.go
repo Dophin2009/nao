@@ -41,7 +41,9 @@ func (set *EpisodeSet) Metadata() *db.ModelMetadata {
 }
 
 // EpisodeService performs operations on Episodes.
-type EpisodeService struct{}
+type EpisodeService struct {
+	Hooks db.PersistHooks
+}
 
 // Create persists the given Episode.
 func (ser *EpisodeService) Create(ep *Episode, tx db.Tx) (int, error) {
@@ -167,6 +169,11 @@ func (ser *EpisodeService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx)
 	return nil
 }
 
+// PersistHooks returns the persistence hook functions.
+func (ser *EpisodeService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
+}
+
 // Marshal transforms the given Episode into JSON.
 func (ser *EpisodeService) Marshal(m db.Model) ([]byte, error) {
 	ep, err := ser.AssertType(m)
@@ -220,7 +227,9 @@ func (ser *EpisodeService) mapFromModel(vlist []db.Model) ([]*Episode, error) {
 }
 
 // EpisodeSetService performs operations on EpisodeSets.
-type EpisodeSetService struct{}
+type EpisodeSetService struct {
+	Hooks db.PersistHooks
+}
 
 // Create persists the given EpisodeSet.
 func (ser *EpisodeSetService) Create(set *EpisodeSet, tx db.Tx) (int, error) {
@@ -354,6 +363,11 @@ func (ser *EpisodeSetService) Initialize(_ db.Model, _ db.Tx) error {
 // in updates.
 func (ser *EpisodeSetService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *EpisodeSetService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given EpisodeSet into JSON.

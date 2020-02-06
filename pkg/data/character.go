@@ -23,7 +23,9 @@ func (c *Character) Metadata() *db.ModelMetadata {
 }
 
 // CharacterService performs operations on Characters.
-type CharacterService struct{}
+type CharacterService struct {
+	Hooks db.PersistHooks
+}
 
 // Create persists the given Character.
 func (ser *CharacterService) Create(c *Character, tx db.Tx) (int, error) {
@@ -163,6 +165,11 @@ func (ser *CharacterService) Marshal(m db.Model) ([]byte, error) {
 	}
 
 	return v, nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *CharacterService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Unmarshal parses the given JSON into Character.

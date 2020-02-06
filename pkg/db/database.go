@@ -22,23 +22,89 @@ type ModelMetadata struct {
 	Version   int
 }
 
-// Service provides various functions to operate on Models. All implementations
-// should use type assertions to guarantee prevention of runtime errors.
-type Service interface {
-	Bucket() string
-
-	Clean(m Model, tx Tx) error
-	Validate(m Model, tx Tx) error
-	Initialize(m Model, tx Tx) error
-	PersistOldProperties(n Model, o Model, tx Tx) error
-
-	Marshal(m Model) ([]byte, error)
-	Unmarshal(buf []byte) (Model, error)
-}
-
 // DatabaseService provides
 type DatabaseService struct {
 	DatabaseDriver
+}
+
+// Create persists a new instance of a Model type.
+func (dbs *DatabaseService) Create(m Model, ser Service, tx Tx) (int, error) {
+	hooks := ser.PersistHooks()
+	if hooks != nil {
+		err := hooks.PreCreateHook(m, ser, tx)
+		if err != nil {
+			return 0, fmt.Errorf("failed to run pre-create hooks: %w", err)
+		}
+	}
+
+	id, err := dbs.DatabaseDriver.Create(m, ser, tx)
+	if err != nil {
+		return 0, err
+	}
+
+	if hooks != nil {
+		err = hooks.PostCreateHook(m, ser, tx)
+		if err != nil {
+			return 0, fmt.Errorf("failed to run post-create hooks: %w", err)
+		}
+	}
+
+	return id, nil
+}
+
+// Update modifies an existing instance of a Model type.
+func (dbs *DatabaseService) Update(m Model, ser Service, tx Tx) error {
+	hooks := ser.PersistHooks()
+	if hooks != nil {
+		err := hooks.PreUpdateHook(m, ser, tx)
+		if err != nil {
+			return fmt.Errorf("failed to run pre-update hooks: %w", err)
+		}
+	}
+
+	err := dbs.DatabaseDriver.Update(m, ser, tx)
+	if err != nil {
+		return err
+	}
+
+	if hooks != nil {
+		err = hooks.PostUpdateHook(m, ser, tx)
+		if err != nil {
+			return fmt.Errorf("failed to run post-update hooks: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// Delete deletes an existing persisted instance of a Model type.
+func (dbs *DatabaseService) Delete(id int, ser Service, tx Tx) error {
+	hooks := ser.PersistHooks()
+	m, err := dbs.DatabaseDriver.GetByID(id, ser, tx)
+	if err != nil {
+		return err
+	}
+
+	if hooks != nil {
+		err = hooks.PreDeleteHook(m, ser, tx)
+		if err != nil {
+			return fmt.Errorf("failed to run pre-delete hooks: %w", err)
+		}
+	}
+
+	err = dbs.DatabaseDriver.Delete(id, ser, tx)
+	if err != nil {
+		return err
+	}
+
+	if hooks != nil {
+		err = ser.PersistHooks().PostDeleteHook(m, ser, tx)
+		if err != nil {
+			return fmt.Errorf("failed to run post-delete hooks: %w", err)
+		}
+	}
+
+	return nil
 }
 
 // DatabaseDriver defines generic CRUD logic for a database backend.

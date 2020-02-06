@@ -113,7 +113,9 @@ func (q Quarter) MarshalGQL(w io.Writer) {
 }
 
 // MediaService performs operations on Media.
-type MediaService struct{}
+type MediaService struct {
+	Hooks db.PersistHooks
+}
 
 // Create persists the given Media.
 func (ser *MediaService) Create(md *Media, tx db.Tx) (int, error) {
@@ -247,6 +249,11 @@ func (ser *MediaService) Initialize(_ db.Model, _ db.Tx) error {
 // updates.
 func (ser *MediaService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *MediaService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given Media into JSON.

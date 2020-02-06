@@ -27,6 +27,7 @@ func (uep *UserEpisode) Metadata() *db.ModelMetadata {
 type UserEpisodeService struct {
 	UserService    *UserService
 	EpisodeService *EpisodeService
+	Hooks          db.PersistHooks
 }
 
 // Create persists the given UserEpisode.
@@ -186,6 +187,11 @@ func (ser *UserEpisodeService) Initialize(_ db.Model, _ db.Tx) error {
 // UserEpisode in updates.
 func (ser *UserEpisodeService) PersistOldProperties(_ db.Model, _ db.Model, _ db.Tx) error {
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *UserEpisodeService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given UserEpisode into JSON.

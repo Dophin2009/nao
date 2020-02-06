@@ -37,7 +37,9 @@ type UserPermission struct {
 }
 
 // UserService performs operations on User.
-type UserService struct{}
+type UserService struct {
+	Hooks db.PersistHooks
+}
 
 // Create persists the given User.
 func (ser *UserService) Create(u *User, tx db.Tx) (int, error) {
@@ -290,6 +292,11 @@ func (ser *UserService) PersistOldProperties(n db.Model, o db.Model, _ db.Tx) er
 		nu.Password = ou.Password
 	}
 	return nil
+}
+
+// PersistHooks returns the persistence hook functions.
+func (ser *UserService) PersistHooks() *db.PersistHooks {
+	return &ser.Hooks
 }
 
 // Marshal transforms the given User into JSON.

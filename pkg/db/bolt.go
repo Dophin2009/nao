@@ -430,10 +430,14 @@ func (db *BoltDatabase) GetFilter(first *int, skip *int, ser Service, tx Tx,
 	var k, v []byte
 	c.First()
 	for i := 0; i < start; k, v = c.Next() {
-		if k == nil {
-			continue
+		m, err := ser.Unmarshal(v)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
 		}
-		i++
+
+		if keep(m) {
+			i++
+		}
 	}
 
 	// Iterate until end is reached

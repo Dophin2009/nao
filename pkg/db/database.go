@@ -196,7 +196,7 @@ type DatabaseDriver interface {
 	Delete(id int, ser Service, tx Tx) error
 	GetByID(id int, ser Service, tx Tx) (Model, error)
 	GetRawByID(id int, ser Service, tx Tx) ([]byte, error)
-	GetMultiple(ids []int, first *int, skip *int, ser Service, tx Tx,
+	GetMultiple(ids []int, first *int, ser Service, tx Tx,
 		keep func(Model) bool) ([]Model, error)
 	GetAll(first *int, skip *int, ser Service, tx Tx) ([]Model, error)
 	GetFilter(first *int, skip *int, ser Service, tx Tx,

@@ -97,9 +97,9 @@ func (ser *MediaGenreService) GetByID(id int, tx db.Tx) (*MediaGenre, error) {
 // GetMultiple retrieves the persisted MediaGenre values specified by the given
 // IDs that pass the filter.
 func (ser *MediaGenreService) GetMultiple(
-	ids []int, first *int, skip *int, tx db.Tx, keep func(mg *MediaGenre) bool,
+	ids []int, first *int, tx db.Tx, keep func(mg *MediaGenre) bool,
 ) ([]*MediaGenre, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
 		func(m db.Model) bool {
 			mg, err := ser.AssertType(m)
 			if err != nil {

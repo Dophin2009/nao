@@ -80,9 +80,9 @@ func (ser *GenreService) GetFilter(
 // GetMultiple retrieves the persisted Genre values specified by the given
 // IDs that pass the filter.
 func (ser *GenreService) GetMultiple(
-	ids []int, first *int, skip *int, tx db.Tx, keep func(c *Genre) bool,
+	ids []int, first *int, tx db.Tx, keep func(c *Genre) bool,
 ) ([]*Genre, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
 		func(m db.Model) bool {
 			g, err := ser.AssertType(m)
 			if err != nil {

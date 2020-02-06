@@ -96,9 +96,9 @@ func (ser *UserService) GetFilter(
 // GetMultiple retrieves the persisted User values specified by the
 // given IDs that pass the filter.
 func (ser *UserService) GetMultiple(
-	ids []int, first *int, skip *int, tx db.Tx, keep func(u *User) bool,
+	ids []int, first *int, tx db.Tx, keep func(u *User) bool,
 ) ([]*User, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
 		func(m db.Model) bool {
 			u, err := ser.AssertType(m)
 			if err != nil {

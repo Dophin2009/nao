@@ -327,8 +327,8 @@ func (db *BoltDatabase) GetRawByID(id int, ser Service, tx Tx) ([]byte, error) {
 // IDs.
 //
 // See GetFilter for details on `first` and `skip`.
-func (db *BoltDatabase) GetMultiple(ids []int, first *int, skip *int,
-	ser Service, tx Tx, keep func(m Model) bool) ([]Model, error) {
+func (db *BoltDatabase) GetMultiple(ids []int, first *int, ser Service, tx Tx,
+	keep func(m Model) bool) ([]Model, error) {
 	// Unwrap transaction
 	_, err := db.unwrapTx(tx)
 	if err != nil {
@@ -349,7 +349,7 @@ func (db *BoltDatabase) GetMultiple(ids []int, first *int, skip *int,
 	}
 
 	// Calculate start and end numbers
-	start, end := db.calculatePaginationBounds(first, skip)
+	start, end := db.calculatePaginationBounds(first, nil)
 
 	// List to return
 	list := []Model{}

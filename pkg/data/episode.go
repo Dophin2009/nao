@@ -100,9 +100,9 @@ func (ser *EpisodeService) GetFilter(
 // GetMultiple retrieves the persisted Episode values specified by the given
 // IDs that pass the filter.
 func (ser *EpisodeService) GetMultiple(
-	ids []int, first *int, skip *int, tx db.Tx, keep func(ep *Episode) bool,
+	ids []int, first *int, tx db.Tx, keep func(ep *Episode) bool,
 ) ([]*Episode, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
 		func(m db.Model) bool {
 			ep, err := ser.AssertType(m)
 			if err != nil {
@@ -286,9 +286,9 @@ func (ser *EpisodeSetService) GetFilter(
 // GetMultiple retrieves the persisted EpisodeSet values specified by the given
 // IDs that pass the filter.
 func (ser *EpisodeSetService) GetMultiple(
-	ids []int, first *int, skip *int, tx db.Tx, keep func(set *EpisodeSet) bool,
+	ids []int, first *int, tx db.Tx, keep func(set *EpisodeSet) bool,
 ) ([]*EpisodeSet, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, skip, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
 		func(m db.Model) bool {
 			set, err := ser.AssertType(m)
 			if err != nil {

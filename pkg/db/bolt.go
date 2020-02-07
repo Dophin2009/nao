@@ -395,27 +395,46 @@ func (db *BoltDatabase) GetAll(first *int, skip *int, ser Service, tx Tx) ([]Mod
 // filter function passes all.
 func (db *BoltDatabase) GetFilter(first *int, skip *int, ser Service, tx Tx,
 	keep func(m Model) bool) ([]Model, error) {
+	list := []Model{}
+	collect := func(m Model, ser Service, tx Tx) (exit bool, err error) {
+		// Append element to list
+		list = append(list, m)
+		return false, nil
+	}
+
+	err := db.DoEach(first, skip, ser, tx, collect, keep)
+	if err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
+
+// DoEach unmarshals and performs some function on each persisted element
+// that passes the filter function.
+func (db *BoltDatabase) DoEach(first *int, skip *int, ser Service, tx Tx,
+	do func(Model, Service, Tx) (exit bool, err error), iff func(Model) bool) error {
 	// Unwrap transaction
 	_, err := db.unwrapTx(tx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Check service
 	err = checkService(ser)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Get bucket, exit if error
 	b, err := db.Bucket(ser.Bucket(), tx)
 	if err != nil {
-		return nil, fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
+		return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 	}
 
 	// If filter function is nil, filter nothing
-	if keep == nil {
-		keep = func(_ Model) bool {
+	if iff == nil {
+		iff = func(_ Model) bool {
 			return true
 		}
 	}
@@ -432,63 +451,64 @@ func (db *BoltDatabase) GetFilter(first *int, skip *int, ser Service, tx Tx,
 	for i := 0; i < start; k, v = c.Next() {
 		m, err := ser.Unmarshal(v)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
+			return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
 		}
 
-		if keep(m) {
+		if iff(m) {
 			i++
 		}
 	}
 
 	// Iterate until end is reached
-	list := []Model{}
 	for i := start; i < end && k != nil; k, v = c.Next() {
 		// Unmarshal element
 		m, err := ser.Unmarshal(v)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
+			return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
 		}
 
 		// If element does not pass filter, continue to next
-		if !keep(m) {
+		if !iff(m) {
 			continue
 		}
 
-		list = append(list, m)
+		exit, err := do(m, ser, tx)
+		if exit {
+			return err
+		}
 		i++
 	}
 
-	return list, nil
+	return nil
 }
 
 // FindFirst returns the first element that matches the conditions in the
 // given function. Elements are iterated through in key order.
 func (db *BoltDatabase) FindFirst(
 	ser Service, tx Tx, match func(Model) (bool, error)) (Model, error) {
-	var m Model
-	err := db.iterateKeys(ser.Bucket(), tx, func(k, v []byte, tx Tx) (bool, error) {
-		e, err := ser.Unmarshal(v)
-		if err != nil {
-			return true, fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
-		}
-
+	var found Model
+	check := func(m Model, _ Service, _ Tx) (exit bool, err error) {
 		t, err := match(m)
 		if err != nil {
 			return true, fmt.Errorf("failed to check if match was found: %w", err)
 		}
 
 		if t {
-			m = e
+			found = m
 			return true, nil
 		}
 
 		return false, nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to iterate through keys: %w", err)
 	}
 
-	return m, nil
+	err := db.DoEach(nil, nil, ser, tx, check, func(m Model) bool {
+		return true
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return found, nil
 }
 
 // iterateKeys iterates through the keys of the given database bucket and
@@ -497,31 +517,31 @@ func (db *BoltDatabase) FindFirst(
 // The loop exits only if do returns a true exit flag. If an error is returned
 // but exit is false, the error will be ignored. If an error is returned and
 // exit is true, the error will be returned.
-func (db *BoltDatabase) iterateKeys(bucketName string, tx Tx,
-	do func(k, v []byte, tx Tx) (exit bool, err error)) error {
-	// Unwrap transaction
-	_, err := db.unwrapTx(tx)
-	if err != nil {
-		return err
-	}
+// func (db *BoltDatabase) iterateKeys(bucketName string, tx Tx,
+// do func(k, v []byte, tx Tx) (exit bool, err error)) error {
+// // Unwrap transaction
+// _, err := db.unwrapTx(tx)
+// if err != nil {
+// return err
+// }
 
-	// Get bucket, exit if error
-	b, err := db.Bucket(bucketName, tx)
-	if err != nil {
-		return fmt.Errorf("%s %q: %w", errmsgBucketOpen, bucketName, err)
-	}
+// // Get bucket, exit if error
+// b, err := db.Bucket(bucketName, tx)
+// if err != nil {
+// return fmt.Errorf("%s %q: %w", errmsgBucketOpen, bucketName, err)
+// }
 
-	c := b.Cursor()
-	for k, v := c.First(); k != nil; k, v = c.Next() {
-		exit, err := do(k, v, tx)
-		if !exit {
-			return fmt.Errorf("iteration of values aborted: %w", err)
-		}
+// c := b.Cursor()
+// for k, v := c.First(); k != nil; k, v = c.Next() {
+// exit, err := do(k, v, tx)
+// if !exit {
+// return fmt.Errorf("iteration of values aborted: %w", err)
+// }
 
-	}
+// }
 
-	return nil
-}
+// return nil
+// }
 
 func (db *BoltDatabase) assertTx(tx Tx) (*BoltTx, error) {
 	btx, ok := tx.(*BoltTx)

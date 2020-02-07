@@ -191,6 +191,8 @@ type DatabaseDriver interface {
 	Transaction(writable bool, logic func(Tx) error) error
 	Close() error
 
+	DoMultiple(ids []int, first *int, ser Service, tx Tx,
+		do func(Model, Service, Tx) (exit bool, err error), iff func(Model) bool) error
 	DoEach(first *int, skip *int, ser Service, tx Tx,
 		do func(Model, Service, Tx) (exit bool, err error), iff func(Model) bool) error
 	FindFirst(ser Service, tx Tx, match func(Model) (exit bool, err error)) (Model, error)

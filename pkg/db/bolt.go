@@ -329,48 +329,15 @@ func (db *BoltDatabase) GetRawByID(id int, ser Service, tx Tx) ([]byte, error) {
 // See GetFilter for details on `first` and `skip`.
 func (db *BoltDatabase) GetMultiple(ids []int, first *int, ser Service, tx Tx,
 	keep func(m Model) bool) ([]Model, error) {
-	// Unwrap transaction
-	_, err := db.unwrapTx(tx)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check service
-	err = checkService(ser)
-	if err != nil {
-		return nil, err
-	}
-
-	// If filter function is nil, filter nothing
-	if keep == nil {
-		keep = func(_ Model) bool {
-			return true
-		}
-	}
-
-	// Calculate start and end numbers
-	start, end := db.calculatePaginationBounds(first, nil)
-
-	// List to return
 	list := []Model{}
+	collect := func(m Model, _ Service, _ Tx) (exit bool, err error) {
+		list = append(list, m)
+		return false, nil
+	}
 
-	// Iterate through values
-	i := start
-	for _, id := range ids {
-		if i >= end {
-			break
-		}
-
-		m, err := db.GetByID(id, ser, tx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get Model by id %d: %w", id, err)
-		}
-
-		// Check if pases filter
-		if keep(m) {
-			list = append(list, m)
-			i++
-		}
+	err := db.DoMultiple(ids, first, ser, tx, collect, keep)
+	if err != nil {
+		return nil, err
 	}
 
 	return list, nil
@@ -408,6 +375,59 @@ func (db *BoltDatabase) GetFilter(first *int, skip *int, ser Service, tx Tx,
 	}
 
 	return list, nil
+}
+
+// DoMultiple unmarshals and performs some function on the persisted elements
+// that pass the given filter function specified by the given IDs.
+func (db *BoltDatabase) DoMultiple(ids []int, first *int, ser Service, tx Tx,
+	do func(Model, Service, Tx) (exit bool, err error), iff func(Model) bool) error {
+	// Unwrap transaction
+	_, err := db.unwrapTx(tx)
+	if err != nil {
+		return err
+	}
+
+	// Check service
+	err = checkService(ser)
+	if err != nil {
+		return err
+	}
+
+	// If filter function is nil, filter nothing
+	if iff == nil {
+		iff = func(_ Model) bool {
+			return true
+		}
+	}
+
+	// Calculate start and end numbers
+	start, end := db.calculatePaginationBounds(first, nil)
+
+	// Iterate through values
+	i := start
+	for _, id := range ids {
+		if i >= end {
+			break
+		}
+
+		m, err := db.GetByID(id, ser, tx)
+		if err != nil {
+			return fmt.Errorf("failed to get Model by id %d: %w", id, err)
+		}
+
+		// Check if pases filter
+		if !iff(m) {
+			continue
+		}
+
+		exit, err := do(m, ser, tx)
+		if exit {
+			return err
+		}
+		i++
+	}
+
+	return nil
 }
 
 // DoEach unmarshals and performs some function on each persisted element

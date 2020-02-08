@@ -166,7 +166,7 @@ func (db *BoltDatabase) Create(m Model, ser Service, tx Tx) (int, error) {
 	}
 
 	// Check service
-	err = checkService(ser)
+	err = CheckService(ser)
 	if err != nil {
 		return 0, err
 	}
@@ -215,7 +215,7 @@ func (db *BoltDatabase) Update(m Model, ser Service, tx Tx) error {
 	}
 
 	// Check service
-	err = checkService(ser)
+	err = CheckService(ser)
 	if err != nil {
 		return err
 	}
@@ -254,7 +254,7 @@ func (db *BoltDatabase) Delete(id int, ser Service, tx Tx) error {
 	}
 
 	// Check service
-	err = checkService(ser)
+	err = CheckService(ser)
 	if err != nil {
 		return err
 	}
@@ -303,7 +303,7 @@ func (db *BoltDatabase) GetRawByID(id int, ser Service, tx Tx) ([]byte, error) {
 	}
 
 	// Check service
-	err = checkService(ser)
+	err = CheckService(ser)
 	if err != nil {
 		return nil, err
 	}
@@ -388,7 +388,7 @@ func (db *BoltDatabase) DoMultiple(ids []int, first *int, ser Service, tx Tx,
 	}
 
 	// Check service
-	err = checkService(ser)
+	err = CheckService(ser)
 	if err != nil {
 		return err
 	}
@@ -441,7 +441,7 @@ func (db *BoltDatabase) DoEach(first *int, skip *int, ser Service, tx Tx,
 	}
 
 	// Check service
-	err = checkService(ser)
+	err = CheckService(ser)
 	if err != nil {
 		return err
 	}

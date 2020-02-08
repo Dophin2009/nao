@@ -30,7 +30,7 @@ type DatabaseService struct {
 // Create persists a new instance of a Model type.
 func (dbs *DatabaseService) Create(m Model, ser Service, tx Tx) (int, error) {
 	// Check service
-	err := checkService(ser)
+	err := CheckService(ser)
 	if err != nil {
 		return 0, err
 	}
@@ -86,7 +86,7 @@ func (dbs *DatabaseService) Create(m Model, ser Service, tx Tx) (int, error) {
 // Update modifies an existing instance of a Model type.
 func (dbs *DatabaseService) Update(m Model, ser Service, tx Tx) error {
 	// Check service
-	err := checkService(ser)
+	err := CheckService(ser)
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func (dbs *DatabaseService) Update(m Model, ser Service, tx Tx) error {
 // Delete deletes an existing persisted instance of a Model type.
 func (dbs *DatabaseService) Delete(id int, ser Service, tx Tx) error {
 	// Check service
-	err := checkService(ser)
+	err := CheckService(ser)
 	if err != nil {
 		return err
 	}
@@ -242,8 +242,8 @@ const (
 	errmsgBucketDelete    = "failed to delete value in bucket"
 )
 
-// checkService returns an error if the given service or its DB are nil.
-func checkService(ser Service) error {
+// CheckService returns an error if the given service or its DB are nil.
+func CheckService(ser Service) error {
 	if ser == nil {
 		return fmt.Errorf("service: %w", errNil)
 	}

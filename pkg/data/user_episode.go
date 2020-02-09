@@ -30,6 +30,47 @@ type UserEpisodeService struct {
 	Hooks          db.PersistHooks
 }
 
+// NewUserEpisodeService returns a UserEpisodeService.
+func NewUserEpisodeService(hooks db.PersistHooks, userService *UserService,
+	episodeService *EpisodeService) *UserEpisodeService {
+	// Initiate UserEpisodeService
+	userEpisodeService := &UserEpisodeService{
+		UserService:    userService,
+		EpisodeService: episodeService,
+		Hooks:          hooks,
+	}
+
+	// Add hook to delete UserEpisode on User deletion
+	deleteUserEpisodeOnDeleteUser := func(um db.Model, _ db.Service, tx db.Tx) error {
+		uID := um.Metadata().ID
+		err := userEpisodeService.DeleteByUser(uID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete UserEpisode by User ID %d: %w",
+				uID, err)
+		}
+		return nil
+	}
+	uSerHooks := userService.PersistHooks()
+	uSerHooks.PreDeleteHooks =
+		append(uSerHooks.PreDeleteHooks, deleteUserEpisodeOnDeleteUser)
+
+	// Add hook to delete UserEpisode on Episode deletion
+	deleteUserEpisodeOnDeleteEpisode := func(epm db.Model, _ db.Service, tx db.Tx) error {
+		epID := epm.Metadata().ID
+		err := userEpisodeService.DeleteByEpisode(epID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete UserEpisode by Episode ID %d: %w",
+				epID, err)
+		}
+		return nil
+	}
+	epSerHooks := episodeService.PersistHooks()
+	epSerHooks.PreDeleteHooks =
+		append(epSerHooks.PreDeleteHooks, deleteUserEpisodeOnDeleteEpisode)
+
+	return userEpisodeService
+}
+
 // Create persists the given UserEpisode.
 func (ser *UserEpisodeService) Create(uep *UserEpisode, tx db.Tx) (int, error) {
 	return tx.Database().Create(uep, ser, tx)
@@ -43,6 +84,28 @@ func (ser *UserEpisodeService) Update(uep *UserEpisode, tx db.Tx) error {
 // Delete deletes the UserEpisode with the given ID.
 func (ser *UserEpisodeService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
+}
+
+// DeleteByUser deletes the UserEpisodes with the given User ID.
+func (ser *UserEpisodeService) DeleteByUser(uID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		uep, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return uep.UserID == uID
+	})
+}
+
+// DeleteByEpisode deletes the UserEpisodes with the given Episode ID.
+func (ser *UserEpisodeService) DeleteByEpisode(epID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		uep, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return uep.EpisodeID == epID
+	})
 }
 
 // GetAll retrieves all persisted values of UserEpisode.

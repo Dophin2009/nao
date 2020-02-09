@@ -28,6 +28,45 @@ type MediaGenreService struct {
 	Hooks        db.PersistHooks
 }
 
+// NewMediaGenreService returns a MediaGenre.
+func NewMediaGenreService(hooks db.PersistHooks, mediaService *MediaService,
+	genreService *GenreService) *MediaGenreService {
+	// Initialize MediaGenreService
+	mediaGenreService := &MediaGenreService{
+		MediaService: mediaService,
+		GenreService: genreService,
+		Hooks:        hooks,
+	}
+
+	// Add hook to delete MediaGenre on Media deletion
+	deleteMediaGenreOnDeleteMedia := func(mdm db.Model, _ db.Service, tx db.Tx) error {
+		mID := mdm.Metadata().ID
+		err := mediaGenreService.DeleteByMedia(mID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete MediaGenre by Media ID %d: %w", mID, err)
+		}
+		return nil
+	}
+	mdSerHooks := mediaService.PersistHooks()
+	mdSerHooks.PreDeleteHooks =
+		append(mdSerHooks.PreDeleteHooks, deleteMediaGenreOnDeleteMedia)
+
+	// Add hook to delete MediaGenre on Genre deletion
+	deleteMediaGenreOnDeleteGenre := func(gm db.Model, _ db.Service, tx db.Tx) error {
+		gID := gm.Metadata().ID
+		err := mediaGenreService.DeleteByGenre(gID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete MediaGenre by Genre ID %d: %w", gID, err)
+		}
+		return nil
+	}
+	gSerHooks := genreService.PersistHooks()
+	gSerHooks.PreDeleteHooks =
+		append(gSerHooks.PreDeleteHooks, deleteMediaGenreOnDeleteGenre)
+
+	return mediaGenreService
+}
+
 // Create persists the given MediaGenre.
 func (ser *MediaGenreService) Create(mg *MediaGenre, tx db.Tx) (int, error) {
 	return tx.Database().Create(mg, ser, tx)
@@ -41,6 +80,30 @@ func (ser *MediaGenreService) Update(mg *MediaGenre, tx db.Tx) error {
 // Delete deletes the MediaGenre with the given ID.
 func (ser *MediaGenreService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
+}
+
+// DeleteByMedia deletes the MediaGenres with the given Media ID.
+func (ser *MediaGenreService) DeleteByMedia(mID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		mg, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+
+		return mg.MediaID == mID
+	})
+}
+
+// DeleteByGenre deletes the MediaGenres with the given Genre ID.
+func (ser *MediaGenreService) DeleteByGenre(gID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		mg, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+
+		return mg.GenreID == gID
+	})
 }
 
 // GetAll retrieves all persisted values of MediaGenre.
@@ -97,9 +160,9 @@ func (ser *MediaGenreService) GetByID(id int, tx db.Tx) (*MediaGenre, error) {
 // GetMultiple retrieves the persisted MediaGenre values specified by the given
 // IDs that pass the filter.
 func (ser *MediaGenreService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(mg *MediaGenre) bool,
+	ids []int, tx db.Tx, keep func(mg *MediaGenre) bool,
 ) ([]*MediaGenre, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			mg, err := ser.AssertType(m)
 			if err != nil {

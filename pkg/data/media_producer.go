@@ -30,6 +30,47 @@ type MediaProducerService struct {
 	Hooks           db.PersistHooks
 }
 
+// NewMediaProducer retursn a MediaProducer.
+func NewMediaProducer(hooks db.PersistHooks, mediaService *MediaService,
+	producerService *ProducerService) *MediaProducerService {
+	// Initialize MediaProducerService
+	mediaProducerService := &MediaProducerService{
+		MediaService:    mediaService,
+		ProducerService: producerService,
+		Hooks:           hooks,
+	}
+
+	// Add hook to delete MediaProducer on Media deletion
+	deleteMediaProducerOnDeleteMedia := func(mdm db.Model, _ db.Service, tx db.Tx) error {
+		mID := mdm.Metadata().ID
+		err := mediaProducerService.DeleteByMedia(mID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete MediaProducer by Media ID %d: %w",
+				mID, err)
+		}
+		return nil
+	}
+	mdSerHooks := mediaService.PersistHooks()
+	mdSerHooks.PreDeleteHooks =
+		append(mdSerHooks.PreDeleteHooks, deleteMediaProducerOnDeleteMedia)
+
+	// Add hook to delete MediaProducer on Producer deletion
+	deleteMediaProducerOnDeleteProducer := func(pd db.Model, _ db.Service, tx db.Tx) error {
+		pID := pd.Metadata().ID
+		err := mediaProducerService.DeleteByProducer(pID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete MediaProducer by Producer ID %d: %w",
+				pID, err)
+		}
+		return nil
+	}
+	pSerHooks := producerService.PersistHooks()
+	pSerHooks.PreDeleteHooks =
+		append(pSerHooks.PreDeleteHooks, deleteMediaProducerOnDeleteProducer)
+
+	return mediaProducerService
+}
+
 // Create persists the given MediaProducer.
 func (ser *MediaProducerService) Create(mp *MediaProducer, tx db.Tx) (int, error) {
 	return tx.Database().Create(mp, ser, tx)
@@ -44,6 +85,30 @@ func (ser *MediaProducerService) Update(mp *MediaProducer, tx db.Tx) error {
 // Delete deletes the MediaProducer with the given ID.
 func (ser *MediaProducerService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
+}
+
+// DeleteByMedia deletes the MediaProducers with the given Media ID.
+func (ser *MediaProducerService) DeleteByMedia(mID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		mp, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+
+		return mp.MediaID == mID
+	})
+}
+
+// DeleteByProducer deletes the MediaProducers with the given Producer ID.
+func (ser *MediaProducerService) DeleteByProducer(pID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		mp, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+
+		return mp.ProducerID == pID
+	})
 }
 
 // GetAll retrieves all persisted values of MediaProducer.
@@ -88,9 +153,9 @@ func (ser *MediaProducerService) GetFilter(
 // GetMultiple retrieves the persisted MediaProducer values specified by the
 // given IDs that pass the filter.
 func (ser *MediaProducerService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(mp *MediaProducer) bool,
+	ids []int, tx db.Tx, keep func(mp *MediaProducer) bool,
 ) ([]*MediaProducer, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			mp, err := ser.AssertType(m)
 			if err != nil {

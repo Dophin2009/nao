@@ -162,9 +162,9 @@ func (ser *UserMediaService) GetFilter(
 // GetMultiple retrieves the persisted UserMedia values specified by the
 // given IDs that pass the filter.
 func (ser *UserMediaService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(um *UserMedia) bool,
+	ids []int, tx db.Tx, keep func(um *UserMedia) bool,
 ) ([]*UserMedia, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			um, err := ser.AssertType(m)
 			if err != nil {

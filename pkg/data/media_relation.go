@@ -29,6 +29,34 @@ type MediaRelationService struct {
 	Hooks        db.PersistHooks
 }
 
+// NewMediaRelationService returns a MediaRelationService.
+func NewMediaRelationService(hooks db.PersistHooks, mediaService *MediaService) *MediaRelationService {
+	mediaRelationService := &MediaRelationService{
+		MediaService: mediaService,
+		Hooks:        hooks,
+	}
+
+	deleteMediaRelationOnDeleteMedia := func(mdm db.Model, _ db.Service, tx db.Tx) error {
+		mID := mdm.Metadata().ID
+		err := mediaRelationService.DeleteByOwner(mID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete MediaRelation by Owner ID %d: %w",
+				mID, err)
+		}
+		err = mediaRelationService.DeleteByRelated(mID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete MediaRelation by Related ID %d: %w",
+				mID, err)
+		}
+		return nil
+	}
+	mdSerHooks := mediaService.PersistHooks()
+	mdSerHooks.PreDeleteHooks =
+		append(mdSerHooks.PreDeleteHooks, deleteMediaRelationOnDeleteMedia)
+
+	return mediaRelationService
+}
+
 // Create persists the given MediaRelation.
 func (ser *MediaRelationService) Create(mr *MediaRelation, tx db.Tx) (int, error) {
 	return tx.Database().Create(mr, ser, tx)
@@ -42,6 +70,28 @@ func (ser *MediaRelationService) Update(mr *MediaRelation, tx db.Tx) error {
 // Delete deletes the MediaRelation with the given ID.
 func (ser *MediaRelationService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
+}
+
+// DeleteByOwner deletes the MediaRelation with the given Owner ID.
+func (ser *MediaRelationService) DeleteByOwner(mID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		mr, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return mr.OwnerID == mID
+	})
+}
+
+// DeleteByRelated deletes the MediaRelation with the given Related ID.
+func (ser *MediaRelationService) DeleteByRelated(mID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		mr, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return mr.RelatedID == mID
+	})
 }
 
 // GetAll retrieves all persisted values of MediaRelation.
@@ -84,9 +134,9 @@ func (ser *MediaRelationService) GetFilter(
 // GetMultiple retrieves the persisted MediaRelation values specified by the
 // given IDs that pass the filter.
 func (ser *MediaRelationService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(mr *MediaRelation) bool,
+	ids []int, tx db.Tx, keep func(mr *MediaRelation) bool,
 ) ([]*MediaRelation, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			mr, err := ser.AssertType(m)
 			if err != nil {

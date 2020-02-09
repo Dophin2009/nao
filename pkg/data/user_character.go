@@ -30,6 +30,46 @@ type UserCharacterService struct {
 	Hooks            db.PersistHooks
 }
 
+// NewUserCharacterService returns a UserCharacterService.
+func NewUserCharacterService(hooks db.PersistHooks, userService *UserService,
+	characterService *CharacterService) *UserCharacterService {
+	userCharacterService := &UserCharacterService{
+		UserService:      userService,
+		CharacterService: characterService,
+		Hooks:            hooks,
+	}
+
+	// Add hook to delete UserCharacter on User deletion
+	deleteUserCharacterOnDeleteUser := func(um db.Model, _ db.Service, tx db.Tx) error {
+		uID := um.Metadata().ID
+		err := userCharacterService.DeleteByUser(uID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete UserCharacter by User ID %d: %w",
+				uID, err)
+		}
+		return nil
+	}
+	uSerHooks := userService.PersistHooks()
+	uSerHooks.PreDeleteHooks =
+		append(uSerHooks.PreDeleteHooks, deleteUserCharacterOnDeleteUser)
+
+	// Add hook to delete UserCharacter on Character deletion
+	deleteUserCharacterOnDeleteCharacter := func(cm db.Model, _ db.Service, tx db.Tx) error {
+		cID := cm.Metadata().ID
+		err := userCharacterService.DeleteByCharacter(cID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete UserCharacter by Character ID %d: %w",
+				cID, err)
+		}
+		return nil
+	}
+	cSerHooks := characterService.PersistHooks()
+	cSerHooks.PreDeleteHooks =
+		append(cSerHooks.PreDeleteHooks, deleteUserCharacterOnDeleteCharacter)
+
+	return userCharacterService
+}
+
 // Create persists the given UserCharacter.
 func (ser *UserCharacterService) Create(uc *UserCharacter, tx db.Tx) (int, error) {
 	return tx.Database().Create(uc, ser, tx)
@@ -43,6 +83,28 @@ func (ser *UserCharacterService) Update(uc *UserCharacter, tx db.Tx) error {
 // Delete deletes the UserCharacter with the given ID.
 func (ser *UserCharacterService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
+}
+
+// DeleteByUser deletes the UserCharacters with the given User ID.
+func (ser *UserCharacterService) DeleteByUser(uID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(ucm db.Model) bool {
+		uc, err := ser.AssertType(ucm)
+		if err != nil {
+			return false
+		}
+		return uc.UserID == uID
+	})
+}
+
+// DeleteByCharacter deletes the UserCharacters with the given Character ID.
+func (ser *UserCharacterService) DeleteByCharacter(cID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(ucm db.Model) bool {
+		uc, err := ser.AssertType(ucm)
+		if err != nil {
+			return false
+		}
+		return uc.CharacterID == cID
+	})
 }
 
 // GetAll retrieves all persisted values of UserCharacter.
@@ -86,9 +148,9 @@ func (ser *UserCharacterService) GetFilter(
 // GetMultiple retrieves the persisted UserCharacter values specified by the
 // given IDs that pass the filter.
 func (ser *UserCharacterService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(uc *UserCharacter) bool,
+	ids []int, tx db.Tx, keep func(uc *UserCharacter) bool,
 ) ([]*UserCharacter, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			uc, err := ser.AssertType(m)
 			if err != nil {

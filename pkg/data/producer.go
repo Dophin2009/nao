@@ -26,6 +26,13 @@ type ProducerService struct {
 	Hooks db.PersistHooks
 }
 
+// NewProducerService returns a ProducerService.
+func NewProducerService(hooks db.PersistHooks) *ProducerService {
+	return &ProducerService{
+		Hooks: hooks,
+	}
+}
+
 // Create persists the given Producer.
 func (ser *ProducerService) Create(p *Producer, tx db.Tx) (int, error) {
 	return tx.Database().Create(p, ser, tx)
@@ -81,9 +88,9 @@ func (ser *ProducerService) GetFilter(
 // GetMultiple retrieves the persisted Producer values specified by the
 // given IDs that pass the filter.
 func (ser *ProducerService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(p *Producer) bool,
+	ids []int, tx db.Tx, keep func(p *Producer) bool,
 ) ([]*Producer, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			p, err := ser.AssertType(m)
 			if err != nil {

@@ -27,6 +27,13 @@ type PersonService struct {
 	Hooks db.PersistHooks
 }
 
+// NewPersonService returns a PersonService.
+func NewPersonService(hooks db.PersistHooks) *PersonService {
+	return &PersonService{
+		Hooks: hooks,
+	}
+}
+
 // Create persists the given Person.
 func (ser *PersonService) Create(p *Person, tx db.Tx) (int, error) {
 	return tx.Database().Create(p, ser, tx)
@@ -82,9 +89,9 @@ func (ser *PersonService) GetFilter(
 // GetMultiple retrieves the persisted Person values specified by the given IDs
 // that pass the filter.
 func (ser *PersonService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(p *Person) bool,
+	ids []int, tx db.Tx, keep func(p *Person) bool,
 ) ([]*Person, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			p, err := ser.AssertType(m)
 			if err != nil {

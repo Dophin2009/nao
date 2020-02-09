@@ -19,7 +19,7 @@ type User struct {
 	Password    []byte
 	Permissions UserPermission
 	Meta        db.ModelMetadata
-	updatedPass bool `json:"-"`
+	updatedPass bool
 }
 
 // Metadata returns Meta.
@@ -39,6 +39,13 @@ type UserPermission struct {
 // UserService performs operations on User.
 type UserService struct {
 	Hooks db.PersistHooks
+}
+
+// NewUserService returns a UserService.
+func NewUserService(hooks db.PersistHooks) *UserService {
+	return &UserService{
+		Hooks: hooks,
+	}
 }
 
 // Create persists the given User.
@@ -96,9 +103,9 @@ func (ser *UserService) GetFilter(
 // GetMultiple retrieves the persisted User values specified by the
 // given IDs that pass the filter.
 func (ser *UserService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(u *User) bool,
+	ids []int, tx db.Tx, keep func(u *User) bool,
 ) ([]*User, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			u, err := ser.AssertType(m)
 			if err != nil {

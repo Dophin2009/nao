@@ -323,63 +323,9 @@ func (db *BoltDatabase) GetRawByID(id int, ser Service, tx Tx) ([]byte, error) {
 	return v, nil
 }
 
-// GetMultiple retrieves the persisted instances of a Model type with the given
-// IDs.
-//
-// See GetFilter for details on `first` and `skip`.
-func (db *BoltDatabase) GetMultiple(ids []int, first *int, ser Service, tx Tx,
-	keep func(m Model) bool) ([]Model, error) {
-	list := []Model{}
-	collect := func(m Model, _ Service, _ Tx) (exit bool, err error) {
-		list = append(list, m)
-		return false, nil
-	}
-
-	err := db.DoMultiple(ids, first, ser, tx, collect, keep)
-	if err != nil {
-		return nil, err
-	}
-
-	return list, nil
-}
-
-// GetAll retrieves all persisted instances of a Model type with the given data
-// layer service.
-//
-// See GetFilter for details on `first` and `skip`.
-func (db *BoltDatabase) GetAll(first *int, skip *int, ser Service, tx Tx) ([]Model, error) {
-	return db.GetFilter(first, skip, ser, tx, func(m Model) bool { return true })
-}
-
-// GetFilter retrieves all persisted instances of a Model type that pass the
-// filter.
-//
-// Collection begins on the first valid element after skipping the `skip` valid
-// elements and continues for `first` valid elements that pass the filter. If
-// `skip` is given as nil, collection begins with the first valid element. If
-// `first` is given as nil, collection continues until the last persisted
-// element is queried. The given service and its DB should not be nil. A nil
-// filter function passes all.
-func (db *BoltDatabase) GetFilter(first *int, skip *int, ser Service, tx Tx,
-	keep func(m Model) bool) ([]Model, error) {
-	list := []Model{}
-	collect := func(m Model, ser Service, tx Tx) (exit bool, err error) {
-		// Append element to list
-		list = append(list, m)
-		return false, nil
-	}
-
-	err := db.DoEach(first, skip, ser, tx, collect, keep)
-	if err != nil {
-		return nil, err
-	}
-
-	return list, nil
-}
-
 // DoMultiple unmarshals and performs some function on the persisted elements
 // that pass the given filter function specified by the given IDs.
-func (db *BoltDatabase) DoMultiple(ids []int, first *int, ser Service, tx Tx,
+func (db *BoltDatabase) DoMultiple(ids []int, ser Service, tx Tx,
 	do func(Model, Service, Tx) (exit bool, err error), iff func(Model) bool) error {
 	// Unwrap transaction
 	_, err := db.unwrapTx(tx)
@@ -401,7 +347,7 @@ func (db *BoltDatabase) DoMultiple(ids []int, first *int, ser Service, tx Tx,
 	}
 
 	// Calculate start and end numbers
-	start, end := db.calculatePaginationBounds(first, nil)
+	start, end := db.calculatePaginationBounds(nil, nil)
 
 	// Iterate through values
 	i := start
@@ -452,13 +398,6 @@ func (db *BoltDatabase) DoEach(first *int, skip *int, ser Service, tx Tx,
 		return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 	}
 
-	// If filter function is nil, filter nothing
-	if iff == nil {
-		iff = func(_ Model) bool {
-			return true
-		}
-	}
-
 	// Calculate start and end numbers
 	start, end := db.calculatePaginationBounds(first, skip)
 
@@ -469,13 +408,23 @@ func (db *BoltDatabase) DoEach(first *int, skip *int, ser Service, tx Tx,
 	var k, v []byte
 	c.First()
 	for i := 0; i < start; k, v = c.Next() {
-		m, err := ser.Unmarshal(v)
-		if err != nil {
-			return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
-		}
-
-		if iff(m) {
+		if iff == nil {
 			i++
+		} else {
+			m, err := ser.Unmarshal(v)
+			if err != nil {
+				return fmt.Errorf("%s: %w", errmsgModelUnmarshal, err)
+			}
+
+			if iff(m) {
+				i++
+			}
+		}
+	}
+
+	if iff == nil {
+		iff = func(_ Model) bool {
+			return true
 		}
 	}
 
@@ -521,9 +470,7 @@ func (db *BoltDatabase) FindFirst(
 		return false, nil
 	}
 
-	err := db.DoEach(nil, nil, ser, tx, check, func(m Model) bool {
-		return true
-	})
+	err := db.DoEach(nil, nil, ser, tx, check, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -25,6 +25,13 @@ type GenreService struct {
 	Hooks db.PersistHooks
 }
 
+// NewGenreService returns a GenreService.
+func NewGenreService(hooks db.PersistHooks) *GenreService {
+	return &GenreService{
+		Hooks: hooks,
+	}
+}
+
 // Create persists the given Genre.
 func (ser *GenreService) Create(g *Genre, tx db.Tx) (int, error) {
 	return tx.Database().Create(g, ser, tx)
@@ -80,9 +87,9 @@ func (ser *GenreService) GetFilter(
 // GetMultiple retrieves the persisted Genre values specified by the given
 // IDs that pass the filter.
 func (ser *GenreService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(c *Genre) bool,
+	ids []int, tx db.Tx, keep func(c *Genre) bool,
 ) ([]*Genre, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			g, err := ser.AssertType(m)
 			if err != nil {

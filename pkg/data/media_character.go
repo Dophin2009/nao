@@ -33,6 +33,61 @@ type MediaCharacterService struct {
 	Hooks            db.PersistHooks
 }
 
+// NewMediaCharacterService returns a MediaCharacterService.
+func NewMediaCharacterService(hooks db.PersistHooks, mediaService *MediaService,
+	characterService *CharacterService, personService *PersonService) *MediaCharacterService {
+	// Initialize MediaCharacterService
+	mediaCharacterService := &MediaCharacterService{
+		MediaService:     mediaService,
+		CharacterService: characterService,
+		PersonService:    personService,
+	}
+
+	// Add hook to delete MediaCharacter on Media deletion
+	deleteMediaCharacterOnDeleteMedia := func(mdm db.Model, _ db.Service, tx db.Tx) error {
+		mID := mdm.Metadata().ID
+		err := mediaCharacterService.DeleteByMedia(mID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete MediaCharacter by Media ID %d: %w",
+				mID, err)
+		}
+		return nil
+	}
+	mdSerHooks := mediaService.PersistHooks()
+	mdSerHooks.PreDeleteHooks =
+		append(mdSerHooks.PreDeleteHooks, deleteMediaCharacterOnDeleteMedia)
+
+	// Add hook to delete MediaCharacter on Character deletion
+	deleteMediaCharacterOnDeleteCharacter := func(cm db.Model, _ db.Service, tx db.Tx) error {
+		cID := cm.Metadata().ID
+		err := mediaCharacterService.DeleteByCharacter(cID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete MediaCharacter by Character ID %d: %w",
+				cID, err)
+		}
+		return nil
+	}
+	cSerHooks := characterService.PersistHooks()
+	cSerHooks.PreDeleteHooks =
+		append(cSerHooks.PreDeleteHooks, deleteMediaCharacterOnDeleteCharacter)
+
+	// Add hook to delete MediaCharaccter on Person deletion
+	deleteMediaCharacterOnDeletePerson := func(pm db.Model, _ db.Service, tx db.Tx) error {
+		pID := pm.Metadata().ID
+		err := mediaCharacterService.DeleteByPerson(pID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete MediaCharacter by Person ID %d: %w",
+				pID, err)
+		}
+		return nil
+	}
+	pSerHooks := personService.PersistHooks()
+	pSerHooks.PreDeleteHooks =
+		append(pSerHooks.PreDeleteHooks, deleteMediaCharacterOnDeletePerson)
+
+	return mediaCharacterService
+}
+
 // Create persists the given MediaCharacter.
 func (ser *MediaCharacterService) Create(mc *MediaCharacter, tx db.Tx) (int, error) {
 	return tx.Database().Create(mc, ser, tx)
@@ -46,6 +101,50 @@ func (ser *MediaCharacterService) Update(mc *MediaCharacter, tx db.Tx) error {
 // Delete deletes the MediaCharacter with the given ID.
 func (ser *MediaCharacterService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
+}
+
+// DeleteByMedia deletes the MediaCharacters with the given Media ID.
+func (ser *MediaCharacterService) DeleteByMedia(mID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		mc, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+
+		return mc.MediaID == mID
+	})
+}
+
+// DeleteByCharacter deletes the MediaCharacters with the given Character ID.
+func (ser *MediaCharacterService) DeleteByCharacter(cID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		mc, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+
+		if mc.CharacterID == nil {
+			return false
+		}
+
+		return *mc.CharacterID == cID
+	})
+}
+
+// DeleteByPerson deletes the MediaCharacters with the given Person ID.
+func (ser *MediaCharacterService) DeleteByPerson(pID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		mc, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+
+		if mc.PersonID == nil {
+			return false
+		}
+
+		return *mc.PersonID == pID
+	})
 }
 
 // GetAll retrieves all persisted values of MediaCharacter.
@@ -89,9 +188,9 @@ func (ser *MediaCharacterService) GetFilter(
 // GetMultiple retrieves the persisted MediaCharacter values specified by the
 // given IDs that pass the filter.
 func (ser *MediaCharacterService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(mc *MediaCharacter) bool,
+	ids []int, tx db.Tx, keep func(mc *MediaCharacter) bool,
 ) ([]*MediaCharacter, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			mc, err := ser.AssertType(m)
 			if err != nil {

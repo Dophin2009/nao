@@ -85,9 +85,9 @@ func (ser *UserMediaListService) GetFilter(
 // GetMultiple retrieves the persisted UserMediaList values specified by the
 // given IDs that pass the filter.
 func (ser *UserMediaListService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(uml *UserMediaList) bool,
+	ids []int, tx db.Tx, keep func(uml *UserMediaList) bool,
 ) ([]*UserMediaList, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx, func(m db.Model) bool {
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx, func(m db.Model) bool {
 		uml, err := ser.AssertType(m)
 		if err != nil {
 			return false

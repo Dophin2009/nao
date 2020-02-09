@@ -117,6 +117,13 @@ type MediaService struct {
 	Hooks db.PersistHooks
 }
 
+// NewMediaService returns a MediaService.
+func NewMediaService(hooks db.PersistHooks) *MediaService {
+	return &MediaService{
+		Hooks: hooks,
+	}
+}
+
 // Create persists the given Media.
 func (ser *MediaService) Create(md *Media, tx db.Tx) (int, error) {
 	return tx.Database().Create(md, ser, tx)
@@ -171,9 +178,9 @@ func (ser *MediaService) GetFilter(
 // GetMultiple retrieves the persisted Media values specified by the given
 // IDs that pass the filter.
 func (ser *MediaService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(md *Media) bool,
+	ids []int, tx db.Tx, keep func(md *Media) bool,
 ) ([]*Media, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			md, err := ser.AssertType(m)
 			if err != nil {

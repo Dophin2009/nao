@@ -45,6 +45,13 @@ type EpisodeService struct {
 	Hooks db.PersistHooks
 }
 
+// NewEpisodeService returns a EpisodeService.
+func NewEpisodeService(hooks db.PersistHooks) *EpisodeService {
+	return &EpisodeService{
+		Hooks: hooks,
+	}
+}
+
 // Create persists the given Episode.
 func (ser *EpisodeService) Create(ep *Episode, tx db.Tx) (int, error) {
 	return tx.Database().Create(ep, ser, tx)
@@ -100,9 +107,9 @@ func (ser *EpisodeService) GetFilter(
 // GetMultiple retrieves the persisted Episode values specified by the given
 // IDs that pass the filter.
 func (ser *EpisodeService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(ep *Episode) bool,
+	ids []int, tx db.Tx, keep func(ep *Episode) bool,
 ) ([]*Episode, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			ep, err := ser.AssertType(m)
 			if err != nil {
@@ -228,7 +235,32 @@ func (ser *EpisodeService) mapFromModel(vlist []db.Model) ([]*Episode, error) {
 
 // EpisodeSetService performs operations on EpisodeSets.
 type EpisodeSetService struct {
-	Hooks db.PersistHooks
+	EpisodeService *EpisodeService
+	Hooks          db.PersistHooks
+}
+
+// NewEpisodeSetService returns an EpisodeSetService.
+func NewEpisodeSetService(hooks db.PersistHooks, episodeService *EpisodeService) *EpisodeSetService {
+	episodeSetService := &EpisodeSetService{
+		EpisodeService: episodeService,
+		Hooks:          hooks,
+	}
+
+	epSerHooks := episodeService.PersistHooks()
+
+	deleteEpisodeSetOnDeleteEpisode := func(epm db.Model, ser db.Service, tx db.Tx) error {
+		epID := epm.Metadata().ID
+		err := episodeSetService.DeleteByEpisode(epID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete EpisodeSets by Episode ID %d: %w", epID, err)
+		}
+
+		return nil
+	}
+	epSerHooks.PreDeleteHooks =
+		append(epSerHooks.PreDeleteHooks, deleteEpisodeSetOnDeleteEpisode)
+
+	return episodeSetService
 }
 
 // Create persists the given EpisodeSet.
@@ -244,6 +276,25 @@ func (ser *EpisodeSetService) Update(set *EpisodeSet, tx db.Tx) error {
 // Delete deletes the EpisodeSet with the given ID.
 func (ser *EpisodeSetService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
+}
+
+// DeleteByEpisode deletes the EpisodeSets who contain the Episode with the
+// given ID.
+func (ser *EpisodeSetService) DeleteByEpisode(epID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		set, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+
+		for _, id := range set.Episodes {
+			if id == epID {
+				return true
+			}
+		}
+
+		return false
+	})
 }
 
 // GetAll retrieves all persisted values of EpisodeSet.
@@ -286,9 +337,9 @@ func (ser *EpisodeSetService) GetFilter(
 // GetMultiple retrieves the persisted EpisodeSet values specified by the given
 // IDs that pass the filter.
 func (ser *EpisodeSetService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(set *EpisodeSet) bool,
+	ids []int, tx db.Tx, keep func(set *EpisodeSet) bool,
 ) ([]*EpisodeSet, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			set, err := ser.AssertType(m)
 			if err != nil {
@@ -345,11 +396,18 @@ func (ser *EpisodeSetService) Clean(m db.Model, _ db.Tx) error {
 	return nil
 }
 
-// Validate returns an error if the Episodeset is not valid for the database.
-func (ser *EpisodeSetService) Validate(m db.Model, _ db.Tx) error {
-	_, err := ser.AssertType(m)
+// Validate returns an error if the EpisodeSet is not valid for the database.
+func (ser *EpisodeSetService) Validate(m db.Model, tx db.Tx) error {
+	set, err := ser.AssertType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+	}
+
+	for _, id := range set.Episodes {
+		_, err := tx.Database().GetRawByID(id, ser, tx)
+		if err != nil {
+			return fmt.Errorf("failed to get Episode with ID %d: %w", id, err)
+		}
 	}
 	return nil
 }

@@ -238,7 +238,7 @@ func (r *episodeSetResolver) Episodes(
 	var list []*data.Episode
 	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.EpisodeService
-		list, err = ser.GetMultiple(obj.Episodes, first, tx, nil)
+		list, err = ser.GetMultiple(obj.Episodes, tx, nil)
 		if err != nil {
 			return fmt.Errorf("failed to get Epiosodes by ids: %w", err)
 		}

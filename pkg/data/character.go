@@ -27,6 +27,13 @@ type CharacterService struct {
 	Hooks db.PersistHooks
 }
 
+// NewCharacterService returns a CharacterService.
+func NewCharacterService(hooks db.PersistHooks) *CharacterService {
+	return &CharacterService{
+		Hooks: hooks,
+	}
+}
+
 // Create persists the given Character.
 func (ser *CharacterService) Create(c *Character, tx db.Tx) (int, error) {
 	return tx.Database().Create(c, ser, tx)
@@ -83,9 +90,9 @@ func (ser *CharacterService) GetFilter(
 // GetMultiple retrieves the persisted Character values specified by the given
 // IDs that pass the filter.
 func (ser *CharacterService) GetMultiple(
-	ids []int, first *int, tx db.Tx, keep func(c *Character) bool,
+	ids []int, tx db.Tx, keep func(c *Character) bool,
 ) ([]*Character, error) {
-	vlist, err := tx.Database().GetMultiple(ids, first, ser, tx,
+	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			c, err := ser.AssertType(m)
 			if err != nil {

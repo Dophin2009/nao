@@ -186,12 +186,100 @@ func (dbs *DatabaseService) Delete(id int, ser Service, tx Tx) error {
 	return nil
 }
 
+// DeleteMultiple deletes the existing persisted instances of a Model
+// type specified by the given IDs.
+func (dbs *DatabaseService) DeleteMultiple(ids []int, first *int,
+	ser Service, tx Tx, iff func(Model) bool) error {
+	err := dbs.DoMultiple(ids, ser, tx, dbs.deleteWrapper(), iff)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteFilter deletes all the persisted instances of a Model type
+// that pass the filer function.
+func (dbs *DatabaseService) DeleteFilter(ser Service, tx Tx,
+	iff func(Model) bool) error {
+	err := dbs.DoEach(nil, nil, ser, tx, dbs.deleteWrapper(), iff)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (dbs *DatabaseService) deleteWrapper() func(m Model, ser Service, tx Tx) (exit bool, err error) {
+	return func(m Model, ser Service, tx Tx) (exit bool, err error) {
+		err = dbs.Delete(m.Metadata().ID, ser, tx)
+		if err != nil {
+			return true, err
+		}
+		return false, nil
+	}
+}
+
+// GetMultiple retrieves the persisted instances of a Model type with the given
+// IDs.
+//
+// See GetFilter for details on `first` and `skip`.
+func (dbs *DatabaseService) GetMultiple(ids []int, ser Service, tx Tx,
+	keep func(m Model) bool) ([]Model, error) {
+	list := []Model{}
+	collect := func(m Model, _ Service, _ Tx) (exit bool, err error) {
+		list = append(list, m)
+		return false, nil
+	}
+
+	err := dbs.DoMultiple(ids, ser, tx, collect, keep)
+	if err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
+
+// GetAll retrieves all persisted instances of a Model type with the given data
+// layer service.
+//
+// See GetFilter for details on `first` and `skip`.
+func (dbs *DatabaseService) GetAll(first *int, skip *int, ser Service, tx Tx) ([]Model, error) {
+	return dbs.GetFilter(first, skip, ser, tx, nil)
+}
+
+// GetFilter retrieves all persisted instances of a Model type that pass the
+// filter.
+//
+// Collection begins on the first valid element after skipping the `skip` valid
+// elements and continues for `first` valid elements that pass the filter. If
+// `skip` is given as nil, collection begins with the first valid element. If
+// `first` is given as nil, collection continues until the last persisted
+// element is queried. The given service and its DB should not be nil. A nil
+// filter function passes all.
+func (dbs *DatabaseService) GetFilter(first *int, skip *int, ser Service, tx Tx,
+	keep func(m Model) bool) ([]Model, error) {
+	list := []Model{}
+	collect := func(m Model, ser Service, tx Tx) (exit bool, err error) {
+		// Append element to list
+		list = append(list, m)
+		return false, nil
+	}
+
+	err := dbs.DoEach(first, skip, ser, tx, collect, keep)
+	if err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
+
 // DatabaseDriver defines generic CRUD logic for a database backend.
 type DatabaseDriver interface {
 	Transaction(writable bool, logic func(Tx) error) error
 	Close() error
 
-	DoMultiple(ids []int, first *int, ser Service, tx Tx,
+	DoMultiple(ids []int, ser Service, tx Tx,
 		do func(Model, Service, Tx) (exit bool, err error), iff func(Model) bool) error
 	DoEach(first *int, skip *int, ser Service, tx Tx,
 		do func(Model, Service, Tx) (exit bool, err error), iff func(Model) bool) error
@@ -202,11 +290,6 @@ type DatabaseDriver interface {
 	Delete(id int, ser Service, tx Tx) error
 	GetByID(id int, ser Service, tx Tx) (Model, error)
 	GetRawByID(id int, ser Service, tx Tx) ([]byte, error)
-	GetMultiple(ids []int, first *int, ser Service, tx Tx,
-		keep func(Model) bool) ([]Model, error)
-	GetAll(first *int, skip *int, ser Service, tx Tx) ([]Model, error)
-	GetFilter(first *int, skip *int, ser Service, tx Tx,
-		keep func(Model) bool) ([]Model, error)
 }
 
 // Tx defines a wrapper for database transactions objects.

@@ -107,6 +107,47 @@ type UserMediaService struct {
 	Hooks        db.PersistHooks
 }
 
+// NewUserMediaService returns a UserMediaService.
+func NewUserMediaService(hooks db.PersistHooks, userService *UserService,
+	mediaService *MediaService) *UserMediaService {
+	// Initialize UserMediaService
+	userMediaService := &UserMediaService{
+		UserService:  userService,
+		MediaService: mediaService,
+		Hooks:        hooks,
+	}
+
+	// Add hook to delete UserMedia on User deletion
+	deleteUserMediaOnDeleteUser := func(um db.Model, _ db.Service, tx db.Tx) error {
+		uID := um.Metadata().ID
+		err := userMediaService.DeleteByUser(uID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete UserMedia by User ID %d: %w",
+				uID, err)
+		}
+		return nil
+	}
+	uSerHooks := userService.PersistHooks()
+	uSerHooks.PreDeleteHooks =
+		append(uSerHooks.PreDeleteHooks, deleteUserMediaOnDeleteUser)
+
+	// Add hook to delete UserMedia on Media deletion
+	deleteUserMediaOnDeleteMedia := func(mdm db.Model, _ db.Service, tx db.Tx) error {
+		mID := mdm.Metadata().ID
+		err := userMediaService.DeleteByMedia(mID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete UserMedia by Media ID %d: %w",
+				mID, err)
+		}
+		return nil
+	}
+	mdSerHooks := mediaService.PersistHooks()
+	mdSerHooks.PreDeleteHooks =
+		append(mdSerHooks.PreDeleteHooks, deleteUserMediaOnDeleteMedia)
+
+	return userMediaService
+}
+
 // Create persists the given UserMedia.
 func (ser *UserMediaService) Create(um *UserMedia, tx db.Tx) (int, error) {
 	return tx.Database().Create(um, ser, tx)
@@ -120,6 +161,28 @@ func (ser *UserMediaService) Update(um *UserMedia, tx db.Tx) error {
 // Delete deletes the UserMedia with the given ID.
 func (ser *UserMediaService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
+}
+
+// DeleteByUser deletes the UserMedia with the given User ID.
+func (ser *UserMediaService) DeleteByUser(uID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		um, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return um.UserID == uID
+	})
+}
+
+// DeleteByMedia deletes the UserMedia with the given Media ID.
+func (ser *UserMediaService) DeleteByMedia(mID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		um, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return um.MediaID == mID
+	})
 }
 
 // GetAll retrieves all persisted values of UserMedia.

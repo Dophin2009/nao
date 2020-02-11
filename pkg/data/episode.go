@@ -249,19 +249,61 @@ func NewEpisodeSetService(hooks db.PersistHooks, episodeService *EpisodeService,
 		Hooks:          hooks,
 	}
 
-	epSerHooks := episodeService.PersistHooks()
-
-	deleteEpisodeSetOnDeleteEpisode := func(epm db.Model, ser db.Service, tx db.Tx) error {
+	// Add hook to update EpisodeSets' list of Episode IDs on Episode deletion
+	updateEpisodeSetOnDeleteEpisode := func(epm db.Model, _ db.Service, tx db.Tx) error {
 		epID := epm.Metadata().ID
-		err := episodeSetService.DeleteByEpisode(epID, tx)
-		if err != nil {
-			return fmt.Errorf("failed to delete EpisodeSets by Episode ID %d: %w", epID, err)
-		}
+		err := tx.Database().DoEach(nil, nil, episodeSetService, tx,
+			func(m db.Model, _ db.Service, tx db.Tx) (exit bool, err error) {
+				set, err := episodeSetService.AssertType(m)
+				if err != nil {
+					return true, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+				}
 
+				// Find ID of Episode to be deleted in the list
+				rmID := -1
+				for _, id := range set.Episodes {
+					if id == epID {
+						rmID = id
+						break
+					}
+				}
+				// Episode ID not found, move onto next EpisodeSet
+				if rmID < 0 {
+					return false, nil
+				}
+
+				// Remove ID from Episodes
+				set.Episodes = append(set.Episodes[:rmID], set.Episodes[rmID+1:]...)
+
+				// Update persisted value
+				err = tx.Database().Update(set, episodeSetService, tx)
+				if err != nil {
+					return true, fmt.Errorf("failed to update EpisodeSet: %w", err)
+				}
+				return false, nil
+			}, nil,
+		)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
+	epSerHooks := episodeService.PersistHooks()
 	epSerHooks.PreDeleteHooks =
-		append(epSerHooks.PreDeleteHooks, deleteEpisodeSetOnDeleteEpisode)
+		append(epSerHooks.PreDeleteHooks, updateEpisodeSetOnDeleteEpisode)
+
+	deleteEpisodeSetOnDeleteMedia := func(mdm db.Model, ser db.Service, tx db.Tx) error {
+		mID := mdm.Metadata().ID
+		err := episodeSetService.DeleteByMedia(mID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete EpisodeSets by Media ID %d: %w",
+				mID, err)
+		}
+		return nil
+	}
+	mdSerHooks := mediaService.PersistHooks()
+	mdSerHooks.PreDeleteHooks =
+		append(mdSerHooks.PreDeleteHooks, deleteEpisodeSetOnDeleteMedia)
 
 	return episodeSetService
 }

@@ -236,13 +236,16 @@ func (ser *EpisodeService) mapFromModel(vlist []db.Model) ([]*Episode, error) {
 // EpisodeSetService performs operations on EpisodeSets.
 type EpisodeSetService struct {
 	EpisodeService *EpisodeService
+	MediaService   *MediaService
 	Hooks          db.PersistHooks
 }
 
 // NewEpisodeSetService returns an EpisodeSetService.
-func NewEpisodeSetService(hooks db.PersistHooks, episodeService *EpisodeService) *EpisodeSetService {
+func NewEpisodeSetService(hooks db.PersistHooks, episodeService *EpisodeService,
+	mediaService *MediaService) *EpisodeSetService {
 	episodeSetService := &EpisodeSetService{
 		EpisodeService: episodeService,
+		MediaService:   mediaService,
 		Hooks:          hooks,
 	}
 
@@ -294,6 +297,17 @@ func (ser *EpisodeSetService) DeleteByEpisode(epID int, tx db.Tx) error {
 		}
 
 		return false
+	})
+}
+
+// DeleteByMedia deletes the EpisodeSets with the given Media ID.
+func (ser *EpisodeSetService) DeleteByMedia(mID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		set, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return set.MediaID == mID
 	})
 }
 

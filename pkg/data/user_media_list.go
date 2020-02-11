@@ -29,6 +29,74 @@ type UserMediaListService struct {
 	Hooks            db.PersistHooks
 }
 
+// NewUserMediaListService returns a UserMediaListService.
+func NewUserMediaListService(hooks db.PersistHooks, userService *UserService,
+	userMediaService *UserMediaService) *UserMediaListService {
+	userMediaListService := &UserMediaListService{
+		UserService:      userService,
+		UserMediaService: userMediaService,
+		Hooks:            hooks,
+	}
+
+	// Add hook to delete UserMediaList on User deletion
+	deleteUserMediaListOnDeleteUser := func(um db.Model, _ db.Service, tx db.Tx) error {
+		uID := um.Metadata().ID
+		err := userMediaListService.DeleteByUser(uID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete UserMediaList by User ID %d: %w",
+				uID, err)
+		}
+		return nil
+	}
+	uSerHooks := userService.PersistHooks()
+	uSerHooks.PreDeleteHooks =
+		append(uSerHooks.PreDeleteHooks, deleteUserMediaListOnDeleteUser)
+
+	// Add hook to update UserMediaList on UserMedia deletion
+	updateUserMediaListOnDeleteUserMedia := func(umm db.Model, _ db.Service, tx db.Tx) error {
+		umID := umm.Metadata().ID
+		err := tx.Database().DoEach(nil, nil, userMediaListService, tx,
+			func(m db.Model, _ db.Service, tx db.Tx) (exit bool, err error) {
+				uml, err := userMediaListService.AssertType(m)
+				if err != nil {
+					return true, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
+				}
+
+				// Find ID of UserMedia to be deleted in the list
+				rmID := -1
+				for _, id := range uml.UserMedia {
+					if id == umID {
+						rmID = id
+						break
+					}
+				}
+				// If UserMedia ID not found, move onto next UserMediaList
+				if rmID < 0 {
+					return false, nil
+				}
+
+				// Remove ID from UserMedia list
+				uml.UserMedia = append(uml.UserMedia[:rmID], uml.UserMedia[rmID+1:]...)
+
+				// Update persisted value
+				err = tx.Database().Update(uml, userMediaListService, tx)
+				if err != nil {
+					return true, fmt.Errorf("failed to update UserMediaList: %w", err)
+				}
+				return false, nil
+			}, nil)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	umSerHooks := userMediaService.PersistHooks()
+	umSerHooks.PreDeleteHooks =
+		append(umSerHooks.PreDeleteHooks, updateUserMediaListOnDeleteUserMedia)
+
+	return userMediaListService
+}
+
 // Create persists the given UserMediaList.
 func (ser *UserMediaListService) Create(uml *UserMediaList, tx db.Tx) (int, error) {
 	return tx.Database().Create(uml, ser, tx)
@@ -42,6 +110,17 @@ func (ser *UserMediaListService) Update(uml *UserMediaList, tx db.Tx) error {
 // Delete deletes the UserMediaList with the given ID.
 func (ser *UserMediaListService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
+}
+
+// DeleteByUser deletes the UserMediaLists by the given User ID.
+func (ser *UserMediaListService) DeleteByUser(uID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		uml, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return uml.UserID == uID
+	})
 }
 
 // GetAll retrieves all persisted values of UserMediaList.

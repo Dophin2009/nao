@@ -30,6 +30,46 @@ type UserPersonService struct {
 	Hooks         db.PersistHooks
 }
 
+// NewUserPersonService returns a UserPersonService.
+func NewUserPersonService(hooks db.PersistHooks, userService *UserService,
+	personService *PersonService) *UserPersonService {
+	userPersonService := &UserPersonService{
+		UserService:   userService,
+		PersonService: personService,
+		Hooks:         hooks,
+	}
+
+	// Add hook to delete UserPerson on User deletion
+	deleteUserPersonOnDeleteUser := func(um db.Model, _ db.Service, tx db.Tx) error {
+		uID := um.Metadata().ID
+		err := userPersonService.DeleteByUser(uID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete UserPerson by User ID %d: %w",
+				uID, err)
+		}
+		return nil
+	}
+	uSerHooks := userService.PersistHooks()
+	uSerHooks.PreDeleteHooks =
+		append(uSerHooks.PreDeleteHooks, deleteUserPersonOnDeleteUser)
+
+	// Add hook to delete UserPerson on Person deletion
+	deleteUserPersonOnDeletePerson := func(pm db.Model, _ db.Service, tx db.Tx) error {
+		pID := pm.Metadata().ID
+		err := userPersonService.DeleteByPerson(pID, tx)
+		if err != nil {
+			return fmt.Errorf("failed to delete UserPerson by Person ID %d: %w",
+				pID, err)
+		}
+		return nil
+	}
+	pSerHooks := personService.PersistHooks()
+	pSerHooks.PreDeleteHooks =
+		append(pSerHooks.PreDeleteHooks, deleteUserPersonOnDeletePerson)
+
+	return userPersonService
+}
+
 // Create persists the given UserPerson.
 func (ser *UserPersonService) Create(up *UserPerson, tx db.Tx) (int, error) {
 	return tx.Database().Create(up, ser, tx)
@@ -43,6 +83,28 @@ func (ser *UserPersonService) Update(up *UserPerson, tx db.Tx) error {
 // Delete deletes the UserPerson with the given ID.
 func (ser *UserPersonService) Delete(id int, tx db.Tx) error {
 	return tx.Database().Delete(id, ser, tx)
+}
+
+// DeleteByUser deletes the UserPersons with the given User ID.
+func (ser *UserPersonService) DeleteByUser(uID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		up, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return up.UserID == uID
+	})
+}
+
+// DeleteByPerson deletes the UserPersons with the given Person ID.
+func (ser *UserPersonService) DeleteByPerson(pID int, tx db.Tx) error {
+	return tx.Database().DeleteFilter(ser, tx, func(m db.Model) bool {
+		up, err := ser.AssertType(m)
+		if err != nil {
+			return false
+		}
+		return up.PersonID == pID
+	})
 }
 
 // GetAll retrieves all persisted values of UserPerson.

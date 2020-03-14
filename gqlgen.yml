@@ -10,8 +10,9 @@ model:
   package: graphql
 
 resolver:
-  filename: internal/graphql/resolver.go
-  type: Resolver
+  layout: follow-schema
+  dir: internal/graphql
+  package: graphql
 
 # omit_slice_element_pointers: true
 

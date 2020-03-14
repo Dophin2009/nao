@@ -15,6 +15,8 @@ MODULES=naos
 
 SRC_FILES=find . -name '*.go' ! -name '*.gen.go'
 
+.PHONY: check nakedret nargs
+
 default: check
 
 clean:
@@ -25,15 +27,12 @@ build: generate test
 	$(foreach module,$(MODULES),$(GOBUILD) -o $(TARGET_DIR)/$(module) -v $(REPO_NAME)/cmd/$(module))
 
 generate: clean
-	$(GORUN) scripts/gqlgen.go -v
+	$(GORUN) scripts/gqlgen.go --verbose
 
 test:
 	$(GOTEST) ./...
 
-check: nakedret nargs
-
-nakedret:
+check:
 	$(GORUN) github.com/alexkohler/nakedret -l 0 $$($(SRC_FILES))
-
-nargs:
 	$(GORUN) github.com/alexkohler/nargs/cmd/nargs $$($(SRC_FILES))
+

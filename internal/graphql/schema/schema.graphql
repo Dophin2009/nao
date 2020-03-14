@@ -28,11 +28,6 @@ input MetadataInput @goModel(model: "db.ModelMetadata") {
   id: Int!
 }
 
-"""
-Map where both key and value are strings.
-"""
-scalar StringMap
-
 directive @goModel(
   model: String
   models: [String!]

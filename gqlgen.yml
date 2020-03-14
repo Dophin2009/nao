@@ -2,7 +2,7 @@ schema:
   - "internal/graphql/schema/**/*.graphql"
 
 exec:
-  filename: internal/graphql/schema.gen.go
+  filename: internal/graphql/exec.gen.go
   package: graphql
 
 model:

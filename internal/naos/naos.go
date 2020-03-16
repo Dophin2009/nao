@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"os"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/Dophin2009/nao/internal/graphql"
+	"github.com/Dophin2009/nao/internal/web"
 	"github.com/Dophin2009/nao/pkg/data"
 	"github.com/Dophin2009/nao/pkg/db"
-	"github.com/Dophin2009/nao/pkg/web"
+	log "github.com/sirupsen/logrus"
 )
 
 // Application is the main naos application.

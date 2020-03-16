@@ -34,7 +34,7 @@ type UserPermission {
 """
 An input to create or update Users.
 """
-input UserInput @goModel(model: "data.User") {
+input UserInput @goModel(model: "models.User") {
   "An metadata for the User."
   meta: MetadataInput!
   "The username of the User."
@@ -51,7 +51,7 @@ input UserInput @goModel(model: "data.User") {
 """
 An input to create or update UserPermissions.
 """
-input UserPermissionInput @goModel(model: "data.UserPermission") {
+input UserPermissionInput @goModel(model: "models.UserPermission") {
   """
   A flag that determines if the User can write
   or mutate global Media data.

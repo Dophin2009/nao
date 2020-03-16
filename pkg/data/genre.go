@@ -4,21 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	json "github.com/json-iterator/go"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
+	json "github.com/json-iterator/go"
 )
-
-// Genre represents a single instance of a genre.
-type Genre struct {
-	Names        []Title
-	Descriptions []Title
-	Meta         db.ModelMetadata
-}
-
-// Metadata returns Meta.
-func (g *Genre) Metadata() *db.ModelMetadata {
-	return &g.Meta
-}
 
 // GenreService performs operations on genre.
 type GenreService struct {
@@ -33,12 +22,12 @@ func NewGenreService(hooks db.PersistHooks) *GenreService {
 }
 
 // Create persists the given Genre.
-func (ser *GenreService) Create(g *Genre, tx db.Tx) (int, error) {
+func (ser *GenreService) Create(g *models.Genre, tx db.Tx) (int, error) {
 	return tx.Database().Create(g, ser, tx)
 }
 
 // Update rglaces the value of the Genre with the given ID.
-func (ser *GenreService) Update(g *Genre, tx db.Tx) error {
+func (ser *GenreService) Update(g *models.Genre, tx db.Tx) error {
 	return tx.Database().Update(g, ser, tx)
 }
 
@@ -48,7 +37,7 @@ func (ser *GenreService) Delete(id int, tx db.Tx) error {
 }
 
 // GetAll retrieves all persisted values of Genre.
-func (ser *GenreService) GetAll(first *int, skip *int, tx db.Tx) ([]*Genre, error) {
+func (ser *GenreService) GetAll(first *int, skip *int, tx db.Tx) ([]*models.Genre, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -63,8 +52,8 @@ func (ser *GenreService) GetAll(first *int, skip *int, tx db.Tx) ([]*Genre, erro
 
 // GetFilter retrieves all persisted values of Genre that pass the filter.
 func (ser *GenreService) GetFilter(
-	first *int, skip *int, tx db.Tx, keep func(g *Genre) bool,
-) ([]*Genre, error) {
+	first *int, skip *int, tx db.Tx, keep func(g *models.Genre) bool,
+) ([]*models.Genre, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
 		func(m db.Model) bool {
 			g, err := ser.AssertType(m)
@@ -87,8 +76,8 @@ func (ser *GenreService) GetFilter(
 // GetMultiple retrieves the persisted Genre values specified by the given
 // IDs that pass the filter.
 func (ser *GenreService) GetMultiple(
-	ids []int, tx db.Tx, keep func(c *Genre) bool,
-) ([]*Genre, error) {
+	ids []int, tx db.Tx, keep func(c *models.Genre) bool,
+) ([]*models.Genre, error) {
 	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			g, err := ser.AssertType(m)
@@ -109,7 +98,7 @@ func (ser *GenreService) GetMultiple(
 }
 
 // GetByID retrieves the persisted Genre with the given ID.
-func (ser *GenreService) GetByID(id int, tx db.Tx) (*Genre, error) {
+func (ser *GenreService) GetByID(id int, tx db.Tx) (*models.Genre, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -178,7 +167,7 @@ func (ser *GenreService) Marshal(m db.Model) ([]byte, error) {
 
 // Unmarshal parses the given JSON into Genre.
 func (ser *GenreService) Unmarshal(buf []byte) (db.Model, error) {
-	var g Genre
+	var g models.Genre
 	err := json.Unmarshal(buf, &g)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
@@ -187,12 +176,12 @@ func (ser *GenreService) Unmarshal(buf []byte) (db.Model, error) {
 }
 
 // AssertType exposes the given Model as a Genre.
-func (ser *GenreService) AssertType(m db.Model) (*Genre, error) {
+func (ser *GenreService) AssertType(m db.Model) (*models.Genre, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
-	g, ok := m.(*Genre)
+	g, ok := m.(*models.Genre)
 	if !ok {
 		return nil, fmt.Errorf("model: %w", errors.New("not of Genre type"))
 	}
@@ -201,8 +190,8 @@ func (ser *GenreService) AssertType(m db.Model) (*Genre, error) {
 
 // mapfromModel returns a list of Genre type asserted from the given list of
 // Model.
-func (ser *GenreService) mapFromModel(vlist []db.Model) ([]*Genre, error) {
-	list := make([]*Genre, len(vlist))
+func (ser *GenreService) mapFromModel(vlist []db.Model) ([]*models.Genre, error) {
+	list := make([]*models.Genre, len(vlist))
 	var err error
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)

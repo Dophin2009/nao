@@ -4,23 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	json "github.com/json-iterator/go"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
+	json "github.com/json-iterator/go"
 )
 
 // TODO: User rating/favoriting/comments/etc. of Persons
-
-// Person represents a single person
-type Person struct {
-	Names       []Title
-	Information []Title
-	Meta        db.ModelMetadata
-}
-
-// Metadata returns Meta.
-func (p *Person) Metadata() *db.ModelMetadata {
-	return &p.Meta
-}
 
 // PersonService performs operations on Persons.
 type PersonService struct {
@@ -35,12 +24,12 @@ func NewPersonService(hooks db.PersistHooks) *PersonService {
 }
 
 // Create persists the given Person.
-func (ser *PersonService) Create(p *Person, tx db.Tx) (int, error) {
+func (ser *PersonService) Create(p *models.Person, tx db.Tx) (int, error) {
 	return tx.Database().Create(p, ser, tx)
 }
 
 // Update rplaces the value of the Person with the given ID.
-func (ser *PersonService) Update(p *Person, tx db.Tx) error {
+func (ser *PersonService) Update(p *models.Person, tx db.Tx) error {
 	return tx.Database().Update(p, ser, tx)
 }
 
@@ -50,7 +39,7 @@ func (ser *PersonService) Delete(id int, tx db.Tx) error {
 }
 
 // GetAll retrieves all persisted values of Person.
-func (ser *PersonService) GetAll(first *int, skip *int, tx db.Tx) ([]*Person, error) {
+func (ser *PersonService) GetAll(first *int, skip *int, tx db.Tx) ([]*models.Person, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -65,8 +54,8 @@ func (ser *PersonService) GetAll(first *int, skip *int, tx db.Tx) ([]*Person, er
 
 // GetFilter retrieves all persisted values of Person that pass the filter.
 func (ser *PersonService) GetFilter(
-	first *int, skip *int, tx db.Tx, keep func(p *Person) bool,
-) ([]*Person, error) {
+	first *int, skip *int, tx db.Tx, keep func(p *models.Person) bool,
+) ([]*models.Person, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
 		func(m db.Model) bool {
 			p, err := ser.AssertType(m)
@@ -89,8 +78,8 @@ func (ser *PersonService) GetFilter(
 // GetMultiple retrieves the persisted Person values specified by the given IDs
 // that pass the filter.
 func (ser *PersonService) GetMultiple(
-	ids []int, tx db.Tx, keep func(p *Person) bool,
-) ([]*Person, error) {
+	ids []int, tx db.Tx, keep func(p *models.Person) bool,
+) ([]*models.Person, error) {
 	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			p, err := ser.AssertType(m)
@@ -111,7 +100,7 @@ func (ser *PersonService) GetMultiple(
 }
 
 // GetByID retrieves the persisted Person with the given ID.
-func (ser *PersonService) GetByID(id int, tx db.Tx) (*Person, error) {
+func (ser *PersonService) GetByID(id int, tx db.Tx) (*models.Person, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -180,7 +169,7 @@ func (ser *PersonService) Marshal(m db.Model) ([]byte, error) {
 
 // Unmarshal parses the given JSON into Person.
 func (ser *PersonService) Unmarshal(buf []byte) (db.Model, error) {
-	var p Person
+	var p models.Person
 	err := json.Unmarshal(buf, &p)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
@@ -189,12 +178,12 @@ func (ser *PersonService) Unmarshal(buf []byte) (db.Model, error) {
 }
 
 // AssertType exposes the given Model as a Person.
-func (ser *PersonService) AssertType(m db.Model) (*Person, error) {
+func (ser *PersonService) AssertType(m db.Model) (*models.Person, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
-	p, ok := m.(*Person)
+	p, ok := m.(*models.Person)
 	if !ok {
 		return nil, fmt.Errorf("model: %w", errors.New("not of Person type"))
 	}
@@ -203,8 +192,8 @@ func (ser *PersonService) AssertType(m db.Model) (*Person, error) {
 
 // mapfromModel returns a list of Person type asserted from the given list of
 // Model.
-func (ser *PersonService) mapFromModel(vlist []db.Model) ([]*Person, error) {
-	list := make([]*Person, len(vlist))
+func (ser *PersonService) mapFromModel(vlist []db.Model) ([]*models.Person, error) {
+	list := make([]*models.Person, len(vlist))
 	var err error
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)

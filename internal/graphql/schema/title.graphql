@@ -2,7 +2,7 @@
 A language-specific string used as a name or
 descriptor in other models.
 """
-type Title @goModel(model: "data.Title") {
+type Title {
   "The string data."
   string: String!
   "The language the string is in."
@@ -15,7 +15,7 @@ type Title @goModel(model: "data.Title") {
 A language-specific string used as a name or
 descriptor in other models.
 """
-input TitleInput @goModel(model: "data.Title") {
+input TitleInput @goModel(model: "models.Title") {
   "The string data."
   string: String!
   "The language the string is in."
@@ -28,7 +28,7 @@ input TitleInput @goModel(model: "data.Title") {
 An enum that describes the priority of a Title
 within a set of Titles.
 """
-enum TitlePriority @goModel(model: "data.TitlePriority") {
+enum TitlePriority @goModel(model: "models.TitlePriority") {
   """
   Primary means the Title is a primary one in a
   set.

@@ -1,4 +1,4 @@
-package data
+package models
 
 import (
 	"fmt"
@@ -56,7 +56,7 @@ func (p TitlePriority) String() string {
 func (p *TitlePriority) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
-		return fmt.Errorf("%v: %w", v, errInvalid)
+		return fmt.Errorf("invalid value: %v", v)
 	}
 
 	switch str {
@@ -67,7 +67,7 @@ func (p *TitlePriority) UnmarshalGQL(v interface{}) error {
 	case titlePriorityOtherString:
 		*p = TitlePriorityOther
 	default:
-		return fmt.Errorf("%s: %w", str, errInvalid)
+		return fmt.Errorf("invalid value: %q", str)
 	}
 	return nil
 }

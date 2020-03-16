@@ -21,7 +21,7 @@ type Character {
 """
 A input to create or update an existing Media.
 """
-input CharacterInput @goModel(model: "data.Character") {
+input CharacterInput @goModel(model: "models.Character") {
   "The metadata for the Character."
   meta: MetadataInput!
   "A list of names used to name the Character."

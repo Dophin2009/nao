@@ -7,15 +7,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Dophin2009/nao/pkg/data"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
 )
 
-func (r *mediaCharacterResolver) Media(ctx context.Context, obj *data.MediaCharacter) (*data.Media, error) {
+func (r *mediaCharacterResolver) Media(ctx context.Context, obj *models.MediaCharacter) (*models.Media, error) {
 	return resolveMediaByID(ctx, obj.MediaID)
 }
 
-func (r *mediaCharacterResolver) Character(ctx context.Context, obj *data.MediaCharacter) (*data.Character, error) {
+func (r *mediaCharacterResolver) Character(ctx context.Context, obj *models.MediaCharacter) (*models.Character, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
@@ -25,7 +25,7 @@ func (r *mediaCharacterResolver) Character(ctx context.Context, obj *data.MediaC
 		return nil, nil
 	}
 
-	var c *data.Character
+	var c *models.Character
 	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.CharacterService
 		c, err = ser.GetByID(*obj.CharacterID, tx)
@@ -39,7 +39,7 @@ func (r *mediaCharacterResolver) Character(ctx context.Context, obj *data.MediaC
 	return c, nil
 }
 
-func (r *mediaCharacterResolver) Person(ctx context.Context, obj *data.MediaCharacter) (*data.Person, error) {
+func (r *mediaCharacterResolver) Person(ctx context.Context, obj *models.MediaCharacter) (*models.Person, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
@@ -49,7 +49,7 @@ func (r *mediaCharacterResolver) Person(ctx context.Context, obj *data.MediaChar
 		return nil, nil
 	}
 
-	var p *data.Person
+	var p *models.Person
 	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.PersonService
 		p, err = ser.GetByID(*obj.PersonID, tx)

@@ -15,7 +15,7 @@ type MediaGenre {
 An input to create or update a relationship between
 a Media and a Genre.
 """
-input MediaGenreInput @goModel(model: "data.MediaGenre") {
+input MediaGenreInput @goModel(model: "models.MediaGenre") {
   "The metadata for the MediaGenre."
   meta: MetadataInput!
   """

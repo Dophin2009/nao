@@ -21,7 +21,7 @@ type Producer {
 """
 An input to create or update an existing Producer.
 """
-input ProducerInput @goModel(model: "data.Producer") {
+input ProducerInput @goModel(model: "models.Producer") {
   "The metadata for the Producer."
   meta: MetadataInput!
   "A list of titles used to name the Producer."

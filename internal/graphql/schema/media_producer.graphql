@@ -20,7 +20,7 @@ type MediaProducer {
 An input to create or update a relationship between a
 Media and a Producer.
 """
-input MediaProducerInput @goModel(model: "data.MediaProducer") {
+input MediaProducerInput @goModel(model: "models.MediaProducer") {
   "The metadata for the MediaProducer."
   meta: MetadataInput!
   """

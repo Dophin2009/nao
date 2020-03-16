@@ -5,23 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	json "github.com/json-iterator/go"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
+	json "github.com/json-iterator/go"
 )
-
-// MediaProducer represents a relationship between single instances of Media
-// and Producer.
-type MediaProducer struct {
-	MediaID    int
-	ProducerID int
-	Role       string
-	Meta       db.ModelMetadata
-}
-
-// Metadata returns Meta.
-func (mp *MediaProducer) Metadata() *db.ModelMetadata {
-	return &mp.Meta
-}
 
 // MediaProducerService performs operations on MediaProducer.
 type MediaProducerService struct {
@@ -72,13 +59,13 @@ func NewMediaProducer(hooks db.PersistHooks, mediaService *MediaService,
 }
 
 // Create persists the given MediaProducer.
-func (ser *MediaProducerService) Create(mp *MediaProducer, tx db.Tx) (int, error) {
+func (ser *MediaProducerService) Create(mp *models.MediaProducer, tx db.Tx) (int, error) {
 	return tx.Database().Create(mp, ser, tx)
 }
 
 // Update rmplaces the value of the MediaProducer with the
 // given ID.
-func (ser *MediaProducerService) Update(mp *MediaProducer, tx db.Tx) error {
+func (ser *MediaProducerService) Update(mp *models.MediaProducer, tx db.Tx) error {
 	return tx.Database().Update(mp, ser, tx)
 }
 
@@ -113,7 +100,7 @@ func (ser *MediaProducerService) DeleteByProducer(pID int, tx db.Tx) error {
 
 // GetAll retrieves all persisted values of MediaProducer.
 func (ser *MediaProducerService) GetAll(
-	first *int, skip *int, tx db.Tx) ([]*MediaProducer, error) {
+	first *int, skip *int, tx db.Tx) ([]*models.MediaProducer, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -129,8 +116,8 @@ func (ser *MediaProducerService) GetAll(
 // GetFilter retrieves all persisted values of MediaProducer that pass the
 // filter.
 func (ser *MediaProducerService) GetFilter(
-	first *int, skip *int, tx db.Tx, keep func(mp *MediaProducer) bool,
-) ([]*MediaProducer, error) {
+	first *int, skip *int, tx db.Tx, keep func(mp *models.MediaProducer) bool,
+) ([]*models.MediaProducer, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
 		func(m db.Model) bool {
 			mp, err := ser.AssertType(m)
@@ -153,8 +140,8 @@ func (ser *MediaProducerService) GetFilter(
 // GetMultiple retrieves the persisted MediaProducer values specified by the
 // given IDs that pass the filter.
 func (ser *MediaProducerService) GetMultiple(
-	ids []int, tx db.Tx, keep func(mp *MediaProducer) bool,
-) ([]*MediaProducer, error) {
+	ids []int, tx db.Tx, keep func(mp *models.MediaProducer) bool,
+) ([]*models.MediaProducer, error) {
 	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			mp, err := ser.AssertType(m)
@@ -175,7 +162,7 @@ func (ser *MediaProducerService) GetMultiple(
 }
 
 // GetByID retrieves the persisted MediaProducer with the given ID.
-func (ser *MediaProducerService) GetByID(id int, tx db.Tx) (*MediaProducer, error) {
+func (ser *MediaProducerService) GetByID(id int, tx db.Tx) (*models.MediaProducer, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -192,8 +179,8 @@ func (ser *MediaProducerService) GetByID(id int, tx db.Tx) (*MediaProducer, erro
 // Media ID.
 func (ser *MediaProducerService) GetByMedia(
 	mID int, first *int, skip *int, tx db.Tx,
-) ([]*MediaProducer, error) {
-	return ser.GetFilter(first, skip, tx, func(mp *MediaProducer) bool {
+) ([]*models.MediaProducer, error) {
+	return ser.GetFilter(first, skip, tx, func(mp *models.MediaProducer) bool {
 		return mp.MediaID == mID
 	})
 }
@@ -202,8 +189,8 @@ func (ser *MediaProducerService) GetByMedia(
 // Producer ID.
 func (ser *MediaProducerService) GetByProducer(
 	pID int, first *int, skip *int, tx db.Tx,
-) ([]*MediaProducer, error) {
-	return ser.GetFilter(first, skip, tx, func(mp *MediaProducer) bool {
+) ([]*models.MediaProducer, error) {
+	return ser.GetFilter(first, skip, tx, func(mp *models.MediaProducer) bool {
 		return mp.ProducerID == pID
 	})
 }
@@ -281,7 +268,7 @@ func (ser *MediaProducerService) Marshal(m db.Model) ([]byte, error) {
 
 // Unmarshal parses the given JSON into MediaProducer.
 func (ser *MediaProducerService) Unmarshal(buf []byte) (db.Model, error) {
-	var mp MediaProducer
+	var mp models.MediaProducer
 	err := json.Unmarshal(buf, &mp)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
@@ -290,12 +277,12 @@ func (ser *MediaProducerService) Unmarshal(buf []byte) (db.Model, error) {
 }
 
 // AssertType exposes the given db.Model as a MediaProducer.
-func (ser *MediaProducerService) AssertType(m db.Model) (*MediaProducer, error) {
+func (ser *MediaProducerService) AssertType(m db.Model) (*models.MediaProducer, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
-	mp, ok := m.(*MediaProducer)
+	mp, ok := m.(*models.MediaProducer)
 	if !ok {
 		return nil, fmt.Errorf("model: %w", errors.New("not of MediaProducer type"))
 	}
@@ -304,8 +291,8 @@ func (ser *MediaProducerService) AssertType(m db.Model) (*MediaProducer, error) 
 
 // mapfromModel returns a list of MediaProducer type asserted from the given
 // list of db.Model.
-func (ser *MediaProducerService) mapFromModel(vlist []db.Model) ([]*MediaProducer, error) {
-	list := make([]*MediaProducer, len(vlist))
+func (ser *MediaProducerService) mapFromModel(vlist []db.Model) ([]*models.MediaProducer, error) {
+	list := make([]*models.MediaProducer, len(vlist))
 	var err error
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)

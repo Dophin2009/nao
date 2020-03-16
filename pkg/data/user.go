@@ -5,39 +5,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
 	json "github.com/json-iterator/go"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// TODO: Delete all things related to User when deleting User
-
-// User represents a single user.
-type User struct {
-	Username    string
-	Email       string
-	Password    []byte
-	Permissions UserPermission
-	Meta        db.ModelMetadata
-}
-
 type userWrap struct {
 	updatedPass bool
-	*User
-}
-
-// Metadata returns Meta.
-func (u *User) Metadata() *db.ModelMetadata {
-	return &u.Meta
-}
-
-// UserPermission contains a number of permissions for users for
-// reading/writing data.
-type UserPermission struct {
-	// WriteMedia is the ability modify global Media.
-	WriteMedia bool
-	// WriteUsers is the ability to modify other Users.
-	WriteUsers bool
+	*models.User
 }
 
 // UserService performs operations on User.
@@ -53,13 +29,13 @@ func NewUserService(hooks db.PersistHooks) *UserService {
 }
 
 // Create persists the given User.
-func (ser *UserService) Create(u *User, tx db.Tx) (int, error) {
+func (ser *UserService) Create(u *models.User, tx db.Tx) (int, error) {
 	uw := userWrap{false, u}
 	return tx.Database().Create(&uw, ser, tx)
 }
 
 // Update rulaces the value of the User with the given ID.
-func (ser *UserService) Update(u *User, tx db.Tx) error {
+func (ser *UserService) Update(u *models.User, tx db.Tx) error {
 	uw := &userWrap{false, u}
 	return ser.update(uw, tx)
 }
@@ -74,7 +50,7 @@ func (ser *UserService) Delete(id int, tx db.Tx) error {
 }
 
 // GetAll retrieves all persisted values of User.
-func (ser *UserService) GetAll(first *int, skip *int, tx db.Tx) ([]*User, error) {
+func (ser *UserService) GetAll(first *int, skip *int, tx db.Tx) ([]*models.User, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -89,8 +65,8 @@ func (ser *UserService) GetAll(first *int, skip *int, tx db.Tx) ([]*User, error)
 
 // GetFilter retrieves all persisted values of User that pass the filter.
 func (ser *UserService) GetFilter(
-	first *int, skip *int, tx db.Tx, keep func(u *User) bool,
-) ([]*User, error) {
+	first *int, skip *int, tx db.Tx, keep func(u *models.User) bool,
+) ([]*models.User, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
 		func(m db.Model) bool {
 			u, err := ser.AssertType(m)
@@ -113,8 +89,8 @@ func (ser *UserService) GetFilter(
 // GetMultiple retrieves the persisted User values specified by the
 // given IDs that pass the filter.
 func (ser *UserService) GetMultiple(
-	ids []int, tx db.Tx, keep func(u *User) bool,
-) ([]*User, error) {
+	ids []int, tx db.Tx, keep func(u *models.User) bool,
+) ([]*models.User, error) {
 	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			u, err := ser.AssertType(m)
@@ -135,7 +111,7 @@ func (ser *UserService) GetMultiple(
 }
 
 // GetByID retrieves the persisted User with the given ID.
-func (ser *UserService) GetByID(id int, tx db.Tx) (*User, error) {
+func (ser *UserService) GetByID(id int, tx db.Tx) (*models.User, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -149,8 +125,8 @@ func (ser *UserService) GetByID(id int, tx db.Tx) (*User, error) {
 }
 
 // GetByUsername retrieves a single instance of User with the given username.
-func (ser *UserService) GetByUsername(username string, tx db.Tx) (*User, error) {
-	var e User
+func (ser *UserService) GetByUsername(username string, tx db.Tx) (*models.User, error) {
+	var e models.User
 	_, err := tx.Database().FindFirst(ser, tx, func(m db.Model) (bool, error) {
 		u, err := ser.AssertType(m)
 		if err != nil {
@@ -173,7 +149,7 @@ func (ser *UserService) GetByUsername(username string, tx db.Tx) (*User, error) 
 
 // Authorize checks if the user with the given ID has permissions that meet
 // the requirements.
-func (ser *UserService) Authorize(userID int, req *UserPermission, tx db.Tx) (*User, error) {
+func (ser *UserService) Authorize(userID int, req *models.UserPermission, tx db.Tx) (*models.User, error) {
 	user, err := ser.GetByID(userID, tx)
 	if err != nil {
 		return nil, err
@@ -188,7 +164,7 @@ func (ser *UserService) Authorize(userID int, req *UserPermission, tx db.Tx) (*U
 // RequirementsMet checks if the given permissions satisfy the required
 // permissions.
 func (ser *UserService) RequirementsMet(
-	perm *UserPermission, req *UserPermission) bool {
+	perm *models.UserPermission, req *models.UserPermission) bool {
 	return !(req.WriteMedia && !perm.WriteMedia) &&
 		!(req.WriteUsers && !perm.WriteUsers)
 }
@@ -335,7 +311,7 @@ func (ser *UserService) Marshal(m db.Model) ([]byte, error) {
 
 // Unmarshal parses the given JSON into User.
 func (ser *UserService) Unmarshal(buf []byte) (db.Model, error) {
-	var u User
+	var u models.User
 	err := json.Unmarshal(buf, &u)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
@@ -356,7 +332,7 @@ func (ser *UserService) assertWrapType(m db.Model) (*userWrap, error) {
 }
 
 // AssertType exposes the given db.Model as a User.
-func (ser *UserService) AssertType(m db.Model) (*User, error) {
+func (ser *UserService) AssertType(m db.Model) (*models.User, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
@@ -374,8 +350,8 @@ func (ser *UserService) AssertType(m db.Model) (*User, error) {
 
 // mapfromModel returns a list of User type asserted from the given list of
 // db.Model.
-func (ser *UserService) mapFromModel(vlist []db.Model) ([]*User, error) {
-	list := make([]*User, len(vlist))
+func (ser *UserService) mapFromModel(vlist []db.Model) ([]*models.User, error) {
+	list := make([]*models.User, len(vlist))
 	var err error
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)

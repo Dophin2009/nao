@@ -4,23 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	json "github.com/json-iterator/go"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
+	json "github.com/json-iterator/go"
 )
-
-// UserMediaList represents a User-created list of UserMedia.
-type UserMediaList struct {
-	UserID       int
-	Names        []Title
-	Descriptions []Title
-	UserMedia    []int
-	Meta         db.ModelMetadata
-}
-
-// Metadata returns Meta.
-func (uml *UserMediaList) Metadata() *db.ModelMetadata {
-	return &uml.Meta
-}
 
 // UserMediaListService performs operations on UserMediaList.
 type UserMediaListService struct {
@@ -98,12 +85,12 @@ func NewUserMediaListService(hooks db.PersistHooks, userService *UserService,
 }
 
 // Create persists the given UserMediaList.
-func (ser *UserMediaListService) Create(uml *UserMediaList, tx db.Tx) (int, error) {
+func (ser *UserMediaListService) Create(uml *models.UserMediaList, tx db.Tx) (int, error) {
 	return tx.Database().Create(uml, ser, tx)
 }
 
 // Update rumllaces the value of the UserMediaList with the given ID.
-func (ser *UserMediaListService) Update(uml *UserMediaList, tx db.Tx) error {
+func (ser *UserMediaListService) Update(uml *models.UserMediaList, tx db.Tx) error {
 	return tx.Database().Update(uml, ser, tx)
 }
 
@@ -124,7 +111,7 @@ func (ser *UserMediaListService) DeleteByUser(uID int, tx db.Tx) error {
 }
 
 // GetAll retrieves all persisted values of UserMediaList.
-func (ser *UserMediaListService) GetAll(first *int, skip *int, tx db.Tx) ([]*UserMediaList, error) {
+func (ser *UserMediaListService) GetAll(first *int, skip *int, tx db.Tx) ([]*models.UserMediaList, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -140,8 +127,8 @@ func (ser *UserMediaListService) GetAll(first *int, skip *int, tx db.Tx) ([]*Use
 // GetFilter retrieves all persisted values of UserMediaList that pass the
 // filter.
 func (ser *UserMediaListService) GetFilter(
-	first *int, skip *int, tx db.Tx, keep func(uml *UserMediaList) bool,
-) ([]*UserMediaList, error) {
+	first *int, skip *int, tx db.Tx, keep func(uml *models.UserMediaList) bool,
+) ([]*models.UserMediaList, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
 		func(m db.Model) bool {
 			uml, err := ser.AssertType(m)
@@ -164,8 +151,8 @@ func (ser *UserMediaListService) GetFilter(
 // GetMultiple retrieves the persisted UserMediaList values specified by the
 // given IDs that pass the filter.
 func (ser *UserMediaListService) GetMultiple(
-	ids []int, tx db.Tx, keep func(uml *UserMediaList) bool,
-) ([]*UserMediaList, error) {
+	ids []int, tx db.Tx, keep func(uml *models.UserMediaList) bool,
+) ([]*models.UserMediaList, error) {
 	vlist, err := tx.Database().GetMultiple(ids, ser, tx, func(m db.Model) bool {
 		uml, err := ser.AssertType(m)
 		if err != nil {
@@ -185,7 +172,7 @@ func (ser *UserMediaListService) GetMultiple(
 }
 
 // GetByID retrieves the persisted UserMediaList with the given ID.
-func (ser *UserMediaListService) GetByID(id int, tx db.Tx) (*UserMediaList, error) {
+func (ser *UserMediaListService) GetByID(id int, tx db.Tx) (*models.UserMediaList, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -272,7 +259,7 @@ func (ser *UserMediaListService) Marshal(m db.Model) ([]byte, error) {
 
 // Unmarshal parses the given JSON into UserMediaList.
 func (ser *UserMediaListService) Unmarshal(buf []byte) (db.Model, error) {
-	var uml UserMediaList
+	var uml models.UserMediaList
 	err := json.Unmarshal(buf, &uml)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
@@ -281,12 +268,12 @@ func (ser *UserMediaListService) Unmarshal(buf []byte) (db.Model, error) {
 }
 
 // AssertType exposes the given db.Model as a UserMediaList.
-func (ser *UserMediaListService) AssertType(m db.Model) (*UserMediaList, error) {
+func (ser *UserMediaListService) AssertType(m db.Model) (*models.UserMediaList, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
-	uml, ok := m.(*UserMediaList)
+	uml, ok := m.(*models.UserMediaList)
 	if !ok {
 		return nil, fmt.Errorf("model: %w", errors.New("not of UserMediaList type"))
 	}
@@ -295,8 +282,8 @@ func (ser *UserMediaListService) AssertType(m db.Model) (*UserMediaList, error) 
 
 // mapfromModel returns a list of UserMediaList type asserted from the given
 // list of db.Model.
-func (ser *UserMediaListService) mapFromModel(vlist []db.Model) ([]*UserMediaList, error) {
-	list := make([]*UserMediaList, len(vlist))
+func (ser *UserMediaListService) mapFromModel(vlist []db.Model) ([]*models.UserMediaList, error) {
+	list := make([]*models.UserMediaList, len(vlist))
 	var err error
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)

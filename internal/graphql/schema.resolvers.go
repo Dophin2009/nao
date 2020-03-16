@@ -7,11 +7,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Dophin2009/nao/pkg/data"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
 )
 
-func (r *mutationResolver) CreateMedia(ctx context.Context, media data.Media) (*data.Media, error) {
+func (r *mutationResolver) CreateMedia(ctx context.Context, media models.Media) (*models.Media, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
@@ -32,13 +32,13 @@ func (r *mutationResolver) CreateMedia(ctx context.Context, media data.Media) (*
 	return &media, nil
 }
 
-func (r *queryResolver) MediaByID(ctx context.Context, id int) (*data.Media, error) {
+func (r *queryResolver) MediaByID(ctx context.Context, id int) (*models.Media, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
 
-	var md *data.Media
+	var md *models.Media
 	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaService
 		md, err = ser.GetByID(id, tx)

@@ -6,14 +6,14 @@ package graphql
 import (
 	"context"
 
-	"github.com/Dophin2009/nao/pkg/data"
+	"github.com/Dophin2009/nao/pkg/data/models"
 )
 
-func (r *mediaRelationResolver) Owner(ctx context.Context, obj *data.MediaRelation) (*data.Media, error) {
+func (r *mediaRelationResolver) Owner(ctx context.Context, obj *models.MediaRelation) (*models.Media, error) {
 	return resolveMediaByID(ctx, obj.OwnerID)
 }
 
-func (r *mediaRelationResolver) Related(ctx context.Context, obj *data.MediaRelation) (*data.Media, error) {
+func (r *mediaRelationResolver) Related(ctx context.Context, obj *models.MediaRelation) (*models.Media, error) {
 	return resolveMediaByID(ctx, obj.RelatedID)
 }
 

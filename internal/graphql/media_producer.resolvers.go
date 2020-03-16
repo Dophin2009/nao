@@ -7,21 +7,21 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Dophin2009/nao/pkg/data"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
 )
 
-func (r *mediaProducerResolver) Media(ctx context.Context, obj *data.MediaProducer) (*data.Media, error) {
+func (r *mediaProducerResolver) Media(ctx context.Context, obj *models.MediaProducer) (*models.Media, error) {
 	return resolveMediaByID(ctx, obj.MediaID)
 }
 
-func (r *mediaProducerResolver) Producer(ctx context.Context, obj *data.MediaProducer) (*data.Producer, error) {
+func (r *mediaProducerResolver) Producer(ctx context.Context, obj *models.MediaProducer) (*models.Producer, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
 
-	var p *data.Producer
+	var p *models.Producer
 	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.ProducerService
 		p, err = ser.GetByID(obj.ProducerID, tx)

@@ -7,29 +7,29 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Dophin2009/nao/pkg/data"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
 )
 
-func (r *mediaResolver) Titles(ctx context.Context, obj *data.Media, first *int, skip *int) ([]*data.Title, error) {
+func (r *mediaResolver) Titles(ctx context.Context, obj *models.Media, first *int, skip *int) ([]*models.Title, error) {
 	return sliceTitles(obj.Titles, first, skip), nil
 }
 
-func (r *mediaResolver) Synopses(ctx context.Context, obj *data.Media, first *int, skip *int) ([]*data.Title, error) {
+func (r *mediaResolver) Synopses(ctx context.Context, obj *models.Media, first *int, skip *int) ([]*models.Title, error) {
 	return sliceTitles(obj.Synopses, first, skip), nil
 }
 
-func (r *mediaResolver) Background(ctx context.Context, obj *data.Media, first *int, skip *int) ([]*data.Title, error) {
+func (r *mediaResolver) Background(ctx context.Context, obj *models.Media, first *int, skip *int) ([]*models.Title, error) {
 	return sliceTitles(obj.Titles, first, skip), nil
 }
 
-func (r *mediaResolver) EpisodeSets(ctx context.Context, obj *data.Media, first *int, skip *int) ([]*data.EpisodeSet, error) {
+func (r *mediaResolver) EpisodeSets(ctx context.Context, obj *models.Media, first *int, skip *int) ([]*models.EpisodeSet, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
 
-	var list []*data.EpisodeSet
+	var list []*models.EpisodeSet
 	ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.EpisodeSetService
 		list, err = ser.GetByMedia(obj.Meta.ID, first, skip, tx)
@@ -43,13 +43,13 @@ func (r *mediaResolver) EpisodeSets(ctx context.Context, obj *data.Media, first 
 	return list, nil
 }
 
-func (r *mediaResolver) Producers(ctx context.Context, obj *data.Media, first *int, skip *int) ([]*data.MediaProducer, error) {
+func (r *mediaResolver) Producers(ctx context.Context, obj *models.Media, first *int, skip *int) ([]*models.MediaProducer, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
 
-	var list []*data.MediaProducer
+	var list []*models.MediaProducer
 	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaProducerService
 		list, err = ser.GetByMedia(obj.Meta.ID, first, skip, tx)
@@ -63,13 +63,13 @@ func (r *mediaResolver) Producers(ctx context.Context, obj *data.Media, first *i
 	return list, nil
 }
 
-func (r *mediaResolver) Characters(ctx context.Context, obj *data.Media, first *int, skip *int) ([]*data.MediaCharacter, error) {
+func (r *mediaResolver) Characters(ctx context.Context, obj *models.Media, first *int, skip *int) ([]*models.MediaCharacter, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
 
-	var list []*data.MediaCharacter
+	var list []*models.MediaCharacter
 	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaCharacterService
 		list, err = ser.GetByMedia(obj.Meta.ID, first, skip, tx)
@@ -83,13 +83,13 @@ func (r *mediaResolver) Characters(ctx context.Context, obj *data.Media, first *
 	return list, nil
 }
 
-func (r *mediaResolver) Genres(ctx context.Context, obj *data.Media, first *int, skip *int) ([]*data.MediaGenre, error) {
+func (r *mediaResolver) Genres(ctx context.Context, obj *models.Media, first *int, skip *int) ([]*models.MediaGenre, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
 
-	var list []*data.MediaGenre
+	var list []*models.MediaGenre
 	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaGenreService
 		list, err = ser.GetByMedia(obj.Meta.ID, first, skip, tx)

@@ -7,25 +7,25 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Dophin2009/nao/pkg/data"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
 )
 
-func (r *genreResolver) Names(ctx context.Context, obj *data.Genre, first *int, skip *int) ([]*data.Title, error) {
+func (r *genreResolver) Names(ctx context.Context, obj *models.Genre, first *int, skip *int) ([]*models.Title, error) {
 	return sliceTitles(obj.Names, first, skip), nil
 }
 
-func (r *genreResolver) Descriptions(ctx context.Context, obj *data.Genre, first *int, skip *int) ([]*data.Title, error) {
+func (r *genreResolver) Descriptions(ctx context.Context, obj *models.Genre, first *int, skip *int) ([]*models.Title, error) {
 	return sliceTitles(obj.Descriptions, first, skip), nil
 }
 
-func (r *genreResolver) Media(ctx context.Context, obj *data.Genre, first *int, skip *int) ([]*data.MediaGenre, error) {
+func (r *genreResolver) Media(ctx context.Context, obj *models.Genre, first *int, skip *int) ([]*models.MediaGenre, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
 
-	var list []*data.MediaGenre
+	var list []*models.MediaGenre
 	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaGenreService
 		list, err = ser.GetByGenre(obj.Meta.ID, first, skip, tx)

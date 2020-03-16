@@ -3,102 +3,11 @@ package data
 import (
 	"errors"
 	"fmt"
-	"time"
 
-	json "github.com/json-iterator/go"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
+	json "github.com/json-iterator/go"
 )
-
-// UserMedia represents a relationship between a User and a Media, containing
-// information about the User's opinion on the Media.
-type UserMedia struct {
-	UserID         int
-	MediaID        int
-	Priority       *int
-	Score          *int
-	Recommended    *int
-	Status         *WatchStatus
-	WatchInstances []WatchedInstance
-	Comments       []Title
-	Meta           db.ModelMetadata
-}
-
-// Metadata returns Meta
-func (um *UserMedia) Metadata() *db.ModelMetadata {
-	return &um.Meta
-}
-
-// WatchedInstance contains information about a single watch of some Media.
-type WatchedInstance struct {
-	Episodes  int
-	Ongoing   bool
-	StartDate *time.Time
-	EndDate   *time.Time
-	Comments  []Title
-}
-
-// WatchStatus is an enum that represents the status of a Media's consumption
-// by a User.
-type WatchStatus int
-
-const (
-	// WatchStatusCompleted means that the User has consumed the Media in its entirety at
-	// least once.
-	WatchStatusCompleted WatchStatus = iota
-
-	// WatchStatusPlanning means that the User is planning to consume the Media sometime in
-	// the future.
-	WatchStatusPlanning
-
-	// WatchStatusDropped means that the User has never consumed the Media in its entirety
-	// and abandoned it in the middle somewhere.
-	WatchStatusDropped
-
-	// WatchStatusHold means the User has begun consuming the Media, but has placed it on
-	// hold.
-	WatchStatusHold
-)
-
-// UnmarshalJSON defines custom JSON deserialization for WatchStatus.
-func (ws *WatchStatus) UnmarshalJSON(data []byte) (err error) {
-	var s string
-	err = json.Unmarshal(data, &s)
-	if err != nil {
-		return fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
-	}
-
-	value, ok := map[string]WatchStatus{
-		"Completed": WatchStatusCompleted,
-		"Planning":  WatchStatusPlanning,
-		"Dropped":   WatchStatusDropped,
-		"Hold":      WatchStatusHold,
-	}[s]
-	if !ok {
-		return fmt.Errorf("watch status value %q: %w", s, errInvalid)
-	}
-	*ws = value
-	return nil
-}
-
-// MarshalJSON defines custom JSON serialization for WatchStatus.
-func (ws *WatchStatus) MarshalJSON() (v []byte, err error) {
-	value, ok := map[WatchStatus]string{
-		WatchStatusCompleted: "Completed",
-		WatchStatusPlanning:  "Planning",
-		WatchStatusDropped:   "Dropped",
-		WatchStatusHold:      "Hold",
-	}[*ws]
-	if !ok {
-		return nil, fmt.Errorf("watch status value %d: %w", *ws, err)
-	}
-
-	v, err = json.Marshal(value)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
-	}
-
-	return v, nil
-}
 
 // UserMediaService performs operations on UserMedia.
 type UserMediaService struct {
@@ -149,12 +58,12 @@ func NewUserMediaService(hooks db.PersistHooks, userService *UserService,
 }
 
 // Create persists the given UserMedia.
-func (ser *UserMediaService) Create(um *UserMedia, tx db.Tx) (int, error) {
+func (ser *UserMediaService) Create(um *models.UserMedia, tx db.Tx) (int, error) {
 	return tx.Database().Create(um, ser, tx)
 }
 
 // Update rumlaces the value of the UserMedia with the given ID.
-func (ser *UserMediaService) Update(um *UserMedia, tx db.Tx) error {
+func (ser *UserMediaService) Update(um *models.UserMedia, tx db.Tx) error {
 	return tx.Database().Update(um, ser, tx)
 }
 
@@ -186,7 +95,7 @@ func (ser *UserMediaService) DeleteByMedia(mID int, tx db.Tx) error {
 }
 
 // GetAll retrieves all persisted values of UserMedia.
-func (ser *UserMediaService) GetAll(first *int, skip *int, tx db.Tx) ([]*UserMedia, error) {
+func (ser *UserMediaService) GetAll(first *int, skip *int, tx db.Tx) ([]*models.UserMedia, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -201,8 +110,8 @@ func (ser *UserMediaService) GetAll(first *int, skip *int, tx db.Tx) ([]*UserMed
 
 // GetFilter retrieves all persisted values of UserMedia that pass the filter.
 func (ser *UserMediaService) GetFilter(
-	first *int, skip *int, tx db.Tx, keep func(um *UserMedia) bool,
-) ([]*UserMedia, error) {
+	first *int, skip *int, tx db.Tx, keep func(um *models.UserMedia) bool,
+) ([]*models.UserMedia, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
 		func(m db.Model) bool {
 			um, err := ser.AssertType(m)
@@ -225,8 +134,8 @@ func (ser *UserMediaService) GetFilter(
 // GetMultiple retrieves the persisted UserMedia values specified by the
 // given IDs that pass the filter.
 func (ser *UserMediaService) GetMultiple(
-	ids []int, tx db.Tx, keep func(um *UserMedia) bool,
-) ([]*UserMedia, error) {
+	ids []int, tx db.Tx, keep func(um *models.UserMedia) bool,
+) ([]*models.UserMedia, error) {
 	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			um, err := ser.AssertType(m)
@@ -247,7 +156,7 @@ func (ser *UserMediaService) GetMultiple(
 }
 
 // GetByID retrieves the persisted UserMedia with the given ID.
-func (ser *UserMediaService) GetByID(id int, tx db.Tx) (*UserMedia, error) {
+func (ser *UserMediaService) GetByID(id int, tx db.Tx) (*models.UserMedia, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -263,8 +172,8 @@ func (ser *UserMediaService) GetByID(id int, tx db.Tx) (*UserMedia, error) {
 // GetByUser retrieves the persisted UserMedia with the given User ID.
 func (ser *UserMediaService) GetByUser(
 	uID int, first *int, skip *int, tx db.Tx,
-) ([]*UserMedia, error) {
-	return ser.GetFilter(first, skip, tx, func(um *UserMedia) bool {
+) ([]*models.UserMedia, error) {
+	return ser.GetFilter(first, skip, tx, func(um *models.UserMedia) bool {
 		return um.UserID == uID
 	})
 }
@@ -272,8 +181,8 @@ func (ser *UserMediaService) GetByUser(
 // GetByMedia retrieves the persisted UserMedia with the given Media ID.
 func (ser *UserMediaService) GetByMedia(
 	mID int, first *int, skip *int, tx db.Tx,
-) ([]*UserMedia, error) {
-	return ser.GetFilter(first, skip, tx, func(um *UserMedia) bool {
+) ([]*models.UserMedia, error) {
+	return ser.GetFilter(first, skip, tx, func(um *models.UserMedia) bool {
 		return um.MediaID == mID
 	})
 }
@@ -349,7 +258,7 @@ func (ser *UserMediaService) Marshal(m db.Model) ([]byte, error) {
 
 // Unmarshal parses the given JSON into UserMedia.
 func (ser *UserMediaService) Unmarshal(buf []byte) (db.Model, error) {
-	var um UserMedia
+	var um models.UserMedia
 	err := json.Unmarshal(buf, &um)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
@@ -358,12 +267,12 @@ func (ser *UserMediaService) Unmarshal(buf []byte) (db.Model, error) {
 }
 
 // AssertType exposes the given db.Model as a UserMedia.
-func (ser *UserMediaService) AssertType(m db.Model) (*UserMedia, error) {
+func (ser *UserMediaService) AssertType(m db.Model) (*models.UserMedia, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
-	um, ok := m.(*UserMedia)
+	um, ok := m.(*models.UserMedia)
 	if !ok {
 		return nil, fmt.Errorf("model: %w", errors.New("not of UserMedia type"))
 	}
@@ -372,8 +281,8 @@ func (ser *UserMediaService) AssertType(m db.Model) (*UserMedia, error) {
 
 // mapfromModel returns a list of UserMedia type asserted from the given list
 // of db.Model.
-func (ser *UserMediaService) mapFromModel(vlist []db.Model) ([]*UserMedia, error) {
-	list := make([]*UserMedia, len(vlist))
+func (ser *UserMediaService) mapFromModel(vlist []db.Model) ([]*models.UserMedia, error) {
+	list := make([]*models.UserMedia, len(vlist))
 	var err error
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)

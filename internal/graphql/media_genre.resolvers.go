@@ -7,21 +7,21 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Dophin2009/nao/pkg/data"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
 )
 
-func (r *mediaGenreResolver) Media(ctx context.Context, obj *data.MediaGenre) (*data.Media, error) {
+func (r *mediaGenreResolver) Media(ctx context.Context, obj *models.MediaGenre) (*models.Media, error) {
 	return resolveMediaByID(ctx, obj.MediaID)
 }
 
-func (r *mediaGenreResolver) Genre(ctx context.Context, obj *data.MediaGenre) (*data.Genre, error) {
+func (r *mediaGenreResolver) Genre(ctx context.Context, obj *models.MediaGenre) (*models.Genre, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
 
-	var g *data.Genre
+	var g *models.Genre
 	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.GenreService
 		g, err = ser.GetByID(obj.GenreID, tx)

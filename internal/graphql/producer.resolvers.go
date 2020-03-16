@@ -7,21 +7,21 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Dophin2009/nao/pkg/data"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
 )
 
-func (r *producerResolver) Titles(ctx context.Context, obj *data.Producer, first *int, skip *int) ([]*data.Title, error) {
+func (r *producerResolver) Titles(ctx context.Context, obj *models.Producer, first *int, skip *int) ([]*models.Title, error) {
 	return sliceTitles(obj.Titles, first, skip), nil
 }
 
-func (r *producerResolver) Media(ctx context.Context, obj *data.Producer, first *int, skip *int) ([]*data.MediaProducer, error) {
+func (r *producerResolver) Media(ctx context.Context, obj *models.Producer, first *int, skip *int) ([]*models.MediaProducer, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
 
-	var list []*data.MediaProducer
+	var list []*models.MediaProducer
 	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaProducerService
 		list, err = ser.GetByProducer(obj.Meta.ID, first, skip, tx)

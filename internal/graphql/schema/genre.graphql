@@ -20,7 +20,7 @@ type Genre {
 """
 An input to create or update a Genre.
 """
-input GenreInput @goModel(model: "data.Genre") {
+input GenreInput @goModel(model: "models.Genre") {
   "The metadata for the Genre."
   meta: MetadataInput!
   "A list of names used to name the Genre."

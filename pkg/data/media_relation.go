@@ -5,23 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	json "github.com/json-iterator/go"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
+	json "github.com/json-iterator/go"
 )
-
-// MediaRelation represents a relationship between single instances of Media
-// and Producer.
-type MediaRelation struct {
-	OwnerID      int
-	RelatedID    int
-	Relationship string
-	Meta         db.ModelMetadata
-}
-
-// Metadata returns Meta.
-func (mr *MediaRelation) Metadata() *db.ModelMetadata {
-	return &mr.Meta
-}
 
 // MediaRelationService performs operations on MediaRelation.
 type MediaRelationService struct {
@@ -58,12 +45,12 @@ func NewMediaRelationService(hooks db.PersistHooks, mediaService *MediaService) 
 }
 
 // Create persists the given MediaRelation.
-func (ser *MediaRelationService) Create(mr *MediaRelation, tx db.Tx) (int, error) {
+func (ser *MediaRelationService) Create(mr *models.MediaRelation, tx db.Tx) (int, error) {
 	return tx.Database().Create(mr, ser, tx)
 }
 
 // Update rmrlaces the value of the MediaRelation with the given ID.
-func (ser *MediaRelationService) Update(mr *MediaRelation, tx db.Tx) error {
+func (ser *MediaRelationService) Update(mr *models.MediaRelation, tx db.Tx) error {
 	return tx.Database().Update(mr, ser, tx)
 }
 
@@ -95,7 +82,7 @@ func (ser *MediaRelationService) DeleteByRelated(mID int, tx db.Tx) error {
 }
 
 // GetAll retrieves all persisted values of MediaRelation.
-func (ser *MediaRelationService) GetAll(first *int, skip *int, tx db.Tx) ([]*MediaRelation, error) {
+func (ser *MediaRelationService) GetAll(first *int, skip *int, tx db.Tx) ([]*models.MediaRelation, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -111,8 +98,8 @@ func (ser *MediaRelationService) GetAll(first *int, skip *int, tx db.Tx) ([]*Med
 // GetFilter retrieves all persisted values of MediaRelation that pass the
 // filter.
 func (ser *MediaRelationService) GetFilter(
-	first *int, skip *int, tx db.Tx, keep func(mr *MediaRelation) bool,
-) ([]*MediaRelation, error) {
+	first *int, skip *int, tx db.Tx, keep func(mr *models.MediaRelation) bool,
+) ([]*models.MediaRelation, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx, func(m db.Model) bool {
 		mr, err := ser.AssertType(m)
 		if err != nil {
@@ -134,8 +121,8 @@ func (ser *MediaRelationService) GetFilter(
 // GetMultiple retrieves the persisted MediaRelation values specified by the
 // given IDs that pass the filter.
 func (ser *MediaRelationService) GetMultiple(
-	ids []int, tx db.Tx, keep func(mr *MediaRelation) bool,
-) ([]*MediaRelation, error) {
+	ids []int, tx db.Tx, keep func(mr *models.MediaRelation) bool,
+) ([]*models.MediaRelation, error) {
 	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			mr, err := ser.AssertType(m)
@@ -156,7 +143,7 @@ func (ser *MediaRelationService) GetMultiple(
 }
 
 // GetByID retrieves the persisted MediaRelation with the given ID.
-func (ser *MediaRelationService) GetByID(id int, tx db.Tx) (*MediaRelation, error) {
+func (ser *MediaRelationService) GetByID(id int, tx db.Tx) (*models.MediaRelation, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -173,8 +160,8 @@ func (ser *MediaRelationService) GetByID(id int, tx db.Tx) (*MediaRelation, erro
 // owning Media ID.
 func (ser *MediaRelationService) GetByOwner(
 	mID int, first *int, skip *int, tx db.Tx,
-) ([]*MediaRelation, error) {
-	return ser.GetFilter(first, skip, tx, func(mr *MediaRelation) bool {
+) ([]*models.MediaRelation, error) {
+	return ser.GetFilter(first, skip, tx, func(mr *models.MediaRelation) bool {
 		return mr.OwnerID == mID
 	})
 }
@@ -183,8 +170,8 @@ func (ser *MediaRelationService) GetByOwner(
 // related Media ID.
 func (ser *MediaRelationService) GetByRelated(
 	mID int, first *int, skip *int, tx db.Tx,
-) ([]*MediaRelation, error) {
-	return ser.GetFilter(first, skip, tx, func(mr *MediaRelation) bool {
+) ([]*models.MediaRelation, error) {
+	return ser.GetFilter(first, skip, tx, func(mr *models.MediaRelation) bool {
 		return mr.RelatedID == mID
 	})
 }
@@ -193,8 +180,8 @@ func (ser *MediaRelationService) GetByRelated(
 // given relationship.
 func (ser *MediaRelationService) GetByRelationship(
 	relationship string, first *int, skip *int, tx db.Tx,
-) ([]*MediaRelation, error) {
-	return ser.GetFilter(first, skip, tx, func(mr *MediaRelation) bool {
+) ([]*models.MediaRelation, error) {
+	return ser.GetFilter(first, skip, tx, func(mr *models.MediaRelation) bool {
 		return mr.Relationship == relationship
 	})
 }
@@ -273,7 +260,7 @@ func (ser *MediaRelationService) Marshal(m db.Model) ([]byte, error) {
 
 // Unmarshal parses the given JSON into MediaRelation.
 func (ser *MediaRelationService) Unmarshal(buf []byte) (db.Model, error) {
-	var mr MediaRelation
+	var mr models.MediaRelation
 	err := json.Unmarshal(buf, &mr)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
@@ -282,12 +269,12 @@ func (ser *MediaRelationService) Unmarshal(buf []byte) (db.Model, error) {
 }
 
 // AssertType exposes the given Model as a MediaRelation.
-func (ser *MediaRelationService) AssertType(m db.Model) (*MediaRelation, error) {
+func (ser *MediaRelationService) AssertType(m db.Model) (*models.MediaRelation, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
-	mr, ok := m.(*MediaRelation)
+	mr, ok := m.(*models.MediaRelation)
 	if !ok {
 		return nil, fmt.Errorf("model: %w", errors.New("not of MediaRelation type"))
 	}
@@ -296,8 +283,8 @@ func (ser *MediaRelationService) AssertType(m db.Model) (*MediaRelation, error) 
 
 // mapfromModel returns a list of MediaRelation type asserted from the given
 // list of Model.
-func (ser *MediaRelationService) mapFromModel(vlist []db.Model) ([]*MediaRelation, error) {
-	list := make([]*MediaRelation, len(vlist))
+func (ser *MediaRelationService) mapFromModel(vlist []db.Model) ([]*models.MediaRelation, error) {
+	list := make([]*models.MediaRelation, len(vlist))
 	var err error
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)

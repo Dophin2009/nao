@@ -5,25 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	json "github.com/json-iterator/go"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
+	json "github.com/json-iterator/go"
 )
-
-// MediaCharacter represents a relationship between single instances of Media
-// and Character.
-type MediaCharacter struct {
-	MediaID       int
-	CharacterID   *int
-	CharacterRole *string
-	PersonID      *int
-	PersonRole    *string
-	Meta          db.ModelMetadata
-}
-
-// Metadata returns Meta.
-func (mc *MediaCharacter) Metadata() *db.ModelMetadata {
-	return &mc.Meta
-}
 
 // MediaCharacterService performs operations on MediaCharacter.
 type MediaCharacterService struct {
@@ -89,12 +74,12 @@ func NewMediaCharacterService(hooks db.PersistHooks, mediaService *MediaService,
 }
 
 // Create persists the given MediaCharacter.
-func (ser *MediaCharacterService) Create(mc *MediaCharacter, tx db.Tx) (int, error) {
+func (ser *MediaCharacterService) Create(mc *models.MediaCharacter, tx db.Tx) (int, error) {
 	return tx.Database().Create(mc, ser, tx)
 }
 
 // Update rmclaces the value of the MediaCharacter with the given ID.
-func (ser *MediaCharacterService) Update(mc *MediaCharacter, tx db.Tx) error {
+func (ser *MediaCharacterService) Update(mc *models.MediaCharacter, tx db.Tx) error {
 	return tx.Database().Update(mc, ser, tx)
 }
 
@@ -148,7 +133,7 @@ func (ser *MediaCharacterService) DeleteByPerson(pID int, tx db.Tx) error {
 }
 
 // GetAll retrieves all persisted values of MediaCharacter.
-func (ser *MediaCharacterService) GetAll(first *int, skip *int, tx db.Tx) ([]*MediaCharacter, error) {
+func (ser *MediaCharacterService) GetAll(first *int, skip *int, tx db.Tx) ([]*models.MediaCharacter, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -164,8 +149,8 @@ func (ser *MediaCharacterService) GetAll(first *int, skip *int, tx db.Tx) ([]*Me
 // GetFilter retrieves all persisted values of MediaCharacter that pass the
 // filter.
 func (ser *MediaCharacterService) GetFilter(
-	first *int, skip *int, tx db.Tx, keep func(mc *MediaCharacter) bool,
-) ([]*MediaCharacter, error) {
+	first *int, skip *int, tx db.Tx, keep func(mc *models.MediaCharacter) bool,
+) ([]*models.MediaCharacter, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
 		func(m db.Model) bool {
 			mc, err := ser.AssertType(m)
@@ -188,8 +173,8 @@ func (ser *MediaCharacterService) GetFilter(
 // GetMultiple retrieves the persisted MediaCharacter values specified by the
 // given IDs that pass the filter.
 func (ser *MediaCharacterService) GetMultiple(
-	ids []int, tx db.Tx, keep func(mc *MediaCharacter) bool,
-) ([]*MediaCharacter, error) {
+	ids []int, tx db.Tx, keep func(mc *models.MediaCharacter) bool,
+) ([]*models.MediaCharacter, error) {
 	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			mc, err := ser.AssertType(m)
@@ -210,7 +195,7 @@ func (ser *MediaCharacterService) GetMultiple(
 }
 
 // GetByID retrieves the persisted MediaCharacter with the given ID.
-func (ser *MediaCharacterService) GetByID(id int, tx db.Tx) (*MediaCharacter, error) {
+func (ser *MediaCharacterService) GetByID(id int, tx db.Tx) (*models.MediaCharacter, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -227,8 +212,8 @@ func (ser *MediaCharacterService) GetByID(id int, tx db.Tx) (*MediaCharacter, er
 // Media ID.
 func (ser *MediaCharacterService) GetByMedia(
 	mID int, first *int, skip *int, tx db.Tx,
-) ([]*MediaCharacter, error) {
-	return ser.GetFilter(first, skip, tx, func(mc *MediaCharacter) bool {
+) ([]*models.MediaCharacter, error) {
+	return ser.GetFilter(first, skip, tx, func(mc *models.MediaCharacter) bool {
 		return mc.MediaID == mID
 	})
 }
@@ -237,8 +222,8 @@ func (ser *MediaCharacterService) GetByMedia(
 // given Character ID.
 func (ser *MediaCharacterService) GetByCharacter(
 	cID int, first *int, skip *int, tx db.Tx,
-) ([]*MediaCharacter, error) {
-	return ser.GetFilter(first, skip, tx, func(mc *MediaCharacter) bool {
+) ([]*models.MediaCharacter, error) {
+	return ser.GetFilter(first, skip, tx, func(mc *models.MediaCharacter) bool {
 		return *mc.CharacterID == cID
 	})
 }
@@ -247,8 +232,8 @@ func (ser *MediaCharacterService) GetByCharacter(
 // Person ID.
 func (ser *MediaCharacterService) GetByPerson(
 	pID int, first *int, skip *int, tx db.Tx,
-) ([]*MediaCharacter, error) {
-	return ser.GetFilter(first, skip, tx, func(mc *MediaCharacter) bool {
+) ([]*models.MediaCharacter, error) {
+	return ser.GetFilter(first, skip, tx, func(mc *models.MediaCharacter) bool {
 		return *mc.CharacterID == pID
 	})
 }
@@ -385,7 +370,7 @@ func (ser *MediaCharacterService) Marshal(m db.Model) ([]byte, error) {
 
 // Unmarshal parses the given JSON into MediaCharacter.
 func (ser *MediaCharacterService) Unmarshal(buf []byte) (db.Model, error) {
-	var mc MediaCharacter
+	var mc models.MediaCharacter
 	err := json.Unmarshal(buf, &mc)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
@@ -394,12 +379,12 @@ func (ser *MediaCharacterService) Unmarshal(buf []byte) (db.Model, error) {
 }
 
 // AssertType exposes the given db.Model as a MediaCharacter.
-func (ser *MediaCharacterService) AssertType(m db.Model) (*MediaCharacter, error) {
+func (ser *MediaCharacterService) AssertType(m db.Model) (*models.MediaCharacter, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
-	mc, ok := m.(*MediaCharacter)
+	mc, ok := m.(*models.MediaCharacter)
 	if !ok {
 		return nil, fmt.Errorf("model: %w", errors.New("not of MediaCharacter type"))
 	}
@@ -408,8 +393,8 @@ func (ser *MediaCharacterService) AssertType(m db.Model) (*MediaCharacter, error
 
 // mapfromModel returns a list of MediaCharacter type asserted from the given
 // list of db.Model.
-func (ser *MediaCharacterService) mapFromModel(vlist []db.Model) ([]*MediaCharacter, error) {
-	list := make([]*MediaCharacter, len(vlist))
+func (ser *MediaCharacterService) mapFromModel(vlist []db.Model) ([]*models.MediaCharacter, error) {
+	list := make([]*models.MediaCharacter, len(vlist))
 	var err error
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)

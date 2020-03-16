@@ -3,7 +3,7 @@ package graphql
 import (
 	"testing"
 
-	"github.com/Dophin2009/nao/pkg/data"
+	"github.com/Dophin2009/nao/pkg/data/models"
 )
 
 // TestSliceTitles tests the function sliceTitles.
@@ -12,35 +12,35 @@ func TestSliceTitles(t *testing.T) {
 		return &a
 	}
 
-	a := data.Title{
-		String: "A", Language: "A", Priority: data.TitlePriorityPrimary}
-	b := data.Title{
-		String: "B", Language: "B", Priority: data.TitlePrioritySecondary}
-	c := data.Title{
-		String: "C", Language: "C", Priority: data.TitlePriorityPrimary}
-	d := data.Title{
-		String: "D", Language: "D", Priority: data.TitlePriorityOther}
-	e := data.Title{
-		String: "E", Language: "E", Priority: data.TitlePrioritySecondary}
-	fullset := []data.Title{a, b, c, d, e}
+	a := models.Title{
+		String: "A", Language: "A", Priority: models.TitlePriorityPrimary}
+	b := models.Title{
+		String: "B", Language: "B", Priority: models.TitlePrioritySecondary}
+	c := models.Title{
+		String: "C", Language: "C", Priority: models.TitlePriorityPrimary}
+	d := models.Title{
+		String: "D", Language: "D", Priority: models.TitlePriorityOther}
+	e := models.Title{
+		String: "E", Language: "E", Priority: models.TitlePrioritySecondary}
+	fullset := []models.Title{a, b, c, d, e}
 
 	cases := []struct {
 		name   string
-		titles []data.Title
+		titles []models.Title
 		first  *int
 		skip   *int
-		res    []*data.Title
+		res    []*models.Title
 	}{
-		{"nil:nil:nil", nil, nil, nil, []*data.Title{}},
-		{"nil:5:0", nil, point(5), point(0), []*data.Title{}},
-		{"5:nil:nil", fullset, nil, nil, []*data.Title{&a, &b, &c, &d, &e}},
-		{"5:3:0", fullset, point(3), point(0), []*data.Title{&a, &b, &c}},
-		{"5:1:1", fullset, point(1), point(1), []*data.Title{&b}},
-		{"5:3:3", fullset, point(3), point(3), []*data.Title{&d, &e}},
-		{"5:4:nil", fullset, point(4), nil, []*data.Title{&a, &b, &c, &d}},
-		{"5:nil:2", fullset, nil, point(2), []*data.Title{&c, &d, &e}},
-		{"5:-1:2", fullset, point(-1), point(2), []*data.Title{&c, &d, &e}},
-		{"5:nil:-1", fullset, nil, point(-1), []*data.Title{&a, &b, &c, &d, &e}},
+		{"nil:nil:nil", nil, nil, nil, []*models.Title{}},
+		{"nil:5:0", nil, point(5), point(0), []*models.Title{}},
+		{"5:nil:nil", fullset, nil, nil, []*models.Title{&a, &b, &c, &d, &e}},
+		{"5:3:0", fullset, point(3), point(0), []*models.Title{&a, &b, &c}},
+		{"5:1:1", fullset, point(1), point(1), []*models.Title{&b}},
+		{"5:3:3", fullset, point(3), point(3), []*models.Title{&d, &e}},
+		{"5:4:nil", fullset, point(4), nil, []*models.Title{&a, &b, &c, &d}},
+		{"5:nil:2", fullset, nil, point(2), []*models.Title{&c, &d, &e}},
+		{"5:-1:2", fullset, point(-1), point(2), []*models.Title{&c, &d, &e}},
+		{"5:nil:-1", fullset, nil, point(-1), []*models.Title{&a, &b, &c, &d, &e}},
 	}
 
 	for _, tc := range cases {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Dophin2009/nao/pkg/data"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
 )
 
@@ -14,13 +15,13 @@ import (
 // Resolver is the root GraphQL resolver object.
 type Resolver struct{}
 
-func resolveMediaByID(ctx context.Context, mID int) (*data.Media, error) {
+func resolveMediaByID(ctx context.Context, mID int) (*models.Media, error) {
 	ds, err := getCtxDataService(ctx)
 	if err != nil {
 		return nil, errorGetDataServices(err)
 	}
 
-	var md *data.Media
+	var md *models.Media
 	err = ds.Database.Transaction(false, func(tx db.Tx) error {
 		ser := ds.MediaService
 		md, err = ser.GetByID(mID, tx)
@@ -34,12 +35,12 @@ func resolveMediaByID(ctx context.Context, mID int) (*data.Media, error) {
 }
 
 func sliceTitles(
-	objTitles []data.Title, first *int, skip *int,
-) []*data.Title {
+	objTitles []models.Title, first *int, skip *int,
+) []*models.Title {
 	start, end := calculatePaginationBounds(first, skip, len(objTitles))
 
 	titles := objTitles[start:end]
-	tlist := make([]*data.Title, len(titles))
+	tlist := make([]*models.Title, len(titles))
 	for i := range tlist {
 		tlist[i] = &titles[i]
 	}

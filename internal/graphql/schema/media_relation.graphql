@@ -16,7 +16,7 @@ type MediaRelation {
 A type to create or update a relationship between two
 Media.
 """
-input MediaRelationInput @goModel(model: "data.MediaRelation") {
+input MediaRelationInput @goModel(model: "models.MediaRelation") {
   "The metadata for the MediaRelation."
   meta: MetadataInput!
   """

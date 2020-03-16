@@ -1,7 +1,7 @@
 """
 A type that describes a Person.
 """
-type Person @goModel(model: "data.Person") {
+type Person {
   "The metadata for the Person."
   meta: Metadata!
   "A list of names used to name the Person."
@@ -18,7 +18,7 @@ type Person @goModel(model: "data.Person") {
 """
 An input to create or update a Person.
 """
-input PersonInput @goModel(model: "data.Person") {
+input PersonInput @goModel(model: "models.Person") {
   "The metadata for the Person."
   meta: MetadataInput!
   "A list of names used to name the Person."

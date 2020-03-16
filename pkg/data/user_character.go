@@ -4,24 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	json "github.com/json-iterator/go"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
+	json "github.com/json-iterator/go"
 )
-
-// UserCharacter represents a relationship between a User and a Character,
-// containing information about the User's opinion on the Character.
-type UserCharacter struct {
-	UserID      int
-	CharacterID int
-	Score       *int
-	Comments    []Title
-	Meta        db.ModelMetadata
-}
-
-// Metadata returns Meta.
-func (uc *UserCharacter) Metadata() *db.ModelMetadata {
-	return &uc.Meta
-}
 
 // UserCharacterService performs operations on UserCharacter.
 type UserCharacterService struct {
@@ -71,12 +57,12 @@ func NewUserCharacterService(hooks db.PersistHooks, userService *UserService,
 }
 
 // Create persists the given UserCharacter.
-func (ser *UserCharacterService) Create(uc *UserCharacter, tx db.Tx) (int, error) {
+func (ser *UserCharacterService) Create(uc *models.UserCharacter, tx db.Tx) (int, error) {
 	return tx.Database().Create(uc, ser, tx)
 }
 
 // Update ruclaces the value of the UserCharacter with the given ID.
-func (ser *UserCharacterService) Update(uc *UserCharacter, tx db.Tx) error {
+func (ser *UserCharacterService) Update(uc *models.UserCharacter, tx db.Tx) error {
 	return tx.Database().Update(uc, ser, tx)
 }
 
@@ -108,7 +94,7 @@ func (ser *UserCharacterService) DeleteByCharacter(cID int, tx db.Tx) error {
 }
 
 // GetAll retrieves all persisted values of UserCharacter.
-func (ser *UserCharacterService) GetAll(first *int, skip *int, tx db.Tx) ([]*UserCharacter, error) {
+func (ser *UserCharacterService) GetAll(first *int, skip *int, tx db.Tx) ([]*models.UserCharacter, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -124,8 +110,8 @@ func (ser *UserCharacterService) GetAll(first *int, skip *int, tx db.Tx) ([]*Use
 // GetFilter retrieves all persisted values of UserCharacter that pass the
 // filter.
 func (ser *UserCharacterService) GetFilter(
-	first *int, skip *int, tx db.Tx, keep func(uc *UserCharacter) bool,
-) ([]*UserCharacter, error) {
+	first *int, skip *int, tx db.Tx, keep func(uc *models.UserCharacter) bool,
+) ([]*models.UserCharacter, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
 		func(m db.Model) bool {
 			uc, err := ser.AssertType(m)
@@ -148,8 +134,8 @@ func (ser *UserCharacterService) GetFilter(
 // GetMultiple retrieves the persisted UserCharacter values specified by the
 // given IDs that pass the filter.
 func (ser *UserCharacterService) GetMultiple(
-	ids []int, tx db.Tx, keep func(uc *UserCharacter) bool,
-) ([]*UserCharacter, error) {
+	ids []int, tx db.Tx, keep func(uc *models.UserCharacter) bool,
+) ([]*models.UserCharacter, error) {
 	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			uc, err := ser.AssertType(m)
@@ -170,7 +156,7 @@ func (ser *UserCharacterService) GetMultiple(
 }
 
 // GetByID retrieves the persisted UserCharacter with the given ID.
-func (ser *UserCharacterService) GetByID(id int, tx db.Tx) (*UserCharacter, error) {
+func (ser *UserCharacterService) GetByID(id int, tx db.Tx) (*models.UserCharacter, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -186,8 +172,8 @@ func (ser *UserCharacterService) GetByID(id int, tx db.Tx) (*UserCharacter, erro
 // GetByUser retrieves the persisted UserCharacter with the given User ID.
 func (ser *UserCharacterService) GetByUser(
 	uID int, first *int, skip *int, tx db.Tx,
-) ([]*UserCharacter, error) {
-	return ser.GetFilter(first, skip, tx, func(uc *UserCharacter) bool {
+) ([]*models.UserCharacter, error) {
+	return ser.GetFilter(first, skip, tx, func(uc *models.UserCharacter) bool {
 		return uc.UserID == uID
 	})
 }
@@ -195,8 +181,8 @@ func (ser *UserCharacterService) GetByUser(
 // GetByCharacter retrieves the persisted UserCharacter with the given Character ID.
 func (ser *UserCharacterService) GetByCharacter(
 	cID int, first *int, skip *int, tx db.Tx,
-) ([]*UserCharacter, error) {
-	return ser.GetFilter(first, skip, tx, func(uc *UserCharacter) bool {
+) ([]*models.UserCharacter, error) {
+	return ser.GetFilter(first, skip, tx, func(uc *models.UserCharacter) bool {
 		return uc.CharacterID == cID
 	})
 }
@@ -275,7 +261,7 @@ func (ser *UserCharacterService) Marshal(m db.Model) ([]byte, error) {
 
 // Unmarshal parses the given JSON into UserCharacter.
 func (ser *UserCharacterService) Unmarshal(buf []byte) (db.Model, error) {
-	var uc UserCharacter
+	var uc models.UserCharacter
 	err := json.Unmarshal(buf, &uc)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
@@ -284,12 +270,12 @@ func (ser *UserCharacterService) Unmarshal(buf []byte) (db.Model, error) {
 }
 
 // AssertType exposes the given db.Model as a UserCharacter.
-func (ser *UserCharacterService) AssertType(m db.Model) (*UserCharacter, error) {
+func (ser *UserCharacterService) AssertType(m db.Model) (*models.UserCharacter, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
-	uc, ok := m.(*UserCharacter)
+	uc, ok := m.(*models.UserCharacter)
 	if !ok {
 		return nil,
 			fmt.Errorf("model: %w", errors.New("not of UserCharacter type"))
@@ -299,8 +285,8 @@ func (ser *UserCharacterService) AssertType(m db.Model) (*UserCharacter, error) 
 
 // mapfromModel returns a list of UserCharacter type asserted from the given
 // list of db.Model.
-func (ser *UserCharacterService) mapFromModel(vlist []db.Model) ([]*UserCharacter, error) {
-	list := make([]*UserCharacter, len(vlist))
+func (ser *UserCharacterService) mapFromModel(vlist []db.Model) ([]*models.UserCharacter, error) {
+	list := make([]*models.UserCharacter, len(vlist))
 	var err error
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)

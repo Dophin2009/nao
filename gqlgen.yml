@@ -17,5 +17,5 @@ resolver:
 # omit_slice_element_pointers: true
 
 autobind:
-  - github.com/Dophin2009/nao/pkg/data
+  - github.com/Dophin2009/nao/pkg/data/models
   - github.com/Dophin2009/nao/pkg/db

@@ -1,7 +1,7 @@
 """
 A type that describes a Media.
 """
-type Media @goModel(model: "data.Media") {
+type Media {
   "The metadata for the Media."
   meta: Metadata!
   "A list of titles used to named the Media."
@@ -48,7 +48,7 @@ type Media @goModel(model: "data.Media") {
 """
 An input to create or update an existing Media.
 """
-input MediaInput @goModel(model: "data.Media") {
+input MediaInput @goModel(model: "models.Media") {
   "The metadata for the Media."
   meta: MetadataInput!
   "A list of titles used to named the Media."
@@ -90,7 +90,7 @@ type Season {
 """
 An input that describes a single season/cour.
 """
-input SeasonInput @goModel(model: "data.Season") {
+input SeasonInput @goModel(model: "models.Season") {
   "An enumerated identifier for the cour."
   quarter: Quarter
   "The year of the season."
@@ -101,7 +101,7 @@ input SeasonInput @goModel(model: "data.Season") {
 An enumerated type for the four quarters of
 the year that each correspond to a season.
 """
-enum Quarter @goModel(model: "data.Quarter") {
+enum Quarter @goModel(model: "models.Quarter") {
   """
   Winter encompasses the months of January,
   February, and March.

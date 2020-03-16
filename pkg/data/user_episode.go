@@ -4,24 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	json "github.com/json-iterator/go"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
+	json "github.com/json-iterator/go"
 )
-
-// UserEpisode represents a relationship between a User and an Episode,
-// containing information about the User's opinion on the Episode.
-type UserEpisode struct {
-	UserID    int
-	EpisodeID int
-	Score     *int
-	Comments  []Title
-	Meta      db.ModelMetadata
-}
-
-// Metadata returns Meta.
-func (uep *UserEpisode) Metadata() *db.ModelMetadata {
-	return &uep.Meta
-}
 
 // UserEpisodeService performs operations on UserEpisode.
 type UserEpisodeService struct {
@@ -72,12 +58,12 @@ func NewUserEpisodeService(hooks db.PersistHooks, userService *UserService,
 }
 
 // Create persists the given UserEpisode.
-func (ser *UserEpisodeService) Create(uep *UserEpisode, tx db.Tx) (int, error) {
+func (ser *UserEpisodeService) Create(uep *models.UserEpisode, tx db.Tx) (int, error) {
 	return tx.Database().Create(uep, ser, tx)
 }
 
 // Update rueplaces the value of the UserEpisode with the given ID.
-func (ser *UserEpisodeService) Update(uep *UserEpisode, tx db.Tx) error {
+func (ser *UserEpisodeService) Update(uep *models.UserEpisode, tx db.Tx) error {
 	return tx.Database().Update(uep, ser, tx)
 }
 
@@ -109,7 +95,7 @@ func (ser *UserEpisodeService) DeleteByEpisode(epID int, tx db.Tx) error {
 }
 
 // GetAll retrieves all persisted values of UserEpisode.
-func (ser *UserEpisodeService) GetAll(first *int, skip *int, tx db.Tx) ([]*UserEpisode, error) {
+func (ser *UserEpisodeService) GetAll(first *int, skip *int, tx db.Tx) ([]*models.UserEpisode, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -125,8 +111,8 @@ func (ser *UserEpisodeService) GetAll(first *int, skip *int, tx db.Tx) ([]*UserE
 // GetFilter retrieves all persisted values of UserEpisode that pass the
 // filter.
 func (ser *UserEpisodeService) GetFilter(
-	first *int, skip *int, tx db.Tx, keep func(uep *UserEpisode) bool,
-) ([]*UserEpisode, error) {
+	first *int, skip *int, tx db.Tx, keep func(uep *models.UserEpisode) bool,
+) ([]*models.UserEpisode, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
 		func(m db.Model) bool {
 			uep, err := ser.AssertType(m)
@@ -149,8 +135,8 @@ func (ser *UserEpisodeService) GetFilter(
 // GetMultiple retrieves the persisted UserEpisode values specified by the
 // given IDs that pass the filter.
 func (ser *UserEpisodeService) GetMultiple(
-	ids []int, tx db.Tx, keep func(uep *UserEpisode) bool,
-) ([]*UserEpisode, error) {
+	ids []int, tx db.Tx, keep func(uep *models.UserEpisode) bool,
+) ([]*models.UserEpisode, error) {
 	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			uep, err := ser.AssertType(m)
@@ -171,7 +157,7 @@ func (ser *UserEpisodeService) GetMultiple(
 }
 
 // GetByID retrieves the persisted UserEpisode with the given ID.
-func (ser *UserEpisodeService) GetByID(id int, tx db.Tx) (*UserEpisode, error) {
+func (ser *UserEpisodeService) GetByID(id int, tx db.Tx) (*models.UserEpisode, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -187,8 +173,8 @@ func (ser *UserEpisodeService) GetByID(id int, tx db.Tx) (*UserEpisode, error) {
 // GetByUser retrieves the persisted UserEpisode with the given User ID.
 func (ser *UserEpisodeService) GetByUser(
 	uID int, first *int, skip *int, tx db.Tx,
-) ([]*UserEpisode, error) {
-	return ser.GetFilter(first, skip, tx, func(uep *UserEpisode) bool {
+) ([]*models.UserEpisode, error) {
+	return ser.GetFilter(first, skip, tx, func(uep *models.UserEpisode) bool {
 		return uep.UserID == uID
 	})
 }
@@ -196,8 +182,8 @@ func (ser *UserEpisodeService) GetByUser(
 // GetByEpisode retrieves the persisted UserEpisode with the given Episode ID.
 func (ser *UserEpisodeService) GetByEpisode(
 	epID int, first *int, skip *int, tx db.Tx,
-) ([]*UserEpisode, error) {
-	return ser.GetFilter(first, skip, tx, func(uep *UserEpisode) bool {
+) ([]*models.UserEpisode, error) {
+	return ser.GetFilter(first, skip, tx, func(uep *models.UserEpisode) bool {
 		return uep.EpisodeID == epID
 	})
 }
@@ -274,7 +260,7 @@ func (ser *UserEpisodeService) Marshal(m db.Model) ([]byte, error) {
 
 // Unmarshal parses the given JSON into UserEpisode.
 func (ser *UserEpisodeService) Unmarshal(buf []byte) (db.Model, error) {
-	var uep UserEpisode
+	var uep models.UserEpisode
 	err := json.Unmarshal(buf, &uep)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
@@ -283,12 +269,12 @@ func (ser *UserEpisodeService) Unmarshal(buf []byte) (db.Model, error) {
 }
 
 // AssertType exposes the given db.Model as a UserEpisode.
-func (ser *UserEpisodeService) AssertType(m db.Model) (*UserEpisode, error) {
+func (ser *UserEpisodeService) AssertType(m db.Model) (*models.UserEpisode, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
-	uep, ok := m.(*UserEpisode)
+	uep, ok := m.(*models.UserEpisode)
 	if !ok {
 		return nil,
 			fmt.Errorf("model: %w", errors.New("not of UserEpisode type"))
@@ -298,8 +284,8 @@ func (ser *UserEpisodeService) AssertType(m db.Model) (*UserEpisode, error) {
 
 // mapfromModel returns a list of UserEpisode type asserted from the given
 // list of db.Model.
-func (ser *UserEpisodeService) mapFromModel(vlist []db.Model) ([]*UserEpisode, error) {
-	list := make([]*UserEpisode, len(vlist))
+func (ser *UserEpisodeService) mapFromModel(vlist []db.Model) ([]*models.UserEpisode, error) {
+	list := make([]*models.UserEpisode, len(vlist))
 	var err error
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)

@@ -4,22 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	json "github.com/json-iterator/go"
+	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
+	json "github.com/json-iterator/go"
 )
-
-// MediaGenre represents a relationship between single instances of Media and
-// Genre.
-type MediaGenre struct {
-	MediaID int
-	GenreID int
-	Meta    db.ModelMetadata
-}
-
-// Metadata returns Meta.
-func (mg *MediaGenre) Metadata() *db.ModelMetadata {
-	return &mg.Meta
-}
 
 // MediaGenreService performs operations on MediaGenre.
 type MediaGenreService struct {
@@ -68,12 +56,12 @@ func NewMediaGenreService(hooks db.PersistHooks, mediaService *MediaService,
 }
 
 // Create persists the given MediaGenre.
-func (ser *MediaGenreService) Create(mg *MediaGenre, tx db.Tx) (int, error) {
+func (ser *MediaGenreService) Create(mg *models.MediaGenre, tx db.Tx) (int, error) {
 	return tx.Database().Create(mg, ser, tx)
 }
 
 // Update rmglaces the value of the MediaGenre with the given ID.
-func (ser *MediaGenreService) Update(mg *MediaGenre, tx db.Tx) error {
+func (ser *MediaGenreService) Update(mg *models.MediaGenre, tx db.Tx) error {
 	return tx.Database().Update(mg, ser, tx)
 }
 
@@ -107,7 +95,7 @@ func (ser *MediaGenreService) DeleteByGenre(gID int, tx db.Tx) error {
 }
 
 // GetAll retrieves all persisted values of MediaGenre.
-func (ser *MediaGenreService) GetAll(first *int, skip *int, tx db.Tx) ([]*MediaGenre, error) {
+func (ser *MediaGenreService) GetAll(first *int, skip *int, tx db.Tx) ([]*models.MediaGenre, error) {
 	vlist, err := tx.Database().GetAll(first, skip, ser, tx)
 	if err != nil {
 		return nil, err
@@ -122,8 +110,8 @@ func (ser *MediaGenreService) GetAll(first *int, skip *int, tx db.Tx) ([]*MediaG
 
 // GetFilter retrieves all persisted values of MediaGenre that pass the filter.
 func (ser *MediaGenreService) GetFilter(
-	first *int, skip *int, tx db.Tx, keep func(mg *MediaGenre) bool,
-) ([]*MediaGenre, error) {
+	first *int, skip *int, tx db.Tx, keep func(mg *models.MediaGenre) bool,
+) ([]*models.MediaGenre, error) {
 	vlist, err := tx.Database().GetFilter(first, skip, ser, tx,
 		func(m db.Model) bool {
 			mg, err := ser.AssertType(m)
@@ -144,7 +132,7 @@ func (ser *MediaGenreService) GetFilter(
 }
 
 // GetByID retrieves the persisted MediaGenre with the given ID.
-func (ser *MediaGenreService) GetByID(id int, tx db.Tx) (*MediaGenre, error) {
+func (ser *MediaGenreService) GetByID(id int, tx db.Tx) (*models.MediaGenre, error) {
 	m, err := tx.Database().GetByID(id, ser, tx)
 	if err != nil {
 		return nil, err
@@ -160,8 +148,8 @@ func (ser *MediaGenreService) GetByID(id int, tx db.Tx) (*MediaGenre, error) {
 // GetMultiple retrieves the persisted MediaGenre values specified by the given
 // IDs that pass the filter.
 func (ser *MediaGenreService) GetMultiple(
-	ids []int, tx db.Tx, keep func(mg *MediaGenre) bool,
-) ([]*MediaGenre, error) {
+	ids []int, tx db.Tx, keep func(mg *models.MediaGenre) bool,
+) ([]*models.MediaGenre, error) {
 	vlist, err := tx.Database().GetMultiple(ids, ser, tx,
 		func(m db.Model) bool {
 			mg, err := ser.AssertType(m)
@@ -185,8 +173,8 @@ func (ser *MediaGenreService) GetMultiple(
 // ID.
 func (ser *MediaGenreService) GetByMedia(
 	mID int, first *int, skip *int, tx db.Tx,
-) ([]*MediaGenre, error) {
-	return ser.GetFilter(first, skip, tx, func(mg *MediaGenre) bool {
+) ([]*models.MediaGenre, error) {
+	return ser.GetFilter(first, skip, tx, func(mg *models.MediaGenre) bool {
 		return mg.MediaID == mID
 	})
 }
@@ -195,8 +183,8 @@ func (ser *MediaGenreService) GetByMedia(
 // ID.
 func (ser *MediaGenreService) GetByGenre(
 	gID int, first *int, skip *int, tx db.Tx,
-) ([]*MediaGenre, error) {
-	return ser.GetFilter(first, skip, tx, func(mg *MediaGenre) bool {
+) ([]*models.MediaGenre, error) {
+	return ser.GetFilter(first, skip, tx, func(mg *models.MediaGenre) bool {
 		return mg.GenreID == gID
 	})
 }
@@ -268,7 +256,7 @@ func (ser *MediaGenreService) Marshal(m db.Model) ([]byte, error) {
 
 // Unmarshal parses the given JSON into MediaGenre.
 func (ser *MediaGenreService) Unmarshal(buf []byte) (db.Model, error) {
-	var mg MediaGenre
+	var mg models.MediaGenre
 	err := json.Unmarshal(buf, &mg)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
@@ -277,12 +265,12 @@ func (ser *MediaGenreService) Unmarshal(buf []byte) (db.Model, error) {
 }
 
 // AssertType exposes the given db.Model as a MediaGenre.
-func (ser *MediaGenreService) AssertType(m db.Model) (*MediaGenre, error) {
+func (ser *MediaGenreService) AssertType(m db.Model) (*models.MediaGenre, error) {
 	if m == nil {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
-	mg, ok := m.(*MediaGenre)
+	mg, ok := m.(*models.MediaGenre)
 	if !ok {
 		return nil, fmt.Errorf("model: %w", errors.New("not of MediaGenre type"))
 	}
@@ -291,8 +279,8 @@ func (ser *MediaGenreService) AssertType(m db.Model) (*MediaGenre, error) {
 
 // mapfromModel returns a list of MediaGenre type asserted from the given list
 // of db.Model.
-func (ser *MediaGenreService) mapFromModel(vlist []db.Model) ([]*MediaGenre, error) {
-	list := make([]*MediaGenre, len(vlist))
+func (ser *MediaGenreService) mapFromModel(vlist []db.Model) ([]*models.MediaGenre, error) {
+	list := make([]*models.MediaGenre, len(vlist))
 	var err error
 	for i, v := range vlist {
 		list[i], err = ser.AssertType(v)

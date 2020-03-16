@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	json "github.com/json-iterator/go"
-	"gitlab.com/Dophin2009/nao/pkg/db"
+	"github.com/Dophin2009/nao/pkg/db"
 )
 
 // MediaGenre represents a relationship between single instances of Media and

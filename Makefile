@@ -10,7 +10,7 @@ GOGEN=$(GOCMD) generate
 
 # Project variables
 TARGET_DIR=bin
-REPO_NAME=gitlab.com/Dophin2009/nao
+REPO_NAME=github.com/Dophin2009/nao
 MODULES=naos
 
 SRC_FILES=find . -name '*.go' ! -name '*.gen.go'

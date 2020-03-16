@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"gitlab.com/Dophin2009/nao/pkg/data"
-	"gitlab.com/Dophin2009/nao/pkg/db"
+	"github.com/Dophin2009/nao/pkg/data"
+	"github.com/Dophin2009/nao/pkg/db"
 )
 
 func (r *characterResolver) Names(ctx context.Context, obj *data.Character, first *int, skip *int) ([]*data.Title, error) {

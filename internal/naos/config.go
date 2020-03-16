@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/adrg/xdg"
-	"gitlab.com/Dophin2009/nao/internal/config"
+	"github.com/Dophin2009/nao/internal/config"
 )
 
 // Configuration contains config properties read from config files.

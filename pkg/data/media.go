@@ -9,7 +9,7 @@ import (
 	"time"
 
 	json "github.com/json-iterator/go"
-	"gitlab.com/Dophin2009/nao/pkg/db"
+	"github.com/Dophin2009/nao/pkg/db"
 )
 
 // TODO: Move UnmarshalGQL and MarshalGQL of Quarter to graphql package; they

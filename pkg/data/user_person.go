@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	json "github.com/json-iterator/go"
-	"gitlab.com/Dophin2009/nao/pkg/db"
+	"github.com/Dophin2009/nao/pkg/db"
 )
 
 // UserPerson represents a relationship between a User and a Person,

@@ -1,4 +1,4 @@
-module gitlab.com/Dophin2009/nao
+module github.com/Dophin2009/nao
 
 go 1.12
 

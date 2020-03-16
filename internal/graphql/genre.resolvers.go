@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"gitlab.com/Dophin2009/nao/pkg/data"
-	"gitlab.com/Dophin2009/nao/pkg/db"
+	"github.com/Dophin2009/nao/pkg/data"
+	"github.com/Dophin2009/nao/pkg/db"
 )
 
 func (r *genreResolver) Names(ctx context.Context, obj *data.Genre, first *int, skip *int) ([]*data.Title, error) {

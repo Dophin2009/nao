@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	json "github.com/json-iterator/go"
-	"gitlab.com/Dophin2009/nao/pkg/db"
+	"github.com/Dophin2009/nao/pkg/db"
 )
 
 // Producer represents a single studio, producer, licensor, etc.

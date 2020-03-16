@@ -7,7 +7,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"gitlab.com/Dophin2009/nao/internal/naos"
+	"github.com/Dophin2009/nao/internal/naos"
 )
 
 // TODO: Parse command line flags

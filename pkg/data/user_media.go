@@ -6,7 +6,7 @@ import (
 	"time"
 
 	json "github.com/json-iterator/go"
-	"gitlab.com/Dophin2009/nao/pkg/db"
+	"github.com/Dophin2009/nao/pkg/db"
 )
 
 // UserMedia represents a relationship between a User and a Media, containing

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Dophin2009/nao/pkg/data"
 	"github.com/Dophin2009/nao/pkg/data/models"
+	"github.com/Dophin2009/nao/pkg/data/services"
 	"github.com/Dophin2009/nao/pkg/db"
 )
 
@@ -81,20 +81,20 @@ func calculatePaginationBounds(first *int, skip *int, size int) (int, int) {
 // in a context object.
 type DataService struct {
 	Database              db.DatabaseService
-	CharacterService      *data.CharacterService
-	EpisodeService        *data.EpisodeService
-	EpisodeSetService     *data.EpisodeSetService
-	GenreService          *data.GenreService
-	MediaService          *data.MediaService
-	MediaCharacterService *data.MediaCharacterService
-	MediaGenreService     *data.MediaGenreService
-	MediaProducerService  *data.MediaProducerService
-	MediaRelationSerivce  *data.MediaRelationService
-	PersonService         *data.PersonService
-	ProducerService       *data.ProducerService
-	UserService           *data.UserService
-	UserMediaService      *data.UserMediaService
-	UserMediaListService  *data.UserMediaListService
+	CharacterService      *services.CharacterService
+	EpisodeService        *services.EpisodeService
+	EpisodeSetService     *services.EpisodeSetService
+	GenreService          *services.GenreService
+	MediaService          *services.MediaService
+	MediaCharacterService *services.MediaCharacterService
+	MediaGenreService     *services.MediaGenreService
+	MediaProducerService  *services.MediaProducerService
+	MediaRelationSerivce  *services.MediaRelationService
+	PersonService         *services.PersonService
+	ProducerService       *services.ProducerService
+	UserService           *services.UserService
+	UserMediaService      *services.UserMediaService
+	UserMediaListService  *services.UserMediaListService
 }
 
 // DataServiceKey is the context key value for DataServices.

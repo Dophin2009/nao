@@ -12,15 +12,15 @@ import (
 // UserMedia represents a relationship between a User and a Media, containing
 // information about the User's opinion on the Media.
 type UserMedia struct {
-	UserID           int
-	MediaID          int
-	Status           *WatchStatus
-	Priority         *int
-	Score            *int
-	Recommended      *int
-	WatchedInstances []WatchedInstance
-	Comments         []Title
-	Meta             db.ModelMetadata
+	UserID         int
+	MediaID        int
+	Priority       *int
+	Score          *int
+	Recommended    *int
+	Status         *WatchStatus
+	WatchInstances []WatchedInstance
+	Comments       []Title
+	Meta           db.ModelMetadata
 }
 
 // Metadata returns Meta
@@ -34,7 +34,7 @@ type WatchedInstance struct {
 	Ongoing   bool
 	StartDate *time.Time
 	EndDate   *time.Time
-	Comments  map[string]string
+	Comments  []Title
 }
 
 // WatchStatus is an enum that represents the status of a Media's consumption

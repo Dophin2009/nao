@@ -50,7 +50,7 @@ func (dbs *DatabaseService) Create(m Model, ser Service, tx Tx) (int, error) {
 	// Initialize metadata
 	meta := m.Metadata()
 	meta.CreatedAt = time.Now()
-	meta.UpdatedAt = time.Now()
+	meta.UpdatedAt = meta.CreatedAt
 	meta.Version = 0
 	err = ser.Initialize(m, tx)
 	if err != nil {

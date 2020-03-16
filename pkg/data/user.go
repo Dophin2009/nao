@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	json "github.com/json-iterator/go"
 	"github.com/Dophin2009/nao/pkg/db"
+	json "github.com/json-iterator/go"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,7 +19,11 @@ type User struct {
 	Password    []byte
 	Permissions UserPermission
 	Meta        db.ModelMetadata
+}
+
+type userWrap struct {
 	updatedPass bool
+	*User
 }
 
 // Metadata returns Meta.
@@ -50,12 +54,18 @@ func NewUserService(hooks db.PersistHooks) *UserService {
 
 // Create persists the given User.
 func (ser *UserService) Create(u *User, tx db.Tx) (int, error) {
-	return tx.Database().Create(u, ser, tx)
+	uw := userWrap{false, u}
+	return tx.Database().Create(&uw, ser, tx)
 }
 
 // Update rulaces the value of the User with the given ID.
 func (ser *UserService) Update(u *User, tx db.Tx) error {
-	return tx.Database().Update(u, ser, tx)
+	uw := &userWrap{false, u}
+	return ser.update(uw, tx)
+}
+
+func (ser *UserService) update(uw *userWrap, tx db.Tx) error {
+	return tx.Database().Update(uw, ser, tx)
 }
 
 // Delete deletes the User with the given ID.
@@ -214,9 +224,9 @@ func (ser *UserService) ChangePassword(userID int, password string, tx db.Tx) er
 		return fmt.Errorf("failed to generate password hash: %w", err)
 	}
 	u.Password = pass
-	u.updatedPass = true
 
-	err = tx.Database().Update(u, ser, tx)
+	uw := &userWrap{true, u}
+	err = ser.update(uw, tx)
 	if err != nil {
 		return err
 	}
@@ -253,10 +263,11 @@ func (ser *UserService) Clean(m db.Model, _ db.Tx) error {
 
 // Validate checks if the given User is valid for the database.
 func (ser *UserService) Validate(m db.Model, tx db.Tx) error {
-	u, err := ser.AssertType(m)
-	if err != nil {
+	uw, err := ser.assertWrapType(m)
+	if err != nil || uw.User == nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
+	u := uw.User
 
 	// Check that username does not already exist
 	sameUsername, err := ser.GetByUsername(u.Username, tx)
@@ -269,34 +280,35 @@ func (ser *UserService) Validate(m db.Model, tx db.Tx) error {
 
 // Initialize sets initial values for some properties.
 func (ser *UserService) Initialize(m db.Model, _ db.Tx) error {
-	u, err := ser.AssertType(m)
+	uw, err := ser.assertWrapType(m)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
-	pass, err := ser.HashPassword(u.Password)
+	pass, err := ser.HashPassword(uw.User.Password)
 	if err != nil {
 		return fmt.Errorf("failed to generate password hash: %w", err)
 	}
-	u.Password = pass
+	uw.User.Password = pass
 	return nil
 }
 
 // PersistOldProperties maintains certain properties of the existing User in
 // updates.
 func (ser *UserService) PersistOldProperties(n db.Model, o db.Model, _ db.Tx) error {
-	nu, err := ser.AssertType(n)
+	nuw, err := ser.assertWrapType(n)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
-	ou, err := ser.AssertType(o)
+	ouw, err := ser.assertWrapType(o)
 	if err != nil {
 		return fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
+
 	// Password may not be changed directly through update; must use
 	// ChangePassword
-	if !nu.updatedPass {
-		nu.Password = ou.Password
+	if !nuw.updatedPass {
+		nuw.User.Password = ouw.User.Password
 	}
 	return nil
 }
@@ -308,12 +320,12 @@ func (ser *UserService) PersistHooks() *db.PersistHooks {
 
 // Marshal transforms the given User into JSON.
 func (ser *UserService) Marshal(m db.Model) ([]byte, error) {
-	u, err := ser.AssertType(m)
+	uw, err := ser.assertWrapType(m)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgModelAssertType, err)
 	}
 
-	v, err := json.Marshal(u)
+	v, err := json.Marshal(uw.User)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONMarshal, err)
 	}
@@ -328,7 +340,19 @@ func (ser *UserService) Unmarshal(buf []byte) (db.Model, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errmsgJSONUnmarshal, err)
 	}
-	return &u, nil
+	return &userWrap{false, &u}, nil
+}
+
+func (ser *UserService) assertWrapType(m db.Model) (*userWrap, error) {
+	if m == nil {
+		return nil, fmt.Errorf("model: %w", errNil)
+	}
+
+	u, ok := m.(*userWrap)
+	if !ok {
+		return nil, fmt.Errorf("model: %w", errors.New("not of User type"))
+	}
+	return u, nil
 }
 
 // AssertType exposes the given db.Model as a User.
@@ -337,11 +361,15 @@ func (ser *UserService) AssertType(m db.Model) (*User, error) {
 		return nil, fmt.Errorf("model: %w", errNil)
 	}
 
-	u, ok := m.(*User)
+	uw, ok := m.(*userWrap)
 	if !ok {
 		return nil, fmt.Errorf("model: %w", errors.New("not of User type"))
 	}
-	return u, nil
+
+	if uw.User == nil {
+		return nil, fmt.Errorf("model: %w", errNil)
+	}
+	return uw.User, nil
 }
 
 // mapfromModel returns a list of User type asserted from the given list of

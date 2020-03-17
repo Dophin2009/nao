@@ -326,9 +326,12 @@ type WatchedInstance struct {
 type WatchStatus int
 
 const (
+	// WatchStatusCurrent means the User is currently consuming the Media.
+	WatchStatusCurrent WatchStatus = iota
+
 	// WatchStatusCompleted means that the User has consumed the Media in its entirety at
 	// least once.
-	WatchStatusCompleted WatchStatus = iota
+	WatchStatusCompleted
 
 	// WatchStatusPlanning means that the User is planning to consume the Media sometime in
 	// the future.

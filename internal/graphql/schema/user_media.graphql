@@ -1,0 +1,60 @@
+# """
+# A type that describes a relationship between a User and a
+# Media.
+# """
+# type UserMedia {
+  # "The metadata of the UserMedia."
+  # meta: Metadata!
+  # "The ID of the User in the relationship."
+  # userID: Int!
+  # "The ID of the Media in the relationship."
+  # mediaID: Int!
+  # "The watch priority level given by the User to the Media."
+  # priority: Int
+  # "The score given by the User to the Media."
+  # score: Int
+  # "The current watch status of the User for the Media."
+  # status: WatchStatus!
+  # "A list of instances the User has watched the Media."
+  # watchInstances: [WatchInstance!]!
+  # """
+  # A list of comments given by the User with regards to the
+  # Media.
+  # """
+  # comments: [Title!]!
+# }
+
+# """
+# A type that describes an instance a User watched a Media.
+# """
+# type WatchInstance {
+  # ""
+# }
+
+# """
+# An enumerated type for the possible consumption status a User
+# can assign to a Media.
+# """
+# enum WatchStatus @goModel(model: "data.WatchStatus") {
+  # """
+  # COMPLETED signifies that the User has completed watching all
+  # the components of the Media.
+  # """
+  # COMPLETED
+  # """
+  # PLANNING signifies that the User is planning to watch the
+  # Media.
+  # """
+  # PLANNING
+  # """
+  # DROPPED signifies that the User stopped watching the Media
+  # mid-way through.
+  # """
+  # DROPPED
+  # """
+  # HOLD indicates that the User began watching, stopped, and
+  # plans to recontinue watching the Media at some point in the
+  # future.
+  # """
+  # HOLD
+# }

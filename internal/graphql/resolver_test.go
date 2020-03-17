@@ -3,7 +3,7 @@ package graphql
 import (
 	"testing"
 
-	"github.com/Dophin2009/nao/pkg/data/models"
+	"github.com/Dophin2009/nao/pkg/models"
 )
 
 // TestSliceTitles tests the function sliceTitles.

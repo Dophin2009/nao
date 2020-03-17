@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Dophin2009/nao/internal/data"
 	"github.com/Dophin2009/nao/internal/graphql"
 	"github.com/Dophin2009/nao/internal/web"
-	"github.com/Dophin2009/nao/pkg/data/services"
 	"github.com/Dophin2009/nao/pkg/db"
 	log "github.com/sirupsen/logrus"
 )
@@ -35,36 +35,36 @@ func NewApplication(c *Configuration) (*Application, error) {
 	address := fmt.Sprintf("%s:%s", c.Hostname, c.Port)
 	s := web.NewServer(address)
 
-	characterService := &services.CharacterService{}
-	episodeService := &services.EpisodeService{}
-	episodeSetService := &services.EpisodeSetService{}
-	genreService := &services.GenreService{}
-	mediaService := &services.MediaService{}
-	personService := &services.PersonService{}
-	producerService := &services.ProducerService{}
-	userService := &services.UserService{}
+	characterService := &data.CharacterService{}
+	episodeService := &data.EpisodeService{}
+	episodeSetService := &data.EpisodeSetService{}
+	genreService := &data.GenreService{}
+	mediaService := &data.MediaService{}
+	personService := &data.PersonService{}
+	producerService := &data.ProducerService{}
+	userService := &data.UserService{}
 
-	mediaCharacterService := &services.MediaCharacterService{
+	mediaCharacterService := &data.MediaCharacterService{
 		MediaService:     mediaService,
 		CharacterService: characterService,
 		PersonService:    personService,
 	}
-	mediaGenreService := &services.MediaGenreService{
+	mediaGenreService := &data.MediaGenreService{
 		MediaService: mediaService,
 		GenreService: genreService,
 	}
-	mediaProducerService := &services.MediaProducerService{
+	mediaProducerService := &data.MediaProducerService{
 		MediaService:    mediaService,
 		ProducerService: producerService,
 	}
-	mediaRelationService := &services.MediaRelationService{
+	mediaRelationService := &data.MediaRelationService{
 		MediaService: mediaService,
 	}
-	userMediaService := &services.UserMediaService{
+	userMediaService := &data.UserMediaService{
 		UserService:  userService,
 		MediaService: mediaService,
 	}
-	userMediaListService := &services.UserMediaListService{
+	userMediaListService := &data.UserMediaListService{
 		UserService:      userService,
 		UserMediaService: userMediaService,
 	}

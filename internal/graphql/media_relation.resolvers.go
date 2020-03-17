@@ -6,7 +6,7 @@ package graphql
 import (
 	"context"
 
-	"github.com/Dophin2009/nao/pkg/data/models"
+	"github.com/Dophin2009/nao/pkg/models"
 )
 
 func (r *mediaRelationResolver) Owner(ctx context.Context, obj *models.MediaRelation) (*models.Media, error) {

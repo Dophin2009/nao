@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
+	"github.com/Dophin2009/nao/pkg/models"
 )
 
 func (r *personResolver) Names(ctx context.Context, obj *models.Person, first *int, skip *int) ([]*models.Title, error) {

@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Dophin2009/nao/pkg/data/models"
 	"github.com/Dophin2009/nao/pkg/db"
+	"github.com/Dophin2009/nao/pkg/models"
 )
 
 func (r *mutationResolver) CreateMedia(ctx context.Context, media models.Media) (*models.Media, error) {

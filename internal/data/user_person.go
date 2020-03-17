@@ -1,10 +1,10 @@
-package services
+package data
 
 import (
 	"errors"
 	"fmt"
 
-	"github.com/Dophin2009/nao/pkg/data/models"
+	"github.com/Dophin2009/nao/pkg/models"
 	"github.com/Dophin2009/nao/pkg/db"
 	json "github.com/json-iterator/go"
 )

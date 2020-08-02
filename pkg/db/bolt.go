@@ -265,6 +265,8 @@ func (db *BoltDatabase) Delete(id int, ser Service, tx Tx) error {
 		return fmt.Errorf("%s %q: %w", errmsgBucketOpen, ser.Bucket(), err)
 	}
 
+	m, err := db.GetByID(id, ser, tx)
+
 	// Store existing model to return
 	err = b.Delete(itob(id))
 	if err != nil {

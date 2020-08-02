@@ -19,6 +19,7 @@ type ModelMetadata struct {
 	ID        int
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	DeletedAt *time.Time
 	Version   int
 }
 
@@ -287,6 +288,7 @@ type DatabaseDriver interface {
 
 	Create(m Model, ser Service, tx Tx) (int, error)
 	Update(m Model, ser Service, tx Tx) error
+	// Delete marks the model with the given ID as deleted.
 	Delete(id int, ser Service, tx Tx) error
 	GetByID(id int, ser Service, tx Tx) (Model, error)
 	GetRawByID(id int, ser Service, tx Tx) ([]byte, error)
